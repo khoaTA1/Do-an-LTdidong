@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">DoAn_LT_DD</string>
+
+    <!-- các nhãn/tiêu đề cho chức năng luyện reading skill -->
+    <string name="reading_skill_homepage_title">Kỹ năng đọc hiểu</string>
+    <string name="st_reading_skill_mode_label"><![CDATA[Đọc hiểu &amp; Trắc nghiệm]]></string>
+    <string name="nd_reading_skill_mode_label">Điền vào chỗ trống</string>
+    <string name="exit_btn_label">Thoát</string>
+    <string name="reading_comprehencion_practice_title">"Đọc hiểu – Bài "</string>
+    <string name="submit_btn_label">Nộp bài</string>
+    <string name="next_btn_label">Tiếp theo</string>
+    <string name="cloze_test_title">"Điền vào chỗ trống - Bài "</string>
+    <string name="total_ten">/10</string>
+</resources>
