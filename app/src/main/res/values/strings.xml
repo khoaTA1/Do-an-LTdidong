@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DoAn_LT_DD</string>
+    <string name="DoAn_LT_DD">DoAn_LT_DD</string>
 
     <!-- các nhãn/tiêu đề cho chức năng luyện reading skill -->
     <string name="reading_skill_homepage_title">Kỹ năng đọc hiểu</string>
@@ -11,4 +11,16 @@
     <string name="next_btn_label">Tiếp theo</string>
     <string name="cloze_test_title">"Điền vào chỗ trống - Bài "</string>
     <string name="total_ten">/10</string>
+
+    <string name="home_title">Discover</string>
+    <string name="search_hint">Search topics...</string>
+    <string name="featured_articles">Featured Articles</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_courses">Courses</string>
+    <string name="menu_profile">Profile</string>
+    <string name="reading_skill">Reading</string>
+    <string name="writing_skill">Writing</string>
+    <string name="listening_skill">Listening</string>
+    <string name="speaking_skill">Speaking</string>
 </resources>
