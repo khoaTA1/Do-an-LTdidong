@@ -23,11 +23,15 @@ import vn.ltdidong.apphoctienganh.models.WordEntry;
 import android.content.Intent;
 import android.view.KeyEvent;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity"; // Thêm TAG cho Log
+    private static final String TAG = "MainActivity";
     private EditText searchEditText;
     private DictionaryApi dictionaryApi;
+
+    BottomNavigationView bottomNav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
         // 2. Ánh xạ EditText
         searchEditText = findViewById(R.id.searchEditText);
+        bottomNav = findViewById(R.id.bottomNavigation);
+
 
         // 3. Bắt sự kiện khi người dùng nhấn nút Search trên bàn phím
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -68,6 +74,39 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return true; // Đánh dấu là đã xử lý xong, không cho chạy tiếp
             }
+            return false;
+        });
+
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                // Xử lý khi bấm Home (Ví dụ: reload lại trang, hoặc không làm gì)
+                return true;
+            }
+            else if (id == R.id.nav_writing) {
+                // Xử lý khi bấm Writing -> Mở trang WritingActivity
+                Intent intent = new Intent(MainActivity.this, WritingActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            else if (id == R.id.nav_reading) {
+                // Code mở trang Reading...
+                return true;
+            }
+            else if (id == R.id.nav_listening) {
+                // Code mở trang Listening...
+                return true;
+            }
+            else if (id == R.id.nav_speaking) {
+                // Code mở trang Speaking...
+                return true;
+            }
+            else if (id == R.id.nav_profile) {
+                // Code mở trang Profile...
+                return true;
+            }
+
             return false;
         });
     }
