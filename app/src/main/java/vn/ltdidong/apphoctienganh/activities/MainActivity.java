@@ -120,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_listening) {
                 return true;
             } else if (id == R.id.nav_speaking) {
+                Intent intent = new Intent(MainActivity.this, SpeakingActivity.class);
+                startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {
                 return true;

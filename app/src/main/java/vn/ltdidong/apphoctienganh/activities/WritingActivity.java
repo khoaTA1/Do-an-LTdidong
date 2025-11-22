@@ -34,7 +34,7 @@ public class WritingActivity extends AppCompatActivity {
     private ImageButton btnBack;
 
     private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyC-p-yyqrFn3NHNlHypJiN39OhaRTBGYLo";
+    private static final String API_KEY = "AIzaSyBAZF_YI9Frj6tpOmtTQJ9I-Y-X0-PCjB0";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
