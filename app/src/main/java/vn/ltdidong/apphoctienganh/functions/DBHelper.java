@@ -1,5 +1,6 @@
 package vn.ltdidong.apphoctienganh.functions;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -23,7 +24,7 @@ public class DBHelper extends SQLiteOpenHelper {
     ///  bảng answers
     private String ANSWER_TABLE_NAME = "answers";
     private String ANSWER_COLUMN_ID = "id";
-    private String ANSWER_COLUMN_INTERID = "inter_id";
+    private String ANSWER_COLUMN_DEDICATEDID = "dedicated_id";
     private String ANSWER_DETAIL = "detail";
 
     /// bảng liên kết bảng reading passage và question answer
@@ -55,7 +56,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         String createAnswerTable = "create table " + ANSWER_TABLE_NAME + " ("
                 + ANSWER_COLUMN_ID + " integer primary key, "
-                + ANSWER_COLUMN_INTERID + " integer, "
+                + ANSWER_COLUMN_DEDICATEDID + " integer, "
                 + ANSWER_DETAIL + " text"
                 + ")";
 
@@ -89,4 +90,55 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     //  một số phương thức giao tiếp với sqlite
+    public long insertReadingPassge(String passage) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(READINGPASSAGE_COLUMN_PASSAGE, passage);
+        long id = db.insert(READINGPASSAGE_TABLE_NAME, null, values);
+        db.close();
+        return id;
+    }
+
+    public long insertQuestionAnswer(String question, int correctAnswerId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        values.put(QA_COLUMN_QUESTION, question);
+        values.put(QA_COLUMN_CORRECTANSWER, correctAnswerId);
+        long id = db.insert(QA_TABLE_NAME, null, values);
+        db.close();
+        return id;
+    }
+
+    public long insertAnswer(int dedicatedId, String detail) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(ANSWER_COLUMN_DEDICATEDID, dedicatedId);
+        values.put(ANSWER_DETAIL, detail);
+        long id = db.insert(ANSWER_TABLE_NAME, null, values);
+        db.close();
+        return id;
+    }
+
+    public long insertRPQA(long rpId, long qaId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(RP_QA_COLUMN_RPREFID, rpId);
+        values.put(RP_QA_COLUMN_QAREFID, qaId);
+        long id = db.insert(RP_QA_TABLE_NAME, null, values);
+        db.close();
+        return id;
+    }
+
+    public long insertQAA(long qaId, long answerId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(QA_A_COLUMN_QAREFID, qaId);
+        values.put(A_COLUMN_AREFID, answerId);
+        long id = db.insert(QA_A_TABLE_NAME, null, values);
+        db.close();
+        return id;
+    }
+
 }
