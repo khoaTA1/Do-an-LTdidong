@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "751836161422",
+    "project_id": "apphoctienganh-493a1",
+    "storage_bucket": "apphoctienganh-493a1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:751836161422:android:8e9a8a2c39c5557f74b0df",
+        "android_client_info": {
+          "package_name": "vn.ltdidong.apphoctienganh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANZ_C17ODf-7f64GHdHTlC63WozcofYdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
