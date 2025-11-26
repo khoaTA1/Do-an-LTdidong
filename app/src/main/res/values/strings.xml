@@ -23,4 +23,87 @@
     <string name="writing_skill">Writing</string>
     <string name="listening_skill">Listening</string>
     <string name="speaking_skill">Speaking</string>
+
+    <!-- các nhãn/tiêu đề cho chức năng luyện Listening -->
+    <string name="listening_lessons">Listening Lessons</string>
+    <string name="all_lessons">All Lessons</string>
+    <string name="filter_easy">Easy</string>
+    <string name="filter_medium">Medium</string>
+    <string name="filter_hard">Hard</string>
+    <string name="no_lessons_available">No lessons available</string>
+
+    <!-- Lesson Card -->
+    <string name="duration">Duration:</string>
+    <string name="questions">Questions:</string>
+    <string name="completed">Completed</string>
+    <string name="in_progress">In Progress</string>
+    <string name="not_started">Not Started</string>
+    <string name="best_score">Best Score:</string>
+
+    <!-- Lesson Detail Activity -->
+    <string name="start_lesson">Start Lesson</string>
+    <string name="retry_lesson">Retry Lesson</string>
+    <string name="continue_lesson">Continue</string>
+    <string name="lesson_description">Description</string>
+    <string name="lesson_info">Lesson Information</string>
+    <string name="difficulty_level">Difficulty:</string>
+    <string name="audio_length">Length:</string>
+    <string name="total_questions">Questions:</string>
+
+    <!-- Audio Player -->
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="replay">Replay</string>
+    <string name="forward">Forward 10s</string>
+    <string name="backward">Backward 10s</string>
+    <string name="loading_audio">Loading audio…</string>
+    <string name="audio_error">Failed to load audio</string>
+
+    <!-- Quiz Activity -->
+    <string name="quiz_title">Answer the Questions</string>
+    <string name="question_number">Question %1$d of %2$d</string>
+    <string name="option_a">A. %s</string>
+    <string name="option_b">B. %s</string>
+    <string name="option_c">C. %s</string>
+    <string name="option_d">D. %s</string>
+    <string name="next_question">Next</string>
+    <string name="previous_question">Previous</string>
+    <string name="submit_quiz">Submit</string>
+    <string name="select_answer">Please select an answer</string>
+    <string name="listen_again">Listen Again</string>
+
+    <!-- Result Activity -->
+    <string name="quiz_result">Quiz Result</string>
+    <string name="congratulations">Congratulations!</string>
+    <string name="your_score">Your Score</string>
+    <string name="correct_answers">Correct Answers: %1$d / %2$d</string>
+    <string name="percentage">Score: %.0f%%</string>
+    <string name="view_transcript">View Transcript</string>
+    <string name="back_to_lessons">Back to Lessons</string>
+    <string name="try_again">Try Again</string>
+    <string name="transcript">Transcript</string>
+    <string name="explanation">Explanation:</string>
+    <string name="correct_answer">Correct Answer:</string>
+    <string name="your_answer">Your Answer:</string>
+
+    <!-- Progress -->
+    <string name="your_progress">Your Progress</string>
+    <string name="lessons_completed">Lessons Completed:</string>
+    <string name="average_score">Average Score:</string>
+    <string name="highest_score">Highest Score:</string>
+
+    <!-- Messages -->
+    <string name="excellent">Excellent! 🎉</string>
+    <string name="good_job">Good Job! 👍</string>
+    <string name="keep_practicing">Keep Practicing! 💪</string>
+    <string name="try_harder">Try Harder! 📚</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="confirm">Confirm</string>
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="retry">Retry</string>
 </resources>
