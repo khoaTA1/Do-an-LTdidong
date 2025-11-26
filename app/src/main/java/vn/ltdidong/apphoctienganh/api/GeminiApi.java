@@ -9,7 +9,7 @@ import vn.ltdidong.apphoctienganh.models.GeminiRequest;
 import vn.ltdidong.apphoctienganh.models.GeminiResponse;
 
 public interface GeminiApi {
-    // Dùng model Gemini 1.5 Flash cho nhanh và rẻ (miễn phí)
+    // Cập nhật theo yêu cầu: gemini-2.5-flash
     @Headers("Content-Type: application/json")
     @POST("v1beta/models/gemini-2.5-flash:generateContent")
     Call<GeminiResponse> generateContent(
