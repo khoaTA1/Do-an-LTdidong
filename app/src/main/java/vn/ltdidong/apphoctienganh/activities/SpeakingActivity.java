@@ -1,11 +1,11 @@
 package vn.ltdidong.apphoctienganh.activities;
 
-import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -42,10 +42,11 @@ public class SpeakingActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private ImageView ivMic;
     private TextView tvHeader;
+    private Button btnNextTopic;
     
     private TextToSpeech textToSpeech;
     private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyC-p-yyqrFn3NHNlHypJiN39OhaRTBGYLo";
+    private static final String API_KEY = "AIzaSyBH8pQnKESAndJW5MrQ961lMWCFFMHez0I";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,7 @@ public class SpeakingActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         ivMic = findViewById(R.id.ivMic);
         tvHeader = findViewById(R.id.tvHeader);
+        btnNextTopic = findViewById(R.id.btnNextTopic);
 
         // Initialize Gemini API
         Retrofit retrofit = new Retrofit.Builder()
@@ -82,6 +84,12 @@ public class SpeakingActivity extends AppCompatActivity {
         btnListen.setOnClickListener(v -> speakOut());
         ivMic.setOnClickListener(v -> startVoiceInput());
         btnBack.setOnClickListener(v -> finish());
+
+        btnNextTopic.setOnClickListener(v -> {
+            tvResultText.setText("...");
+            tvScore.setText("");
+            generateSpeakingTopic();
+        });
         
         // Load initial topic
         generateSpeakingTopic();
@@ -89,8 +97,10 @@ public class SpeakingActivity extends AppCompatActivity {
 
     private void generateSpeakingTopic() {
         tvHeader.setText("Generating topic...");
-        String prompt = "Give me 1 short, simple sentence for English speaking practice. " +
-                "Suitable for daily conversation. No extra text.";
+        tvTargetText.setText("Loading...");
+        String prompt = "Give me a random, interesting short sentence for English speaking practice. " +
+                "Topics can be about travel, food, work, hobbies, or daily life. " +
+                "Ensure it is suitable for A2-B1 level. No extra text.";
 
         geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
             @Override
@@ -100,13 +110,17 @@ public class SpeakingActivity extends AppCompatActivity {
                     tvTargetText.setText(topic.trim());
                     tvHeader.setText("Speaking Practice");
                 } else {
-                    tvTargetText.setText("Hello, how are you today?");
+                    Log.e("SpeakingActivity", "Gemini API Error: " + response.code() + " - " + response.message());
+                    tvTargetText.setText("Error: " + response.code() + " Check API Key/Model.");
+                    tvHeader.setText("Error");
                 }
             }
 
             @Override
             public void onFailure(Call<GeminiResponse> call, Throwable t) {
-                tvTargetText.setText("Hello, how are you today?");
+                Log.e("SpeakingActivity", "API Call Failed", t);
+                tvTargetText.setText("Network Error: " + t.getMessage());
+                tvHeader.setText("Error");
             }
         });
     }
@@ -146,9 +160,9 @@ public class SpeakingActivity extends AppCompatActivity {
     }
 
     private void gradeSpeaking(String target, String spoken) {
-        ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("AI is evaluating your pronunciation...");
-        progressDialog.show();
+        // Removed ProgressDialog
+        tvScore.setText("Evaluating...");
+        tvScore.setTextColor(getResources().getColor(android.R.color.darker_gray));
 
         String prompt = "Act as an English teacher. Evaluate this speaking attempt.\n" +
                 "Target sentence: \"" + target + "\"\n" +
@@ -162,19 +176,19 @@ public class SpeakingActivity extends AppCompatActivity {
         geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
             @Override
             public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
-                progressDialog.dismiss();
                 if (response.isSuccessful() && response.body() != null) {
                     String result = response.body().getOutputText();
+                    tvScore.setText(""); // Clear temporary status
                     showResultBottomSheet(result);
                 } else {
-                    // Fallback local check if AI fails
+                    Log.e("SpeakingActivity", "Grade Error: " + response.code());
                     evaluateSpeechLocal(target, spoken);
                 }
             }
 
             @Override
             public void onFailure(Call<GeminiResponse> call, Throwable t) {
-                progressDialog.dismiss();
+                Log.e("SpeakingActivity", "Grade Failure", t);
                 evaluateSpeechLocal(target, spoken);
             }
         });
@@ -211,11 +225,22 @@ public class SpeakingActivity extends AppCompatActivity {
         bottomSheetDialog.show();
     }
 
+    // Helper to normalize text for comparison (remove punctuation, extra spaces)
+    private String normalizeText(String text) {
+        if (text == null) return "";
+        return text.replaceAll("[^a-zA-Z0-9\\s]", "") // Remove non-alphanumeric chars
+                   .trim()
+                   .replaceAll("\\s+", " "); // Normalize spaces
+    }
+
     private void evaluateSpeechLocal(String target, String spokenText) {
-        if (spokenText.equalsIgnoreCase(target)) {
+        String normalizedTarget = normalizeText(target);
+        String normalizedSpoken = normalizeText(spokenText);
+
+        if (normalizedSpoken.equalsIgnoreCase(normalizedTarget)) {
             tvScore.setText("Excellent! Match.");
             tvScore.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        } else if (spokenText.toLowerCase().contains(target.toLowerCase())) {
+        } else if (normalizedSpoken.toLowerCase().contains(normalizedTarget.toLowerCase())) {
              tvScore.setText("Good job!");
              tvScore.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
         } else {
