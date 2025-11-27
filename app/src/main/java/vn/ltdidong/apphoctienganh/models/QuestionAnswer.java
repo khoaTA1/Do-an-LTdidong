@@ -34,6 +34,11 @@ public class QuestionAnswer {
     }
 
     // getters, setters
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public int getCorrectAnswer() {
         return correctAnswer;
     }
