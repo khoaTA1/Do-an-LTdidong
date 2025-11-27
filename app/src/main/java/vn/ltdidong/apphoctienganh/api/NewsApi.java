@@ -10,6 +10,7 @@ public interface NewsApi {
     Call<NewsResponse> getEnglishNews(
         @Query("q") String query,
         @Query("language") String language,
+        @Query("sortBy") String sortBy,
         @Query("pageSize") int pageSize,
         @Query("apiKey") String apiKey
     );
