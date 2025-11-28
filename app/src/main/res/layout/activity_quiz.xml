@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layout cho màn hình làm bài quiz -->
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_light">
+
+    <!-- Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/primary"
+        android:elevation="4dp"
+        app:title="Bài kiểm tra"
+        app:titleTextColor="@color/white"
+        app:navigationIcon="@android:drawable/ic_menu_revert"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Progress indicator -->
+    <LinearLayout
+        android:id="@+id/layoutProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="@android:color/white"
+        android:elevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <TextView
+            android:id="@+id/tvQuestionNumber"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            tools:text="Câu hỏi 1/5" />
+
+        <TextView
+            android:id="@+id/tvScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
+            android:visibility="gone"
+            tools:text="Điểm: 3/5"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <!-- Progress bar -->
+    <ProgressBar
+        android:id="@+id/progressBarQuiz"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:progressTint="@color/primary"
+        app:layout_constraintTop_toBottomOf="@id/layoutProgress" />
+
+    <!-- ScrollView chứa nội dung quiz -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/progressBarQuiz"
+        app:layout_constraintBottom_toTopOf="@id/layoutButtons">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Question Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardQuestion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardElevation="4dp"
+                app:cardCornerRadius="12dp"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/tvQuestionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="4dp"
+                    tools:text="Tên của người nói là gì?" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Options Container -->
+            <RadioGroup
+                android:id="@+id/radioGroupOptions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/cardQuestion">
+
+                <!-- Option A -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardOptionA"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="@color/transparent">
+
+                    <RadioButton
+                        android:id="@+id/radioOptionA"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:button="@android:color/transparent"
+                        android:drawableEnd="@android:drawable/radiobutton_off_background"
+                        tools:text="A. Mary" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Option B -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardOptionB"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="@color/transparent">
+
+                    <RadioButton
+                        android:id="@+id/radioOptionB"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:button="@android:color/transparent"
+                        android:drawableEnd="@android:drawable/radiobutton_off_background"
+                        tools:text="B. Sarah" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Option C -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardOptionC"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="@color/transparent">
+
+                    <RadioButton
+                        android:id="@+id/radioOptionC"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:button="@android:color/transparent"
+                        android:drawableEnd="@android:drawable/radiobutton_off_background"
+                        tools:text="C. Linda" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Option D -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardOptionD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardElevation="2dp"
+                    app:cardCornerRadius="8dp"
+                    app:strokeWidth="2dp"
+                    app:strokeColor="@color/transparent">
+
+                    <RadioButton
+                        android:id="@+id/radioOptionD"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:button="@android:color/transparent"
+                        android:drawableEnd="@android:drawable/radiobutton_off_background"
+                        tools:text="D. Jennifer" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </RadioGroup>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+    <!-- Bottom buttons -->
+    <LinearLayout
+        android:id="@+id/layoutButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Previous button -->
+        <Button
+            android:id="@+id/btnPrevious"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Câu trước"
+            android:textColor="@color/primary"
+            app:strokeColor="@color/primary" />
+
+        <!-- Next/Submit button -->
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Câu tiếp"
+            app:backgroundTint="@color/primary" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
