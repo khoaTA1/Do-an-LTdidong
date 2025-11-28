@@ -2,8 +2,20 @@ package vn.ltdidong.apphoctienganh.functions;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import org.checkerframework.checker.units.qual.C;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
+import vn.ltdidong.apphoctienganh.models.ReadingPassage;
 
 public class DBHelper extends SQLiteOpenHelper {
     private Context context;
@@ -18,12 +30,14 @@ public class DBHelper extends SQLiteOpenHelper {
     ///  bảng question answer
     private String QA_TABLE_NAME = "questionanswer";
     private String QA_COLUMN_ID = "id";
+    private String QA_COLUMN_PREFID = "p_id";
     private String QA_COLUMN_QUESTION = "pasage";
     private String QA_COLUMN_CORRECTANSWER = "correctanswer";
 
     ///  bảng answers
     private String ANSWER_TABLE_NAME = "answers";
     private String ANSWER_COLUMN_ID = "id";
+    private String ANSWER_COLUMN_QREFID = "q_id";
     private String ANSWER_COLUMN_DEDICATEDID = "dedicated_id";
     private String ANSWER_DETAIL = "detail";
 
@@ -35,7 +49,7 @@ public class DBHelper extends SQLiteOpenHelper {
     ///  bảng liên kết bảng question answer và answers
     private String QA_A_TABLE_NAME = "questionanswer_answers";
     private String QA_A_COLUMN_QAREFID = "qa_id";
-    private String A_COLUMN_AREFID = "a_id";
+    private String QA_A_COLUMN_AREFID = "a_id";
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, 2);
@@ -50,6 +64,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         String createQATable = "create table " + QA_TABLE_NAME + " ("
                 + QA_COLUMN_ID + " integer primary key, "
+                + QA_COLUMN_PREFID + " integer, "
                 + QA_COLUMN_QUESTION + " text, "
                 + QA_COLUMN_CORRECTANSWER + " integer"
                 + ")";
@@ -57,6 +72,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String createAnswerTable = "create table " + ANSWER_TABLE_NAME + " ("
                 + ANSWER_COLUMN_ID + " integer primary key, "
                 + ANSWER_COLUMN_DEDICATEDID + " integer, "
+                + ANSWER_COLUMN_QREFID + " integer, "
                 + ANSWER_DETAIL + " text"
                 + ")";
 
@@ -67,7 +83,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         String createQA_ATable = "create table " + QA_A_TABLE_NAME + " ("
                 + QA_A_COLUMN_QAREFID + " integer, "
-                + A_COLUMN_AREFID + " integer"
+                + QA_A_COLUMN_AREFID + " integer"
                 + ")";
 
         db.execSQL(createRPTable);
@@ -90,55 +106,145 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     //  một số phương thức giao tiếp với sqlite
-    public long insertReadingPassge(String passage) {
+    public int insertRPList(List<ReadingPassage> RPList) {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
 
-        values.put(READINGPASSAGE_COLUMN_PASSAGE, passage);
-        long id = db.insert(READINGPASSAGE_TABLE_NAME, null, values);
-        db.close();
-        return id;
+        try {
+            for (ReadingPassage rp : RPList) {
+                ContentValues rp_value = new ContentValues();
+                //ContentValues rp_qa_value = new ContentValues();
+
+                rp_value.put(READINGPASSAGE_COLUMN_ID, rp.getId());
+                rp_value.put(READINGPASSAGE_COLUMN_PASSAGE, rp.getPassage());
+                db.insert(READINGPASSAGE_TABLE_NAME, null, rp_value);
+
+                for (QuestionAnswer qa : rp.getQAList()) {
+                    ContentValues qa_value = new ContentValues();
+                    //ContentValues qa_a_value = new ContentValues();
+                    //long answerId;
+
+                    qa_value.put(QA_COLUMN_ID, qa.getId());
+                    qa_value.put(QA_COLUMN_QUESTION, qa.getQuestionContent());
+                    qa_value.put(QA_COLUMN_CORRECTANSWER, qa.getCorrectAnswer());
+                    qa_value.put(QA_COLUMN_PREFID, rp.getId());
+                    db.insert(QA_TABLE_NAME, null, qa_value);
+
+                    for (Map.Entry<Integer, String> entry : qa.getAnswers().entrySet()) {
+                        ContentValues a_value = new ContentValues();
+
+                        a_value.put(ANSWER_DETAIL, entry.getValue());
+                        a_value.put(ANSWER_COLUMN_DEDICATEDID, entry.getKey());
+                        a_value.put(ANSWER_COLUMN_QREFID, qa.getId());
+                        db.insert(ANSWER_TABLE_NAME, null, a_value);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("!!! SQLite", "Lỗi: ", e);
+            return 0;
+        }
+
+        return 1;
     }
 
-    public long insertQuestionAnswer(String question, int correctAnswerId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
+    public ReadingPassage getReadingPassageById(long passageId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        ReadingPassage returnReadingPassage = new ReadingPassage();
 
-        values.put(QA_COLUMN_QUESTION, question);
-        values.put(QA_COLUMN_CORRECTANSWER, correctAnswerId);
-        long id = db.insert(QA_TABLE_NAME, null, values);
-        db.close();
-        return id;
+        // lấy nội dung đoạn văn trước tiên
+        Cursor cursor = db.query(
+                READINGPASSAGE_TABLE_NAME,                  // Tên bảng
+                null,                      // Cột muốn lấy, null = tất cả
+                READINGPASSAGE_COLUMN_ID + " = ?",                  // WHERE clause
+                new String[]{String.valueOf(passageId)}, // Các tham số cho ?
+                null,                      // groupBy
+                null,                      // having
+                null                       // orderBy
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            returnReadingPassage.setId(cursor.getInt(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID)));
+            returnReadingPassage.setPassage(cursor.getString(cursor.getColumnIndex(READINGPASSAGE_COLUMN_PASSAGE)));
+        }
+
+        // lấy câu hỏi thuộc đoạn văn hiện tại
+        cursor = db.query(
+                QA_TABLE_NAME,
+                null,
+                QA_COLUMN_PREFID + " = ?",
+                new String[]{String.valueOf(passageId)},
+                null,
+                null,
+                null
+        );
+
+        List<QuestionAnswer> QAList = new ArrayList<>();
+        if (cursor != null) {
+            while (cursor.moveToFirst()) {
+                QuestionAnswer qa = new QuestionAnswer();
+
+                qa.setId(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_ID)));
+                qa.setPassageId(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_PREFID)));
+                qa.setCorrectAnswer(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_CORRECTANSWER)));
+
+                // lấy các câu trả lời thuộc câu hỏi hiện tại
+                Cursor cursor2 = db.query(
+                        ANSWER_TABLE_NAME,
+                        null,
+                        ANSWER_COLUMN_QREFID + " = ?",
+                        new String[]{String.valueOf(qa.getId())},
+                        null,
+                        null,
+                        null
+                        );
+
+                Map<Integer, String> answers = new HashMap<>();
+                if (cursor2 != null) {
+                    while (cursor2.moveToFirst()) {
+                        answers.put(cursor2.getInt(cursor2.getColumnIndex(ANSWER_COLUMN_DEDICATEDID)),
+                                cursor2.getString(cursor2.getColumnIndex(ANSWER_DETAIL)));
+                    }
+
+                    cursor2.close();
+                }
+
+                qa.setAnswers(answers);
+
+                QAList.add(qa);
+            }
+
+            cursor.close();
+        }
+
+        returnReadingPassage.setQAList(QAList);
+
+        return returnReadingPassage;
     }
 
-    public long insertAnswer(int dedicatedId, String detail) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(ANSWER_COLUMN_DEDICATEDID, dedicatedId);
-        values.put(ANSWER_DETAIL, detail);
-        long id = db.insert(ANSWER_TABLE_NAME, null, values);
-        db.close();
-        return id;
+    public long getCountPassage() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + READINGPASSAGE_TABLE_NAME, null);
+
+        long count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+
+        cursor.close();
+
+        return count;
     }
 
-    public long insertRPQA(long rpId, long qaId) {
+    public void clearAllTables() {
         SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(RP_QA_COLUMN_RPREFID, rpId);
-        values.put(RP_QA_COLUMN_QAREFID, qaId);
-        long id = db.insert(RP_QA_TABLE_NAME, null, values);
-        db.close();
-        return id;
-    }
+        db.execSQL("DELETE FROM " + READINGPASSAGE_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + QA_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + ANSWER_TABLE_NAME + ";");
 
-    public long insertQAA(long qaId, long answerId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(QA_A_COLUMN_QAREFID, qaId);
-        values.put(A_COLUMN_AREFID, answerId);
-        long id = db.insert(QA_A_TABLE_NAME, null, values);
         db.close();
-        return id;
+
+        Log.d(">>> SQLite", "Xóa cache SQLite");
     }
 
 }

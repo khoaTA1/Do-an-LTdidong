@@ -15,7 +15,7 @@ import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 
 public class QuestionAnswerRepo {
     private static final String QUESTION_COLLECTION_NAME = "question";
-    private static final String ANSWER_COLLECTION_NAME = "question";
+    private static final String ANSWER_COLLECTION_NAME = "answer";
 
     private final FirebaseFirestore firestore;
     private int correctAnswer;
@@ -68,13 +68,16 @@ public class QuestionAnswerRepo {
     }
 
     private void getAnswerByQuestionId(long questionId, FirestoreCallBack callback) {
+            Log.d(">>> QuestionAnswer Repo ^2", "Tìm danh sách câu trả lời cho question id: " + questionId);
             firestore.collection(ANSWER_COLLECTION_NAME).whereEqualTo("questionId", questionId)
                     .get().addOnSuccessListener(a_snapshots -> {
                         if (!a_snapshots.isEmpty()) {
                             Map<Integer, String> answers = new HashMap<>();
 
                             for (DocumentSnapshot a_snap : a_snapshots.getDocuments()) {
-                                answers.put((Integer) a_snap.get("dedicatedId"), a_snap.get("answerDetail").toString());
+                                Object obj = a_snap.get("dedicatedId");
+                                int dedicatedId = ((Number) obj).intValue();
+                                answers.put(dedicatedId, a_snap.get("answerDetail").toString());
                             }
                             Log.d(">>> QuestionAnswer Repo ^2", "Tìm được danh sách câu trả lời, số lượng" + answers.size());
 

@@ -64,4 +64,5 @@ dependencies {
 
     annotationProcessor(libs.room.compiler)
 
+    implementation("androidx.gridlayout:gridlayout:1.0.0")
 }

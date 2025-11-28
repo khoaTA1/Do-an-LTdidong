@@ -72,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
         // 2. Bind Views
         searchEditText = findViewById(R.id.searchEditText);
         bottomNav = findViewById(R.id.bottomNavigation);
+        bottomNav.setSelectedItemId(R.id.nav_home);
+
         newsRecyclerView = findViewById(R.id.newsRecyclerView);
         articlesRecyclerView = findViewById(R.id.articlesRecyclerView);
 

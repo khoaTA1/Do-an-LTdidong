@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +26,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputLayout textInputPassword;
     private TextInputEditText editTextEmail;
     private TextInputEditText editTextPassword;
+    private TextView textRegisterRedirect;
     private Button buttonLogin;
     private FirebaseFirestore firestore;
 
@@ -38,6 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         textInputEmail = findViewById(R.id.text_input_email);
         textInputPassword = findViewById(R.id.text_input_password);
         buttonLogin = findViewById(R.id.button_login);
+        textRegisterRedirect = findViewById(R.id.text_register);
 
         if (textInputEmail.getEditText() != null) {
             editTextEmail = (TextInputEditText) textInputEmail.getEditText();
@@ -76,6 +79,12 @@ public class LoginActivity extends AppCompatActivity {
                     textInputPassword.setError("Tên đăng nhập hoặc mật khẩu không chính xác");
                 }
             });
+        });
+
+        textRegisterRedirect.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
     private void validateLogin(String email, String password, FirestoreCallBack callback) {
