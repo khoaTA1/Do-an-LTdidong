@@ -12,4 +12,39 @@
 
     <color name="text_primary">#333333</color> <color name="text_hint">#9E9E9E</color>    <color name="nav_active">@color/secondary</color>
     <color name="nav_inactive">#BDBDBD</color> <color name="purple_500">#6200EE</color>
+
+    <!-- Primary Colors -->
+    <color name="primary">#2196F3</color>
+    <color name="primary_dark">#1976D2</color>
+    <color name="primary_light">#BBDEFB</color>
+    <color name="accent">#FF5722</color>
+
+    <!-- Difficulty Colors -->
+    <color name="difficulty_easy">#4CAF50</color>
+    <color name="difficulty_medium">#FF9800</color>
+    <color name="difficulty_hard">#F44336</color>
+
+    <!-- Background Colors -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="card_background">#FFFFFF</color>
+
+    <!-- Status Colors -->
+    <color name="success">#4CAF50</color>
+    <color name="error">#F44336</color>
+    <color name="warning">#FFC107</color>
+    <color name="info">#2196F3</color>
+
+    <!-- Button Colors -->
+    <color name="button_enabled">#2196F3</color>
+    <color name="button_disabled">#BDBDBD</color>
+
+    <!-- Other Colors -->
+    <color name="divider">#E0E0E0</color>
+    <color name="transparent">#00000000</color>
+    
+    <!-- Result Colors -->
+    <color name="result_excellent">#4CAF50</color>
+    <color name="result_great">#8BC34A</color>
+    <color name="result_good">#FF9800</color>
+    <color name="result_try_again">#F44336</color>
 </resources>
