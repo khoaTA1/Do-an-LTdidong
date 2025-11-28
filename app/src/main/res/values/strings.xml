@@ -23,4 +23,17 @@
     <string name="writing_skill">Writing</string>
     <string name="listening_skill">Listening</string>
     <string name="speaking_skill">Speaking</string>
+    <string name="welcome_to_app">newEnglish</string>
+    <string name="welcome_to_app1">App học tiếng anh mới nhất</string>
+    <string name="forgotpass_login_label">Quên mật khẩu?</string>
+    <string name="btn_login_label">Đăng nhập</string>
+    <string name="redirectregister_label">Đăng ký ngay</string>
+    <string name="btn_redirectregister_label">đăng ký</string>
+    <string name="register_req">Đăng ký tài khoản</string>
+    <string name="register_law">register law?</string>
+    <string name="btn_register_label">Đăng ký</string>
+    <string name="skills">Skills</string>
+    <string name="redirectlogin_label">Đã có tài khoản?</string>
+    <string name="speaking_skill_homepage_title">Kỹ năng nghe</string>
+    <string name="writing_skill_homepage_title">Kỹ năng viết</string>
 </resources>

@@ -15,6 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.Firebase;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Article> newsList;
 
     BottomNavigationView bottomNav;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +113,17 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
+
+            if (id == R.id.nav_home) {
+                return  true;
+            } else if (id == R.id.nav_skills) {
+                Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_profile) {
+                return true;
+            }
+            /*
             if (id == R.id.nav_home) {
                 return true;
             } else if (id == R.id.nav_writing) {
@@ -125,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_profile) {
                 return true;
-            }
+            }*/
 
             return false;
         });

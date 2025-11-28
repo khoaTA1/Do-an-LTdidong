@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBHelper extends SQLiteOpenHelper {
     private Context context;
-    private String DATABASE_NAME = "APPHOCTIENGANH";
+    private static final String DATABASE_NAME = "CSDL";
 
     // bảng cho chế độ trắc nghiệm trong kỹ năng đọc
     ///  bảng reading pasage

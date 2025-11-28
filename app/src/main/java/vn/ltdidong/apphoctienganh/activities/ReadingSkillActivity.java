@@ -13,6 +13,6 @@ public class ReadingSkillActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.reading_skill_homepage);
+        //setContentView(R.layout);
     }
 }
