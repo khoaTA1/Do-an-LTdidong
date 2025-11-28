@@ -134,8 +134,8 @@ public class MainActivity extends AppCompatActivity {
     private void loadEnglishNews() {
         // Replace with your actual API Key from NewsAPI.org
         String apiKey = "ce2c44c423d24ce7adf1b1990dc7ea20"; 
-        // Changed query to target IELTS / English Learning news
-        newsApi.getEnglishNews("Learn English", "en", 4, apiKey).enqueue(new Callback<NewsResponse>() {
+        // Changed query to target IELTS / English Learning news, sorted by published date
+        newsApi.getEnglishNews("Learn English", "en", "publishedAt", 4, apiKey).enqueue(new Callback<NewsResponse>() {
             @Override
             public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
