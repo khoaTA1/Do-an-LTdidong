@@ -1,5 +1,6 @@
 package vn.ltdidong.apphoctienganh.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +47,7 @@ public class ReadingQAAdapter extends RecyclerView.Adapter<ReadingQAAdapter.Ques
     public void onBindViewHolder(@NonNull QuestionViewHolder holder, int position) {
         QuestionAnswer item = questionList.get(position);
 
+        Log.d(">>> ReadingQAA adapter", "Question content: " + item.getQuestionContent());
         holder.tvQuestion.setText(item.getQuestionContent());
 
         // Clear RadioButtons trước khi thêm mới

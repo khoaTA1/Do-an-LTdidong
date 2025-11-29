@@ -25,7 +25,7 @@ public class DBHelper extends SQLiteOpenHelper {
     ///  bảng reading pasage
     private String READINGPASSAGE_TABLE_NAME = "readingpassage";
     private String READINGPASSAGE_COLUMN_ID = "id";
-    private String READINGPASSAGE_COLUMN_PASSAGE = "pasage";
+    private String READINGPASSAGE_COLUMN_PASSAGE = "passage";
 
     ///  bảng question answer
     private String QA_TABLE_NAME = "questionanswer";
@@ -52,7 +52,7 @@ public class DBHelper extends SQLiteOpenHelper {
     private String QA_A_COLUMN_AREFID = "a_id";
 
     public DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, 2);
+        super(context, DATABASE_NAME, null, 3);
         this.context = context.getApplicationContext();
     }
     @Override
@@ -116,6 +116,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
                 rp_value.put(READINGPASSAGE_COLUMN_ID, rp.getId());
                 rp_value.put(READINGPASSAGE_COLUMN_PASSAGE, rp.getPassage());
+                Log.d(">>> SQLite", "Id: " + rp.getId() + ", passage: " + rp.getPassage());
                 db.insert(READINGPASSAGE_TABLE_NAME, null, rp_value);
 
                 for (QuestionAnswer qa : rp.getQAList()) {
@@ -165,6 +166,7 @@ public class DBHelper extends SQLiteOpenHelper {
         if (cursor != null && cursor.moveToFirst()) {
             returnReadingPassage.setId(cursor.getInt(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID)));
             returnReadingPassage.setPassage(cursor.getString(cursor.getColumnIndex(READINGPASSAGE_COLUMN_PASSAGE)));
+            Log.d(">>> SQLite", "Đã tìm được đoạn ngẫu nhiên: " + returnReadingPassage.getId());
         }
 
         // lấy câu hỏi thuộc đoạn văn hiện tại
@@ -180,39 +182,41 @@ public class DBHelper extends SQLiteOpenHelper {
 
         List<QuestionAnswer> QAList = new ArrayList<>();
         if (cursor != null) {
-            while (cursor.moveToFirst()) {
-                QuestionAnswer qa = new QuestionAnswer();
+            if (cursor.moveToFirst()) {
+                do {
+                    QuestionAnswer qa = new QuestionAnswer();
 
-                qa.setId(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_ID)));
-                qa.setPassageId(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_PREFID)));
-                qa.setCorrectAnswer(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_CORRECTANSWER)));
+                    qa.setId(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_ID)));
+                    qa.setPassageId(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_PREFID)));
+                    qa.setQuestionContent(cursor.getString(cursor.getColumnIndex(QA_COLUMN_QUESTION)));
+                    qa.setCorrectAnswer(cursor.getInt(cursor.getColumnIndex(QA_COLUMN_CORRECTANSWER)));
 
-                // lấy các câu trả lời thuộc câu hỏi hiện tại
-                Cursor cursor2 = db.query(
-                        ANSWER_TABLE_NAME,
-                        null,
-                        ANSWER_COLUMN_QREFID + " = ?",
-                        new String[]{String.valueOf(qa.getId())},
-                        null,
-                        null,
-                        null
-                        );
+                    // lấy các câu trả lời thuộc câu hỏi hiện tại
+                    Cursor cursor2 = db.query(
+                            ANSWER_TABLE_NAME,
+                            null,
+                            ANSWER_COLUMN_QREFID + " = ?",
+                            new String[]{String.valueOf(qa.getId())},
+                            null,
+                            null,
+                            null
+                    );
 
-                Map<Integer, String> answers = new HashMap<>();
-                if (cursor2 != null) {
-                    while (cursor2.moveToFirst()) {
-                        answers.put(cursor2.getInt(cursor2.getColumnIndex(ANSWER_COLUMN_DEDICATEDID)),
-                                cursor2.getString(cursor2.getColumnIndex(ANSWER_DETAIL)));
+                    Map<Integer, String> answers = new HashMap<>();
+                    if (cursor2 != null && cursor2.moveToFirst()) {
+                        do {
+                            answers.put(cursor2.getInt(cursor2.getColumnIndex(ANSWER_COLUMN_DEDICATEDID)),
+                                    cursor2.getString(cursor2.getColumnIndex(ANSWER_DETAIL)));
+                        } while (cursor2.moveToNext());
+
+                        cursor2.close();
                     }
 
-                    cursor2.close();
-                }
+                    qa.setAnswers(answers);
 
-                qa.setAnswers(answers);
-
-                QAList.add(qa);
+                    QAList.add(qa);
+                } while (cursor.moveToNext());
             }
-
             cursor.close();
         }
 
@@ -236,6 +240,34 @@ public class DBHelper extends SQLiteOpenHelper {
         return count;
     }
 
+    // hàm lấy danh sách id các đoạn văn trong trường hợp nó không liên tục
+    public List<Integer> getAllPassageIds() {
+        List<Integer> ids = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(READINGPASSAGE_TABLE_NAME,
+                    new String[]{READINGPASSAGE_COLUMN_ID},
+                    null, null, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    int id = cursor.getInt(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID));
+                    Log.d(">>> SQLite", "Thêm id: " + id);
+                    ids.add(id);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("!!! SQLite", "Lỗi khi lấy danh sách id", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
+        }
+
+        return ids;
+    }
+
     public void clearAllTables() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM " + READINGPASSAGE_TABLE_NAME + ";");
@@ -246,5 +278,4 @@ public class DBHelper extends SQLiteOpenHelper {
 
         Log.d(">>> SQLite", "Xóa cache SQLite");
     }
-
 }

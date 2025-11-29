@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
@@ -31,11 +32,15 @@ public class QuestionAnswerRepo {
                 .get().addOnSuccessListener(q_snapshots -> {
                     if (!q_snapshots.isEmpty()) {
                         List<QuestionAnswer> questionList = new ArrayList<>();
+                        int totalQuestions = q_snapshots.size();
+
+                        CountDownLatch latch = new CountDownLatch(totalQuestions);
 
                         // lấy lần lượt câu hỏi liên quan đến đoạn văn bản
                         for (DocumentSnapshot q_snap : q_snapshots.getDocuments()) {
                             // parse sang model QuestionAnswer
                             QuestionAnswer QA = q_snap.toObject(QuestionAnswer.class);
+                            Log.d(">>> QuestionAnswer Repo ^1", "Nội dung câu hỏi: " + QA.getQuestionContent());
 
                             // set id
                             long questionId = Long.valueOf(q_snap.getId());
@@ -49,15 +54,24 @@ public class QuestionAnswerRepo {
                                 } else QA.setAnswers(null);
 
                                 questionList.add(QA);
+
+                                latch.countDown();
                             });
                         }
 
-                        // kiểm tra nếu questionList đã được nạp đầy đủ câu hỏi (bằng q_snapshots)
+                        // kiểm tra nếu questionList đã được nạp đầy đủ câu hỏi, bằng count down
                         // thì mới kết thúc và trả về kết quả
-                        if (questionList.size() == q_snapshots.size()) {
-                            Log.d(">>> QuestionAnswer Repo ^1", "Tìm được danh sách câu hỏi, số lượng" + questionList.size());
-                            callback.returnResult(questionList);
-                        }
+                        new Thread(() -> {
+                            try {
+                                // đợi answer load xong
+                                latch.await();
+                                Log.d(">>> QuestionAnswer Repo ^1", "Tìm được danh sách câu hỏi, số lượng" + questionList.size());
+                                callback.returnResult(questionList);
+                            } catch (InterruptedException e) {
+                                Log.e("!!! QuestionAnswer Repo ^1", "CountDownLatch lỗi", e);
+                                callback.returnResult(null);
+                            }
+                        }).start();
                     } else {
                         callback.returnResult(null);
                     }
@@ -75,9 +89,10 @@ public class QuestionAnswerRepo {
                             Map<Integer, String> answers = new HashMap<>();
 
                             for (DocumentSnapshot a_snap : a_snapshots.getDocuments()) {
-                                Object obj = a_snap.get("dedicatedId");
-                                int dedicatedId = ((Number) obj).intValue();
-                                answers.put(dedicatedId, a_snap.get("answerDetail").toString());
+                                Long dedicatedId = a_snap.getLong("dedicatedId");
+                                Log.d(">>> QuestionAnswer Repo ^2", "DEBUG: dedicatedId = " + dedicatedId);
+                                //int dedicatedId = ((Number) obj).intValue();
+                                answers.put(dedicatedId.intValue(), a_snap.getString("answerDetail"));
                             }
                             Log.d(">>> QuestionAnswer Repo ^2", "Tìm được danh sách câu trả lời, số lượng" + answers.size());
 

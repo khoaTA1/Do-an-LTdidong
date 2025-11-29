@@ -50,7 +50,7 @@
             android:id="@+id/total_question"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/total_ten"
+            android:text="/5"
             android:textColor="#222222"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -90,7 +90,7 @@
             android:id="@+id/ReadingPassage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#333333"
+            android:textColor="@color/text_1"
             android:textSize="16sp"
             android:lineSpacingExtra="4dp"
             android:layout_marginBottom="8dp"/>
