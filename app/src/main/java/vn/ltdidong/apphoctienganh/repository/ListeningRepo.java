@@ -19,7 +19,7 @@ import java.util.List;
  * Cung cấp API sạch sẽ để truy cập data
  * Xử lý logic data từ nhiều nguồn (database, network, cache...)
  */
-public class ListeningRepository {
+public class ListeningRepo {
     
     // DAOs
     private ListeningLessonDao lessonDao;
@@ -30,7 +30,7 @@ public class ListeningRepository {
      * Constructor - khởi tạo database và các DAOs
      * @param application Application context
      */
-    public ListeningRepository(Application application) {
+    public ListeningRepo(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
         lessonDao = db.listeningLessonDao();
         questionDao = db.questionDao();

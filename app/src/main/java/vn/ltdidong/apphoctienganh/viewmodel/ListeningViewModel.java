@@ -9,7 +9,7 @@ import androidx.lifecycle.LiveData;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
 import vn.ltdidong.apphoctienganh.models.Question;
 import vn.ltdidong.apphoctienganh.models.UserProgress;
-import vn.ltdidong.apphoctienganh.repository.ListeningRepository;
+import vn.ltdidong.apphoctienganh.repository.ListeningRepo;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class ListeningViewModel extends AndroidViewModel {
     
-    private ListeningRepository repository;
+    private ListeningRepo repository;
     
     // LiveData cho lessons
     private LiveData<List<ListeningLesson>> allLessons;
@@ -35,7 +35,7 @@ public class ListeningViewModel extends AndroidViewModel {
     public ListeningViewModel(@NonNull Application application) {
         super(application);
         // Tạo repository từ application context
-        this.repository = new ListeningRepository(application);
+        this.repository = new ListeningRepo(application);
         
         // Initialize LiveData
         allLessons = repository.getAllLessons();
