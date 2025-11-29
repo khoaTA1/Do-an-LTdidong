@@ -9,7 +9,7 @@ import androidx.lifecycle.LiveData;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
 import vn.ltdidong.apphoctienganh.models.Question;
 import vn.ltdidong.apphoctienganh.models.UserProgress;
-import vn.ltdidong.apphoctienganh.repository.ListeningRepository;
+import vn.ltdidong.apphoctienganh.repositories.ListeningRepository;
 
 import java.util.List;
 

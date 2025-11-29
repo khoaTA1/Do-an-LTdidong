@@ -6,11 +6,20 @@
     <string name="st_reading_skill_mode_label"><![CDATA[Đọc hiểu &amp; Trắc nghiệm]]></string>
     <string name="nd_reading_skill_mode_label">Điền vào chỗ trống</string>
     <string name="exit_btn_label">Thoát</string>
-    <string name="reading_comprehencion_practice_title">"Đọc hiểu – Bài "</string>
-    <string name="submit_btn_label">Nộp bài</string>
-    <string name="next_btn_label">Tiếp theo</string>
-    <string name="cloze_test_title">"Điền vào chỗ trống - Bài "</string>
+    <string name="reading_comprehencion_practice_title">"Reading comprehension - "</string>
+    <string name="submit_btn_label">Submit</string>
+    <string name="next_btn_label">Next</string>
+    <string name="cloze_test_practice_title">"Cloze test - "</string>
     <string name="total_ten">/10</string>
+    <string name="reading_comprehension_desc">"In this mode, you will practice your reading skills through a set of short passages. Each session contains 5 reading texts, and each text includes multiple-choice questions.\\n\\nFor every question, there is only one correct answer.\n\nTake your time, read carefully, and choose the best answer.\n\nGood luck!"</string>
+    <string name="reading_comprehencion_title">Reading Comprehension Mode</string>
+
+    <string name="cloze_test_desc">"In this mode, you will practice your reading and vocabulary skills by completing sentences or short passages with missing words.\n
+                            Each exercise contains several blanks, and for every blank, you must choose the correct word from the given options.\n\n
+                            Read the context carefully before selecting your answers.\n
+                            Some choices may look similar, so pay close attention to grammar, meaning, and the overall flow of the text.\n\n
+                            Good luck!"</string>
+    <string name="cloze_test_title">Cloze Test Mode</string>
 
     <string name="home_title">Discover</string>
     <string name="search_hint">Search topics...</string>
@@ -23,4 +32,20 @@
     <string name="writing_skill">Writing</string>
     <string name="listening_skill">Listening</string>
     <string name="speaking_skill">Speaking</string>
+    <string name="welcome_to_app">newEnglish</string>
+    <string name="welcome_to_app1">App học tiếng anh mới nhất</string>
+    <string name="forgotpass_login_label">Quên mật khẩu?</string>
+    <string name="btn_login_label">Đăng nhập</string>
+    <string name="redirectregister_label">Đăng ký ngay</string>
+    <string name="btn_redirectregister_label">đăng ký</string>
+    <string name="register_req">Đăng ký tài khoản</string>
+    <string name="register_law">register law?</string>
+    <string name="btn_register_label">Đăng ký</string>
+    <string name="skills">Skills</string>
+    <string name="redirectlogin_label">Đã có tài khoản?</string>
+    <string name="speaking_skill_homepage_title">Kỹ năng nghe</string>
+    <string name="writing_skill_homepage_title">Kỹ năng viết</string>
+    <string name="logout_user">Đăng xuất tài khoản</string>
+
+
 </resources>

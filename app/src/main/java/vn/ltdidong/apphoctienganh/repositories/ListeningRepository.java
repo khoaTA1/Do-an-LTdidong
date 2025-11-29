@@ -1,4 +1,4 @@
-package vn.ltdidong.apphoctienganh.repository;
+package vn.ltdidong.apphoctienganh.repositories;
 
 import android.app.Application;
 

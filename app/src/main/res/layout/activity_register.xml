@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_form"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="24dp"
+        app:cardBackgroundColor="@color/background"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="24dp">
+
+            <!-- Form Title -->
+            <TextView
+                android:id="@+id/text_form_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/register_req"
+                android:textColor="@color/text_1"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Ô nhập Tên người dùng -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/text_input_username"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="Họ và tên"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:startIconTint="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_form_title">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Ô nhập Email -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/text_input_email"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Email"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:startIconTint="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_input_username">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Ô nhập Mật khẩu -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/text_input_password"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Mật khẩu"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:endIconMode="password_toggle"
+                app:startIconTint="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_input_email">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Ô nhập Xác nhận Mật khẩu -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/text_input_confirm_password"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Xác nhận mật khẩu"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:endIconMode="password_toggle"
+                app:startIconTint="?attr/colorPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_input_password">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_confirm_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Password Hint -->
+            <TextView
+                android:id="@+id/text_password_hint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/register_law"
+                android:textColor="@color/black"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_input_confirm_password" />
+
+            <LinearLayout
+                android:id="@+id/login_redirect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="32dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_password_hint"
+                app:layout_constraintBottom_toTopOf="@id/button_register">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/redirectlogin_label"
+                    android:textColor="@color/black"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/text_login"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="Đăng nhập ngay"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Nút Đăng ký -->
+            <Button
+                android:id="@+id/button_register"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="28dp"
+                android:text="@string/btn_register_label"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/login_redirect" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>
