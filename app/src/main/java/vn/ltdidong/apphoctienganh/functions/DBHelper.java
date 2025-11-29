@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import vn.ltdidong.apphoctienganh.models.ClozeTestQA;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 import vn.ltdidong.apphoctienganh.models.ReadingPassage;
 
@@ -41,18 +42,14 @@ public class DBHelper extends SQLiteOpenHelper {
     private String ANSWER_COLUMN_DEDICATEDID = "dedicated_id";
     private String ANSWER_DETAIL = "detail";
 
-    /// bảng liên kết bảng reading passage và question answer
-    private String RP_QA_TABLE_NAME = "readingpassage_questionanswer";
-    private String RP_QA_COLUMN_RPREFID = "rp_id";
-    private String RP_QA_COLUMN_QAREFID = "qa_id";
-
-    ///  bảng liên kết bảng question answer và answers
-    private String QA_A_TABLE_NAME = "questionanswer_answers";
-    private String QA_A_COLUMN_QAREFID = "qa_id";
-    private String QA_A_COLUMN_AREFID = "a_id";
+    // bảng cloze test QA
+    private String CLOZETEST_QA_TABLE_NAME = "clozetest_qa";
+    private String CLOZETEST_QA_COLUMN_ID = "id";
+    private String CLOZETEST_QA_COLUMN_QUESTION = "question";
+    private String CLOZETEST_QA_COLUMN_ANSWER = "answer";
 
     public DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, 3);
+        super(context, DATABASE_NAME, null, 4);
         this.context = context.getApplicationContext();
     }
     @Override
@@ -76,22 +73,16 @@ public class DBHelper extends SQLiteOpenHelper {
                 + ANSWER_DETAIL + " text"
                 + ")";
 
-        String createRP_QATable = "create table " + RP_QA_TABLE_NAME + " ("
-                + RP_QA_COLUMN_RPREFID + " integer, "
-                + RP_QA_COLUMN_QAREFID + " integer"
-                + ")";
-
-        String createQA_ATable = "create table " + QA_A_TABLE_NAME + " ("
-                + QA_A_COLUMN_QAREFID + " integer, "
-                + QA_A_COLUMN_AREFID + " integer"
+        String createCTQATable = "create table " + CLOZETEST_QA_TABLE_NAME + " ("
+                + CLOZETEST_QA_COLUMN_ID + " integer primary key, "
+                + CLOZETEST_QA_COLUMN_QUESTION + " text, "
+                + CLOZETEST_QA_COLUMN_ANSWER + " text"
                 + ")";
 
         db.execSQL(createRPTable);
         db.execSQL(createQATable);
         db.execSQL(createAnswerTable);
-
-        db.execSQL(createRP_QATable);
-        db.execSQL(createQA_ATable);
+        db.execSQL(createCTQATable);
     }
 
     @Override
@@ -99,13 +90,10 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("drop table if exists " + READINGPASSAGE_TABLE_NAME);
         db.execSQL("drop table if exists " + QA_TABLE_NAME);
         db.execSQL("drop table if exists " + ANSWER_TABLE_NAME);
-
-        db.execSQL("drop table if exists " + RP_QA_TABLE_NAME);
-        db.execSQL("drop table if exists " + QA_A_TABLE_NAME);
         onCreate(db);
     }
 
-    //  một số phương thức giao tiếp với sqlite
+    //  một số phương thức giao tiếp với sqlite cho mode reading comprehension
     public int insertRPList(List<ReadingPassage> RPList) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -277,5 +265,28 @@ public class DBHelper extends SQLiteOpenHelper {
         db.close();
 
         Log.d(">>> SQLite", "Xóa cache SQLite");
+    }
+
+    //  một số phương thức giao tiếp với sqlite cho mode cloze test
+    public int insertCTQAList(List<ClozeTestQA> QAList) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        try {
+            for (ClozeTestQA qa : QAList) {
+                ContentValues cv = new ContentValues();
+
+                cv.put(CLOZETEST_QA_COLUMN_ID, qa.getId());
+                cv.put(CLOZETEST_QA_COLUMN_QUESTION, qa.getQuestion());
+                cv.put(CLOZETEST_QA_COLUMN_ANSWER, qa.getAnswer());
+
+                db.insert(CLOZETEST_QA_TABLE_NAME, null, cv);
+                Log.d(">>> SQLite", "Đã thêm 1 cloze test QA");
+            }
+        } catch (Exception e) {
+            Log.e("!!! SQLite", "Lỗi: ", e);
+            return 0;
+        }
+
+        return 1;
     }
 }

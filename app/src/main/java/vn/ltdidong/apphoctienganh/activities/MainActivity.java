@@ -123,28 +123,10 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {
+                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                startActivity(intent);
                 return true;
             }
-            /*
-            if (id == R.id.nav_home) {
-                return true;
-            } else if (id == R.id.nav_writing) {
-                Intent intent = new Intent(MainActivity.this, WritingActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (id == R.id.nav_reading) {
-                return true;
-            } else if (id == R.id.nav_listening) {
-                Intent intent = new Intent(MainActivity.this, ListeningListActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (id == R.id.nav_speaking) {
-                Intent intent = new Intent(MainActivity.this, SpeakingActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (id == R.id.nav_profile) {
-                return true;
-            }*/
 
             return false;
         });

@@ -61,6 +61,8 @@ public class SkillHomeActivity extends AppCompatActivity {
 
                 return true;
             } else if (id == R.id.nav_profile) {
+                Intent intent = new Intent(SkillHomeActivity.this, ProfileActivity.class);
+                startActivity(intent);
                 return true;
             }
 
@@ -145,7 +147,7 @@ public class SkillHomeActivity extends AppCompatActivity {
             case "Reading":
                 if (mode.equals("Đọc hiểu")) {
                     // mở activity Đọc hiểu
-                    startActivity(new Intent(this, ReadingComprehensionActivity.class));
+                    startActivity(new Intent(this, RCTransActivity.class));
                 } else if (mode.equals("Điền khuyết")) {
                     // mở activity Điền khuyết
                     startActivity(new Intent(this, ClozeTestActivity.class));

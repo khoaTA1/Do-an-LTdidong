@@ -39,6 +39,9 @@
         <activity android:name=".activities.RegisterActivity"/>
         <activity android:name=".activities.LoginActivity"/>
         <activity android:name=".activities.SkillHomeActivity"/>
+        <activity android:name=".activities.RCTransActivity"/>
+        <activity android:name=".activities.CTTransActivity"/>
+        <activity android:name=".activities.ProfileActivity"/>
     </application>
 
 </manifest>

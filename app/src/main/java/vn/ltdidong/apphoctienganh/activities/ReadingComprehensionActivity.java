@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,10 +33,8 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
     private RecyclerView rvQuestions;
     private List<ReadingPassage> readingPassageQAlist;
     private List<Long> passagePassed = new ArrayList<>();
-    private ReadingPassageRepo rprepo;
-    private QuestionAnswerRepo qarepo;
-    private int LIMIT_LOAD = 50;
     private DBHelper sqlite;
+    private TextView btnBack;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,8 +42,6 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.reading_comprehension_mode);
 
-        rprepo = new ReadingPassageRepo();
-        qarepo = new QuestionAnswerRepo();
         sqlite = new DBHelper(this);
 
         // làm sạch danh sách đề đã làm
@@ -51,75 +49,20 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
 
         // ánh xạ một số thành phần
         passage = findViewById(R.id.ReadingPassage);
+        btnBack = findViewById(R.id.back_arrow);
 
-        // nạp dữ liệu từ firestore
-        loadFromFirestore(cb -> {
-            if (((String) cb).equals("ok")) Log.d(">>> RC Activity", "Đã nạp xong từ Firstore");
-
-            // chọn ngẫu nhiên đoạn văn và câu hỏi tương ứng để hiển thị
-            ReadingPassage chosenPassage = choosePassage();
-
-            passage.setText(chosenPassage.getPassage());
-
-            rvQuestions = findViewById(R.id.Questions);
-
-            setupRecyclerView(rvQuestions, chosenPassage.getQAList());
+        btnBack.setOnClickListener(v -> {
+            finish();
         });
-    }
 
-    private void loadFromStorage() {
-        readingPassageQAlist = LoadFromJSON.loadAllPassages(this);
-    }
+        // chọn ngẫu nhiên đoạn văn và câu hỏi tương ứng để hiển thị
+        ReadingPassage chosenPassage = choosePassage();
 
-    // hàm lấy dữ liệu từ firestore và lưu vào sqlite làm cache
-    private void loadFromFirestore(FirestoreCallBack callback) {
-        // lấy một số lượng đoạn văn từ firestore
-        rprepo.getReadingPassagePagination(LIMIT_LOAD, list -> {
-            if (list != null) {
-                int totalPassages = ((List<ReadingPassage>) list).size();
-                List<ReadingPassage> RPlist = (List<ReadingPassage>) list;
+        passage.setText(chosenPassage.getPassage());
 
-                // CountDownLatch đếm số passage
-                CountDownLatch latch = new CountDownLatch(totalPassages);
+        rvQuestions = findViewById(R.id.Questions);
 
-                for (ReadingPassage rp : RPlist) {
-
-                    // lấy các câu hỏi thuộc đoạn văn này bằng passage id
-                    qarepo.getQuestionAnswerByPassageId(rp.getId(), qa_list -> {
-                        if (qa_list != null) {
-                            List<QuestionAnswer> QAlist = (List<QuestionAnswer>) qa_list;
-
-                            // set danh sách câu hỏi - câu trả lời cho đoạn văn hiện tại
-                            rp.setQAList(QAlist);
-                        } else rp.setQAList(new ArrayList<>());
-
-                        latch.countDown();
-                    });
-                }
-
-                // kiểm tra xem danh sách đoạn văn và các câu hỏi cùng câu trả lời đã load đầy đủ chưa
-                new Thread(() -> {
-                    try {
-                        // chờ hết countDown
-                        latch.await();
-                        runOnUiThread(() -> {
-                            if (sqlite == null) sqlite = new DBHelper(this);
-                            if (sqlite.insertRPList(RPlist) == 1) {
-                                Log.d(">>> SQLite", "Thêm danh sách vào cache thành công");
-                            } else {
-                                Log.e("!!! SQLite", "Thêm danh sách vào cache KHÔNG thành công");
-                            }
-
-                            callback.returnResult("ok");
-                        });
-                    } catch (InterruptedException e) {
-                        Log.e("!!! CountDown", "Lỗi: ", e);
-                    }
-                }).start();
-            } else {
-                Log.e("!!! Firestore", "Danh sách đoạn văn bị null");
-            }
-        });
+        setupRecyclerView(rvQuestions, chosenPassage.getQAList());
     }
 
     // Lấy random 1 passage
