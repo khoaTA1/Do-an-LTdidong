@@ -55,13 +55,13 @@
             app:layout_constraintStart_toEndOf="@id/ClozeTestTitle"
             app:layout_constraintEnd_toStartOf="@id/total_question"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="8"/>
+            tools:text="3"/>
 
         <TextView
             android:id="@+id/total_question"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/total_ten"
+            android:text="@string/total"
             android:textColor="#222222"
             android:textSize="18sp"
             android:textStyle="bold"

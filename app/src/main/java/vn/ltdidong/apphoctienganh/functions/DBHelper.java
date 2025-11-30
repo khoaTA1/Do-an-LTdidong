@@ -229,8 +229,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     // hàm lấy danh sách id các đoạn văn trong trường hợp nó không liên tục
-    public List<Integer> getAllPassageIds() {
-        List<Integer> ids = new ArrayList<>();
+    public List<Long> getAllPassageIds() {
+        List<Long> ids = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
@@ -241,7 +241,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    int id = cursor.getInt(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID));
+                    long id = cursor.getLong(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID));
                     Log.d(">>> SQLite", "Thêm id: " + id);
                     ids.add(id);
                 } while (cursor.moveToNext());
@@ -261,6 +261,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DELETE FROM " + READINGPASSAGE_TABLE_NAME + ";");
         db.execSQL("DELETE FROM " + QA_TABLE_NAME + ";");
         db.execSQL("DELETE FROM " + ANSWER_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + CLOZETEST_QA_TABLE_NAME + ";");
 
         db.close();
 
@@ -288,5 +289,65 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         return 1;
+    }
+    public List<Long> getAllCLozeTestQAIds() {
+        List<Long> ids = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(CLOZETEST_QA_TABLE_NAME,
+                    new String[]{CLOZETEST_QA_COLUMN_ID},
+                    null, null, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    long id = cursor.getLong(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_ID));
+                    Log.d(">>> SQLite", "Thêm id: " + id);
+                    ids.add(id);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("!!! SQLite", "Lỗi khi lấy danh sách id", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
+        }
+
+        return ids;
+    }
+    public ClozeTestQA getCTQAById(long qaid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        ClozeTestQA qa = new ClozeTestQA();
+        Cursor cursor;
+
+        try {
+            cursor = db.query(
+                    CLOZETEST_QA_TABLE_NAME,
+                    null,
+                    CLOZETEST_QA_COLUMN_ID + " = ?",
+                    new String[]{String.valueOf(qaid)},
+                    null,
+                    null,
+                    null
+                    );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                qa.setId(cursor.getLong(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_ID)));
+                qa.setQuestion(cursor.getString(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_QUESTION)));
+                qa.setAnswer(cursor.getString(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_ANSWER)));
+
+                Log.d(">>> SQLite", "Đã tìm được cloze test QA theo id: " + qa.getId());
+            } else {
+                Log.e("!!! SQLite", "KHÔNG tìm được cloze test QA");
+                return null;
+            }
+
+            return qa;
+        } catch (Exception e) {
+            Log.e("!!! SQlite", "Lỗi:",e);
+        }
+
+        return null;
     }
 }

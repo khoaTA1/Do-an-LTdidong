@@ -42,6 +42,8 @@
         <activity android:name=".activities.RCTransActivity"/>
         <activity android:name=".activities.CTTransActivity"/>
         <activity android:name=".activities.ProfileActivity"/>
+        <activity android:name=".activities.ReadingSkillResultActivity"/>
+        <activity android:name=".activities.ClozeTestActivity"/>
     </application>
 
 </manifest>
