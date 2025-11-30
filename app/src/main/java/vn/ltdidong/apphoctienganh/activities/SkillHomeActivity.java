@@ -4,15 +4,21 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputLayout;
 
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
@@ -107,7 +113,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                 new String[]{"Nghe cơ bản"});
 
         setupSkill(speakingSkill.getId(), "Speaking", R.drawable.ic_speaking,
-                new String[]{"Luyện nói"});
+                new String[]{"Luyện nói", "Nói chuyện"});
 
         setupSkill(writingSkill.getId(), "Writing", R.drawable.ic_writing,
                 new String[]{"Viết câu"});
@@ -134,7 +140,7 @@ public class SkillHomeActivity extends AppCompatActivity {
 
             // Xử lý click
             modeItem.setOnClickListener(v -> {
-                Toast.makeText(this, "Open mode: " + modeName, Toast.LENGTH_SHORT).show();
+                // Toast.makeText(this, "Open mode: " + modeName, Toast.LENGTH_SHORT).show(); // removed toast
                 handleModeClick(title, modeName);
             });
 
@@ -163,6 +169,8 @@ public class SkillHomeActivity extends AppCompatActivity {
             case "Speaking":
                 if (mode.equals("Luyện nói")) {
                     startActivity(new Intent(this, SpeakingActivity.class));
+                } else if (mode.equals("Nói chuyện")) {
+                    showTopicDialog();
                 }
                 break;
 
@@ -172,6 +180,74 @@ public class SkillHomeActivity extends AppCompatActivity {
                 }
                 break;
         }
+    }
+
+    private void showTopicDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Inflate custom layout
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_choose_topic, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent); // For rounded corners
+
+        ChipGroup chipGroup = dialogView.findViewById(R.id.chipGroupTopics);
+        TextInputLayout inputLayoutTopic = dialogView.findViewById(R.id.inputLayoutTopic);
+        EditText etTopicInput = dialogView.findViewById(R.id.etTopicInput);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+        Button btnStart = dialogView.findViewById(R.id.btnStart);
+
+        chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId != View.NO_ID) {
+                Chip chip = group.findViewById(checkedId);
+                String selected = chip.getText().toString();
+                if (selected.equals("Other")) {
+                    inputLayoutTopic.setVisibility(View.VISIBLE);
+                    etTopicInput.requestFocus();
+                } else {
+                    inputLayoutTopic.setVisibility(View.GONE);
+                    etTopicInput.setText(""); // Clear manual input
+                }
+            }
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnStart.setOnClickListener(v -> {
+            String topic = "";
+            int checkedId = chipGroup.getCheckedChipId();
+            
+            if (checkedId != View.NO_ID) {
+                Chip chip = chipGroup.findViewById(checkedId);
+                String selected = chip.getText().toString();
+                
+                if (selected.equals("Other")) {
+                    topic = etTopicInput.getText().toString().trim();
+                    if (topic.isEmpty()) {
+                        inputLayoutTopic.setError("Please enter a topic");
+                        return;
+                    }
+                } else {
+                    topic = selected;
+                }
+            } else {
+                // Fallback if nothing selected (or enforce selection)
+                // Here let's check manual input just in case
+                topic = etTopicInput.getText().toString().trim();
+                 if (topic.isEmpty()) {
+                    Toast.makeText(SkillHomeActivity.this, "Please choose a topic", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+
+            Intent intent = new Intent(SkillHomeActivity.this, ConversationActivity.class);
+            intent.putExtra("TOPIC", topic);
+            startActivity(intent);
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
 

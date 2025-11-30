@@ -46,7 +46,7 @@ public class SpeakingActivity extends AppCompatActivity {
     
     private TextToSpeech textToSpeech;
     private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyAVk3slXlUo6Oix6aCK0ntwT9q6OCAgzms";
+    private static final String API_KEY = "AIzaSyCJvhWIWINzPIr0liu_WKEUHiqw5wpgLCo";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +108,7 @@ public class SpeakingActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String topic = response.body().getOutputText();
                     tvTargetText.setText(topic.trim());
-                    tvHeader.setText("Speaking Practice");
+                    tvHeader.setText("Practice");
                 } else {
                     Log.e("SpeakingActivity", "Gemini API Error: " + response.code() + " - " + response.message());
                     tvTargetText.setText("Error: " + response.code() + " Check API Key/Model.");
@@ -134,7 +134,13 @@ public class SpeakingActivity extends AppCompatActivity {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say the sentence...");
+        
+        // Use the target sentence as the prompt so the user can see what to read
+        String promptText = tvTargetText.getText().toString();
+        if (promptText == null || promptText.isEmpty()) {
+            promptText = "Say the sentence...";
+        }
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, promptText);
 
         try {
             startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
