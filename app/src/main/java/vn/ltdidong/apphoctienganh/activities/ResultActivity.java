@@ -1,5 +1,6 @@
 package vn.ltdidong.apphoctienganh.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,7 +30,6 @@ public class ResultActivity extends AppCompatActivity {
     private ListeningLesson lesson;
     
     // UI components
-    private TextView tvScore;
     private TextView tvScorePercentage;
     private TextView tvCorrectAnswers;
     private TextView tvResultMessage;
@@ -67,8 +67,8 @@ public class ResultActivity extends AppCompatActivity {
     /**
      * Khởi tạo tất cả views
      */
+    @SuppressLint("WrongViewCast")
     private void initViews() {
-        tvScore = null;
         tvScorePercentage = findViewById(R.id.tvScorePercentage);
         tvCorrectAnswers = findViewById(R.id.tvCorrectAnswers);
         tvResultMessage = findViewById(R.id.tvMessage);
@@ -92,9 +92,6 @@ public class ResultActivity extends AppCompatActivity {
     private void displayResults() {
         // Score percentage
         tvScorePercentage.setText(String.format("%.0f%%", score));
-        
-        // Score fraction - included in tvCorrectAnswers
-        // tvScore.setText(correctAnswers + "/" + totalQuestions);
         
         // Correct answers
         tvCorrectAnswers.setText("Correct Answers: " + correctAnswers + "/" + totalQuestions);

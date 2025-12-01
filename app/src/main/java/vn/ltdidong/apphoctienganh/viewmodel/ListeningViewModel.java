@@ -9,7 +9,7 @@ import androidx.lifecycle.LiveData;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
 import vn.ltdidong.apphoctienganh.models.Question;
 import vn.ltdidong.apphoctienganh.models.UserProgress;
-import vn.ltdidong.apphoctienganh.repository.ListeningRepo;
+import vn.ltdidong.apphoctienganh.repositories.ListeningRepo;
 
 import java.util.List;
 
@@ -20,13 +20,13 @@ import java.util.List;
  */
 public class ListeningViewModel extends AndroidViewModel {
     
-    private ListeningRepo repository;
+    private final ListeningRepo repository;
     
     // LiveData cho lessons
-    private LiveData<List<ListeningLesson>> allLessons;
-    private LiveData<Integer> completedLessonCount;
-    private LiveData<Float> averageScore;
-    private LiveData<Float> highestScore;
+    private final LiveData<List<ListeningLesson>> allLessons;
+    private final LiveData<Integer> completedLessonCount;
+    private final LiveData<Float> averageScore;
+    private final LiveData<Float> highestScore;
     
     /**
      * Constructor

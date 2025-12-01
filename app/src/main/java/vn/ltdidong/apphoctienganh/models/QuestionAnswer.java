@@ -5,7 +5,7 @@ import java.util.Map;
 public class QuestionAnswer {
     private long id;
     private long passageId;
-    private String question;
+    private String questionContent;
     private Map<Integer, String> answers;
     private int correctAnswer;
     private int userAnswer;
@@ -28,12 +28,17 @@ public class QuestionAnswer {
 
     public QuestionAnswer(long passageId, String question, Map<Integer, String> answers, int correctAnswer) {
         this.passageId = passageId;
-        this.question = question;
+        this.questionContent = question;
         this.answers = answers;
         this.correctAnswer = correctAnswer;
     }
 
     // getters, setters
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
     public int getCorrectAnswer() {
         return correctAnswer;
     }
@@ -50,12 +55,12 @@ public class QuestionAnswer {
         this.answers = answers;
     }
 
-    public String getQuestion() {
-        return question;
+    public String getQuestionContent() {
+        return questionContent;
     }
 
-    public void setQuestion(String question) {
-        this.question = question;
+    public void setQuestionContent(String questionContent) {
+        this.questionContent = questionContent;
     }
 
     public long getPassageId() {

@@ -5,6 +5,19 @@
         android:icon="@drawable/ic_home"
         android:title="@string/menu_home" />
     <item
+        android:id="@+id/nav_skills"
+        android:icon="@drawable/ic_reading"
+        android:title="@string/skills" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_person"
+        android:title="@string/menu_profile" />
+    <!--
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="@string/menu_home" />
+    <item
         android:id="@+id/nav_reading"
         android:icon="@drawable/ic_reading"
         android:title="@string/reading_skill" />
@@ -24,4 +37,5 @@
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_person"
         android:title="@string/menu_profile" />
+        -->
 </menu>

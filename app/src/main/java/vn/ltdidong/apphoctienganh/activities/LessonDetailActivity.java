@@ -172,7 +172,7 @@ public class LessonDetailActivity extends AppCompatActivity {
             
             // Kiểm tra xem audioUrl có phải raw resource không
             String audioUrl = lesson.getAudioUrl();
-            if (audioUrl.startsWith("raw://")) {
+            if (audioUrl != null && audioUrl.startsWith("raw://")) {
                 // Load từ raw resource
                 String resourceName = audioUrl.substring(6);
                 int resourceId = getResources().getIdentifier(resourceName, "raw", getPackageName());
@@ -180,13 +180,25 @@ public class LessonDetailActivity extends AppCompatActivity {
                     Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + resourceId);
                     mediaPlayer.setDataSource(this, uri);
                 } else {
-                    // Resource không tồn tại, dùng URL mẫu
-                    Toast.makeText(this, "Audio file not found, using sample", Toast.LENGTH_SHORT).show();
-                    mediaPlayer.setDataSource(lesson.getAudioUrl());
+                    // Resource không tồn tại, hiển thị lỗi
+                    Toast.makeText(this, "Audio file not found: " + resourceName, Toast.LENGTH_LONG).show();
+                    btnPlayPause.setEnabled(false);
+                    return;
+                }
+            } else if (audioUrl != null && !audioUrl.isEmpty()) {
+                // Load từ URL hoặc tên resource trực tiếp
+                int resourceId = getResources().getIdentifier(audioUrl, "raw", getPackageName());
+                if (resourceId != 0) {
+                    Uri uri = Uri.parse("android.resource://" + getPackageName() + "/" + resourceId);
+                    mediaPlayer.setDataSource(this, uri);
+                } else {
+                    // Thử load như URL
+                    mediaPlayer.setDataSource(audioUrl);
                 }
             } else {
-                // Load từ URL
-                mediaPlayer.setDataSource(audioUrl);
+                Toast.makeText(this, "No audio available", Toast.LENGTH_SHORT).show();
+                btnPlayPause.setEnabled(false);
+                return;
             }
             
             mediaPlayer.prepareAsync();

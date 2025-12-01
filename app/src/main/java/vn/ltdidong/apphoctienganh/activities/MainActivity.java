@@ -15,6 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.Firebase;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
     BottomNavigationView bottomNav;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
         // 2. Bind Views
         searchEditText = findViewById(R.id.searchEditText);
         bottomNav = findViewById(R.id.bottomNavigation);
+        bottomNav.setSelectedItemId(R.id.nav_home);
+
         newsRecyclerView = findViewById(R.id.newsRecyclerView);
         articlesRecyclerView = findViewById(R.id.articlesRecyclerView);
 
@@ -109,23 +115,16 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
+
             if (id == R.id.nav_home) {
-                return true;
-            } else if (id == R.id.nav_writing) {
-                Intent intent = new Intent(MainActivity.this, WritingActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (id == R.id.nav_reading) {
-                return true;
-            } else if (id == R.id.nav_listening) {
-                Intent intent = new Intent(MainActivity.this, ListeningListActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (id == R.id.nav_speaking) {
-                Intent intent = new Intent(MainActivity.this, SpeakingActivity.class);
+                return  true;
+            } else if (id == R.id.nav_skills) {
+                Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {
+                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                startActivity(intent);
                 return true;
             }
 

@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
  */
 @Database(
     entities = {ListeningLesson.class, Question.class, UserProgress.class},
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -55,6 +55,8 @@ public abstract class AppDatabase extends RoomDatabase {
                     )
                     // Callback để thêm sample data khi database được tạo lần đầu
                     .addCallback(sRoomDatabaseCallback)
+                    // Xóa và tạo lại database khi version thay đổi
+                    .fallbackToDestructiveMigration()
                     .build();
                 }
             }
@@ -63,13 +65,29 @@ public abstract class AppDatabase extends RoomDatabase {
     }
     
     /**
-     * Callback được gọi khi database được tạo lần đầu
+     * Callback được gọi khi database được tạo lần đầu hoặc sau khi migrate
      * Thêm sample data để demo
      */
     private static RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
         @Override
         public void onCreate(@NonNull SupportSQLiteDatabase db) {
             super.onCreate(db);
+            populateDatabase();
+        }
+        
+        @Override
+        public void onDestructiveMigration(@NonNull SupportSQLiteDatabase db) {
+            super.onDestructiveMigration(db);
+            // Sau khi xóa database cũ, thêm lại dữ liệu mẫu
+            populateDatabase();
+        }
+    };
+    
+    /**
+     * Thêm dữ liệu mẫu vào database
+     */
+    private static void populateDatabase() {
+        if (INSTANCE != null) {
             
             // Thêm sample data trên background thread
             databaseWriteExecutor.execute(() -> {
@@ -85,8 +103,8 @@ public abstract class AppDatabase extends RoomDatabase {
                     "Basic Greetings",
                     "Learn how to greet people in English",
                     "EASY",
-                    "raw://sample_audio_1", // Sẽ thay bằng raw resource hoặc URL thật
-                    45, // 45 seconds
+                    "raw://smalltalk0101", // Audio resource name in res/raw
+                    23, // 23 seconds
                     "Hello! My name is Sarah. Nice to meet you. How are you today? I'm doing great, thank you!",
                     "ic_lesson_1",
                     3
@@ -96,37 +114,37 @@ public abstract class AppDatabase extends RoomDatabase {
                 // Thêm câu hỏi cho bài 1
                 questionDao.insertQuestion(new Question(
                     (int)lesson1Id,
-                    "What is the speaker's name?",
-                    "Mary",
-                    "Sarah",
-                    "Linda",
-                    "Jennifer",
-                    "B",
-                    "The speaker clearly says 'My name is Sarah'",
+                    "What is the man doing right now?",
+                    "Working full-time",
+                    "Staying at home",
+                    "Going to school",
+                    "Traveling",
+                    "C",
+                    "The speaker clearly says 'I've been good. I'm in school right now'",
                     1
                 ));
                 
                 questionDao.insertQuestion(new Question(
                     (int)lesson1Id,
-                    "How is the speaker feeling?",
-                    "Sad",
-                    "Tired",
-                    "Great",
-                    "Angry",
-                    "C",
-                    "The speaker says 'I'm doing great'",
+                    "Which school does the men go to?",
+                    "UCLA",
+                    "PCC",
+                    "Harvard",
+                    "USC",
+                    "B",
+                    "The speaker says 'I go to PCC'",
                     2
                 ));
                 
                 questionDao.insertQuestion(new Question(
                     (int)lesson1Id,
-                    "What does the speaker say first?",
-                    "Goodbye",
-                    "Hello",
-                    "Thank you",
-                    "Sorry",
-                    "B",
-                    "The first word is 'Hello!'",
+                    "What does the woman say to the man at the end of the conversation?",
+                    "Good luck with your new job",
+                    "Good luck on your exam",
+                    "Good luck with school",
+                    "Have a nice day",
+                    "C",
+                    "Good luck with school",
                     3
                 ));
                 
@@ -135,7 +153,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     "Daily Routine",
                     "Listen about someone's daily activities",
                     "EASY",
-                    "raw://sample_audio_2",
+                    "sample_audio_2", // Audio resource name in res/raw
                     60,
                     "I wake up at 7 AM every day. First, I brush my teeth and take a shower. Then I have breakfast with my family. After that, I go to school at 8 AM.",
                     "ic_lesson_2",
@@ -184,7 +202,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     "Shopping at the Mall",
                     "A conversation about shopping",
                     "MEDIUM",
-                    "raw://sample_audio_3",
+                    "sample_audio_3", // Audio resource name in res/raw
                     90,
                     "Customer: Excuse me, how much is this blue jacket?\nSalesperson: It's $45, but we have a 20% discount today.\nCustomer: That's great! I'll take it. Do you accept credit cards?\nSalesperson: Yes, we do. Cash and credit cards are both fine.",
                     "ic_lesson_3",
@@ -245,7 +263,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     "Weather Forecast",
                     "Listen to a weather report",
                     "MEDIUM",
-                    "raw://sample_audio_4",
+                    "sample_audio_4", // Audio resource name in res/raw
                     75,
                     "Good morning! Here's today's weather forecast. It will be sunny in the morning with temperatures around 25 degrees Celsius. In the afternoon, we expect some clouds and the temperature will rise to 30 degrees. There's a 40% chance of rain in the evening, so don't forget your umbrella!",
                     "ic_lesson_4",
@@ -306,7 +324,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     "Job Interview",
                     "A conversation during a job interview",
                     "HARD",
-                    "raw://sample_audio_5",
+                    "sample_audio_5", // Audio resource name in res/raw
                     120,
                     "Interviewer: Thank you for coming, Mr. Johnson. Can you tell me about your previous work experience?\nCandidate: Certainly. I worked as a marketing manager for five years at Tech Solutions Inc. I was responsible for developing marketing strategies and managing a team of ten people. We successfully increased sales by 35% during my tenure.\ninterviewer: That's impressive. Why are you interested in joining our company?\nCandidate: I've been following your company's growth for the past two years. I'm particularly interested in your innovative approach to digital marketing, and I believe my experience would be valuable to your team.",
                     "ic_lesson_5",
@@ -373,80 +391,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     "He's been following for the past two years",
                     5
                 ));
-                
-                // ========== BÀI 6: HARD - UNIVERSITY LECTURE ==========
-                ListeningLesson lesson6 = new ListeningLesson(
-                    "University Lecture",
-                    "An excerpt from a psychology lecture",
-                    "HARD",
-                    "raw://sample_audio_6",
-                    150,
-                    "Today we'll discuss cognitive psychology, specifically memory formation. Research shows that our brain processes information in three stages: encoding, storage, and retrieval. Short-term memory can hold about seven items for approximately 20 to 30 seconds. However, through a process called chunking, we can increase this capacity. Long-term memory, on the other hand, has virtually unlimited capacity and can store information for years or even a lifetime. The hippocampus plays a crucial role in transferring information from short-term to long-term memory.",
-                    "ic_lesson_6",
-                    5
-                );
-                long lesson6Id = lessonDao.insertLesson(lesson6);
-                
-                questionDao.insertQuestion(new Question(
-                    (int)lesson6Id,
-                    "What is the main topic of this lecture?",
-                    "Biology",
-                    "Memory formation",
-                    "Brain structure",
-                    "Learning styles",
-                    "B",
-                    "The lecture discusses memory formation",
-                    1
-                ));
-                
-                questionDao.insertQuestion(new Question(
-                    (int)lesson6Id,
-                    "How many stages of information processing are mentioned?",
-                    "Two",
-                    "Three",
-                    "Four",
-                    "Five",
-                    "B",
-                    "Three stages: encoding, storage, and retrieval",
-                    2
-                ));
-                
-                questionDao.insertQuestion(new Question(
-                    (int)lesson6Id,
-                    "How many items can short-term memory hold?",
-                    "About 5 items",
-                    "About 7 items",
-                    "About 10 items",
-                    "About 15 items",
-                    "B",
-                    "About seven items",
-                    3
-                ));
-                
-                questionDao.insertQuestion(new Question(
-                    (int)lesson6Id,
-                    "How long can short-term memory hold information?",
-                    "10-15 seconds",
-                    "20-30 seconds",
-                    "40-50 seconds",
-                    "60 seconds",
-                    "B",
-                    "Approximately 20 to 30 seconds",
-                    4
-                ));
-                
-                questionDao.insertQuestion(new Question(
-                    (int)lesson6Id,
-                    "What helps transfer information to long-term memory?",
-                    "Cerebellum",
-                    "Hippocampus",
-                    "Amygdala",
-                    "Cortex",
-                    "B",
-                    "The hippocampus plays a crucial role",
-                    5
-                ));
             });
         }
-    };
+    }
 }

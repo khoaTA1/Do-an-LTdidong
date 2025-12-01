@@ -1,23 +1,40 @@
 package vn.ltdidong.apphoctienganh.activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.adapters.ReadingQAAdapter;
+import vn.ltdidong.apphoctienganh.functions.DBHelper;
+import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
 import vn.ltdidong.apphoctienganh.functions.LoadFromJSON;
+import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 import vn.ltdidong.apphoctienganh.models.ReadingPassage;
+import vn.ltdidong.apphoctienganh.repositories.QuestionAnswerRepo;
+import vn.ltdidong.apphoctienganh.repositories.ReadingPassageRepo;
 
 public class ReadingComprehensionActivity extends AppCompatActivity {
     private TextView passage;
-
+    private RecyclerView rvQuestions;
     private List<ReadingPassage> readingPassageQAlist;
-    private List<Long> passagePassed;
+    private List<Long> passagePassed = new ArrayList<>();
+    private DBHelper sqlite;
+    private TextView btnBack;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,43 +42,51 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.reading_comprehension_mode);
 
-        // nạp các json hiện có trong internal storage
-        loadFromStorage();
+        sqlite = new DBHelper(this);
 
         // làm sạch danh sách đề đã làm
         passagePassed.clear();
 
         // ánh xạ một số thành phần
         passage = findViewById(R.id.ReadingPassage);
+        btnBack = findViewById(R.id.back_arrow);
+
+        btnBack.setOnClickListener(v -> {
+            finish();
+        });
 
         // chọn ngẫu nhiên đoạn văn và câu hỏi tương ứng để hiển thị
         ReadingPassage chosenPassage = choosePassage();
 
         passage.setText(chosenPassage.getPassage());
-    }
 
-    private void loadFromStorage() {
-        readingPassageQAlist = LoadFromJSON.loadAllPassages(this);
+        rvQuestions = findViewById(R.id.Questions);
+
+        setupRecyclerView(rvQuestions, chosenPassage.getQAList());
     }
 
     // Lấy random 1 passage
     private ReadingPassage choosePassage() {
-        ReadingPassage randomPassage = new ReadingPassage();
-        while (true) {
-            if (!readingPassageQAlist.isEmpty()) {
-                int index = (int) (Math.random() * readingPassageQAlist.size());
-                randomPassage = readingPassageQAlist.get(index);
+        if (sqlite == null) sqlite = new DBHelper(this);
 
-                // nếu đoạn văn chưa được làm thì trả về
-                // nếu không thì tiếp tục vòng lặp
-                long passageId = randomPassage.getId();
-                if (!passagePassed.contains(passageId)) {
-                    passagePassed.add(passageId);
-                    break;
-                }
-            }
-        }
+        // random bằng danh sách id có thể không liên tục
+        List<Integer> ids = sqlite.getAllPassageIds();
+        Log.d(">>> RC Activity", "Số lượng passage hiện tại: " + ids.size());
+
+        int randomId = ids.get(new Random().nextInt(ids.size()));
+        Log.d(">>> RC Activity", "id được sinh nghẫu nhiên: " + randomId);
+
+        ReadingPassage randomPassage = sqlite.getReadingPassageById(randomId);
+        Log.d(">>> RC Activity", "Đã tìm được đoạn văn ngẫu nhiên: " + randomPassage.getPassage());
 
         return randomPassage;
     }
+
+    // khởi tạo recycler view
+    private void setupRecyclerView(RecyclerView recyclerView, List<QuestionAnswer> questionList) {
+        ReadingQAAdapter adapter = new ReadingQAAdapter(questionList);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
+
 }
