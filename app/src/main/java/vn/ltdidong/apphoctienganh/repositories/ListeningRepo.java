@@ -5,161 +5,76 @@ import android.app.Application;
 import androidx.lifecycle.LiveData;
 
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
-import vn.ltdidong.apphoctienganh.database.ListeningLessonDao;
-import vn.ltdidong.apphoctienganh.database.QuestionDao;
 import vn.ltdidong.apphoctienganh.database.UserProgressDao;
-import vn.ltdidong.apphoctienganh.models.ListeningLesson;
-import vn.ltdidong.apphoctienganh.models.Question;
 import vn.ltdidong.apphoctienganh.models.UserProgress;
 
 import java.util.List;
 
 /**
- * Repository class - Lớp trung gian giữa ViewModel và Database
- * Cung cấp API sạch sẽ để truy cập data
- * Xử lý logic data từ nhiều nguồn (database, network, cache...)
+ * Repository class cho UserProgress
+ * Quản lý tiến độ học tập của người dùng (local database)
+ * Lessons và Questions load từ Firebase qua FirebaseListeningRepo
  */
 public class ListeningRepo {
     
-    // DAOs
-    private ListeningLessonDao lessonDao;
-    private QuestionDao questionDao;
+    // DAO
     private UserProgressDao progressDao;
+    private String currentUserId; // User hiện tại đang đăng nhập
     
     /**
-     * Constructor - khởi tạo database và các DAOs
+     * Constructor - khởi tạo database và DAO
      * @param application Application context
      */
     public ListeningRepo(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
-        lessonDao = db.listeningLessonDao();
-        questionDao = db.questionDao();
         progressDao = db.userProgressDao();
-    }
-    
-    // ============= LISTENING LESSON METHODS =============
-    
-    /**
-     * Lấy tất cả bài học
-     */
-    public LiveData<List<ListeningLesson>> getAllLessons() {
-        return lessonDao.getAllLessons();
+        // Mặc định dùng "guest" nếu chưa đăng nhập
+        this.currentUserId = "guest";
     }
     
     /**
-     * Lấy bài học theo độ khó
+     * Set user ID hiện tại (gọi sau khi đăng nhập)
+     * @param userId ID của user (từ Firebase Auth hoặc local login)
      */
-    public LiveData<List<ListeningLesson>> getLessonsByDifficulty(String difficulty) {
-        return lessonDao.getLessonsByDifficulty(difficulty);
+    public void setCurrentUserId(String userId) {
+        this.currentUserId = userId != null ? userId : "guest";
     }
     
     /**
-     * Lấy một bài học cụ thể
+     * Lấy user ID hiện tại
      */
-    public LiveData<ListeningLesson> getLessonById(int lessonId) {
-        return lessonDao.getLessonById(lessonId);
-    }
-    
-    /**
-     * Thêm bài học mới (chạy trên background thread)
-     */
-    public void insertLesson(ListeningLesson lesson) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            lessonDao.insertLesson(lesson);
-        });
-    }
-    
-    /**
-     * Cập nhật bài học (chạy trên background thread)
-     */
-    public void updateLesson(ListeningLesson lesson) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            lessonDao.updateLesson(lesson);
-        });
-    }
-    
-    /**
-     * Xóa bài học (chạy trên background thread)
-     */
-    public void deleteLesson(ListeningLesson lesson) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            lessonDao.deleteLesson(lesson);
-        });
-    }
-    
-    // ============= QUESTION METHODS =============
-    
-    /**
-     * Lấy tất cả câu hỏi của một bài học
-     */
-    public LiveData<List<Question>> getQuestionsByLesson(int lessonId) {
-        return questionDao.getQuestionsByLesson(lessonId);
-    }
-    
-    /**
-     * Thêm câu hỏi mới (chạy trên background thread)
-     */
-    public void insertQuestion(Question question) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            questionDao.insertQuestion(question);
-        });
-    }
-    
-    /**
-     * Thêm nhiều câu hỏi cùng lúc (chạy trên background thread)
-     */
-    public void insertQuestions(List<Question> questions) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            questionDao.insertQuestions(questions);
-        });
-    }
-    
-    /**
-     * Cập nhật câu hỏi (chạy trên background thread)
-     */
-    public void updateQuestion(Question question) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            questionDao.updateQuestion(question);
-        });
-    }
-    
-    /**
-     * Xóa câu hỏi (chạy trên background thread)
-     */
-    public void deleteQuestion(Question question) {
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            questionDao.deleteQuestion(question);
-        });
+    public String getCurrentUserId() {
+        return currentUserId;
     }
     
     // ============= USER PROGRESS METHODS =============
     
     /**
-     * Lấy tất cả tiến độ
+     * Lấy tất cả tiến độ của user hiện tại
      */
     public LiveData<List<UserProgress>> getAllProgress() {
-        return progressDao.getAllProgress();
+        return progressDao.getAllProgressByUser(currentUserId);
     }
     
     /**
-     * Lấy tiến độ của một bài học
+     * Lấy tiến độ của một bài học cho user hiện tại
      */
     public LiveData<UserProgress> getProgressByLesson(int lessonId) {
-        return progressDao.getProgressByLesson(lessonId);
+        return progressDao.getProgressByUserAndLesson(currentUserId, lessonId);
     }
     
     /**
-     * Lấy các bài đã hoàn thành
+     * Lấy các bài đã hoàn thành của user hiện tại
      */
     public LiveData<List<UserProgress>> getCompletedLessons() {
-        return progressDao.getCompletedLessons();
+        return progressDao.getCompletedLessonsByUser(currentUserId);
     }
     
     /**
-     * Lấy các bài đang làm dở
+     * Lấy các bài đang làm dở của user hiện tại
      */
     public LiveData<List<UserProgress>> getInProgressLessons() {
-        return progressDao.getInProgressLessons();
+        return progressDao.getInProgressLessonsByUser(currentUserId);
     }
     
     /**
@@ -167,8 +82,12 @@ public class ListeningRepo {
      */
     public void saveProgress(UserProgress progress) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
+            // Set userId cho progress
+            progress.setUserId(currentUserId);
+            
             // Kiểm tra xem đã có progress chưa
-            UserProgress existingProgress = progressDao.getProgressByLessonSync(progress.getLessonId());
+            UserProgress existingProgress = progressDao.getProgressByUserAndLessonSync(
+                currentUserId, progress.getLessonId());
             
             if (existingProgress != null) {
                 // Nếu đã có, cập nhật
@@ -202,32 +121,32 @@ public class ListeningRepo {
     }
     
     /**
-     * Xóa tiến độ của một bài học (chạy trên background thread)
+     * Xóa tiến độ của một bài học cho user hiện tại (chạy trên background thread)
      */
     public void deleteProgressByLesson(int lessonId) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            progressDao.deleteProgressByLesson(lessonId);
+            progressDao.deleteProgressByUserAndLesson(currentUserId, lessonId);
         });
     }
     
     /**
-     * Lấy điểm trung bình
+     * Lấy điểm trung bình của user hiện tại
      */
     public LiveData<Float> getAverageScore() {
-        return progressDao.getAverageScore();
+        return progressDao.getAverageScoreByUser(currentUserId);
     }
     
     /**
-     * Lấy số bài đã hoàn thành
+     * Lấy số bài đã hoàn thành của user hiện tại
      */
     public LiveData<Integer> getCompletedLessonCount() {
-        return progressDao.getCompletedLessonCount();
+        return progressDao.getCompletedLessonCountByUser(currentUserId);
     }
     
     /**
-     * Lấy điểm cao nhất
+     * Lấy điểm cao nhất của user hiện tại
      */
     public LiveData<Float> getHighestScore() {
-        return progressDao.getHighestScore();
+        return progressDao.getHighestScoreByUser(currentUserId);
     }
 }

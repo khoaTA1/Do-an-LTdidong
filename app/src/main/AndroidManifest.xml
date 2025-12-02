@@ -40,6 +40,9 @@
         <activity 
             android:name=".activities.ResultActivity"
             android:parentActivityName=".activities.ListeningListActivity" />
+        <activity 
+            android:name=".activities.FillBlankActivity"
+            android:parentActivityName=".activities.LessonDetailActivity" />
         <activity android:name=".activities.RegisterActivity"/>
         <activity android:name=".activities.LoginActivity"/>
         <activity android:name=".activities.SkillHomeActivity"/>

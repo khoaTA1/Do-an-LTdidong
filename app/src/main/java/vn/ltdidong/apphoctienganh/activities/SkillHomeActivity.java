@@ -110,7 +110,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                 new String[]{"Đọc hiểu", "Điền khuyết"});
 
         setupSkill(listeningSkill.getId(), "Listening", R.drawable.ic_listening,
-                new String[]{"Nghe cơ bản"});
+                new String[]{"Nghe cơ bản", "Điền chỗ trống"});
 
         setupSkill(speakingSkill.getId(), "Speaking", R.drawable.ic_speaking,
                 new String[]{"Luyện nói", "Nói chuyện"});
@@ -163,6 +163,8 @@ public class SkillHomeActivity extends AppCompatActivity {
             case "Listening":
                 if (mode.equals("Nghe cơ bản")) {
                     startActivity(new Intent(this, ListeningListActivity.class));
+                } else if (mode.equals("Điền chỗ trống")) {
+                    startActivity(new Intent(this, FillBlankActivity.class));
                 }
                 break;
 

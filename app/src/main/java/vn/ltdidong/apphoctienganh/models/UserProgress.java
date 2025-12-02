@@ -1,7 +1,6 @@
 package vn.ltdidong.apphoctienganh.models;
 
 import androidx.room.Entity;
-import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
@@ -9,19 +8,22 @@ import androidx.room.PrimaryKey;
 /**
  * Entity theo dõi tiến độ học tập của người dùng
  * Lưu điểm số, thời gian hoàn thành và trạng thái của từng bài học
+ * lessonId tham chiếu đến lesson từ Firebase (không có foreign key vì lesson không lưu local)
+ * userId để phân biệt tiến độ của từng user khi đăng nhập
  */
 @Entity(tableName = "user_progress",
-        foreignKeys = @ForeignKey(
-                entity = ListeningLesson.class,
-                parentColumns = "id",
-                childColumns = "lessonId",
-                onDelete = ForeignKey.CASCADE
-        ),
-        indices = {@Index(value = "lessonId")})
+        indices = {
+            @Index(value = "lessonId"),
+            @Index(value = "userId"),
+            @Index(value = {"userId", "lessonId"}, unique = true)
+        })
 public class UserProgress {
     
     @PrimaryKey(autoGenerate = true)
     private int id;
+    
+    // ID của user (từ Firebase Auth hoặc local login)
+    private String userId;
     
     // ID của bài học
     private int lessonId;
@@ -56,8 +58,9 @@ public class UserProgress {
 
     // @Ignore annotation để Room không sử dụng constructor này
     @Ignore
-    public UserProgress(int lessonId, int correctAnswers, int totalQuestions, 
+    public UserProgress(String userId, int lessonId, int correctAnswers, int totalQuestions, 
                        float score, String status, long completedAt) {
+        this.userId = userId;
         this.lessonId = lessonId;
         this.correctAnswers = correctAnswers;
         this.totalQuestions = totalQuestions;
@@ -75,6 +78,14 @@ public class UserProgress {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public int getLessonId() {

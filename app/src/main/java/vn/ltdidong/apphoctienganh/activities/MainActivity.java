@@ -8,6 +8,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +32,9 @@ import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.adapters.ArticleAdapter;
 import vn.ltdidong.apphoctienganh.api.DictionaryApi;
 import vn.ltdidong.apphoctienganh.api.NewsApi;
+import vn.ltdidong.apphoctienganh.database.AppDatabase;
+import vn.ltdidong.apphoctienganh.database.UserStreakDao;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.Article;
 import vn.ltdidong.apphoctienganh.models.NewsResponse;
 import vn.ltdidong.apphoctienganh.models.WordEntry;
@@ -46,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView articlesRecyclerView;
     private ArticleAdapter newsAdapter;
     private List<Article> newsList;
+
+    private TextView tvStreakCount;
+    private TextView tvLongestStreak;
 
     BottomNavigationView bottomNav;
 
@@ -77,6 +84,10 @@ public class MainActivity extends AppCompatActivity {
         newsRecyclerView = findViewById(R.id.newsRecyclerView);
         articlesRecyclerView = findViewById(R.id.articlesRecyclerView);
 
+        // Initialize streak TextViews
+        tvStreakCount = findViewById(R.id.tvStreakCount);
+        tvLongestStreak = findViewById(R.id.tvLongestStreak);
+
         // Setup News RecyclerView
         newsList = new ArrayList<>();
         newsAdapter = new ArticleAdapter(this, newsList);
@@ -90,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Load News
         loadEnglishNews();
+        
+        // Load user progress
+        loadUserProgress();
 
         // 3. Search Event
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -129,6 +143,46 @@ public class MainActivity extends AppCompatActivity {
             }
 
             return false;
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh user progress khi quay lại activity
+        loadUserProgress();
+    }
+
+    /**
+     * Load user streak từ database và hiển thị
+     */
+    private void loadUserProgress() {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) {
+            // User chưa đăng nhập, hiển thị giá trị mặc định
+            tvStreakCount.setText("0 day streak");
+            tvLongestStreak.setText("Longest: 0 days");
+            return;
+        }
+
+        AppDatabase db = AppDatabase.getDatabase(this);
+        UserStreakDao streakDao = db.userStreakDao();
+        
+        // Load streak
+        streakDao.getStreakByUser(userId).observe(this, streak -> {
+            if (streak != null) {
+                int currentStreak = streak.getCurrentStreak();
+                int longestStreak = streak.getLongestStreak();
+                
+                String streakText = currentStreak + (currentStreak == 1 ? " day streak" : " days streak");
+                String longestText = "Longest: " + longestStreak + (longestStreak == 1 ? " day" : " days");
+                
+                tvStreakCount.setText(streakText);
+                tvLongestStreak.setText(longestText);
+            } else {
+                tvStreakCount.setText("0 day streak");
+                tvLongestStreak.setText("Longest: 0 days");
+            }
         });
     }
 

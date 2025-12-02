@@ -164,9 +164,9 @@ public class QuizActivity extends AppCompatActivity {
         clearAllChecks();
         resetCardColor();
 
-        // Load đáp án đã chọn
-        if (userAnswers.containsKey(q.getId())) {
-            switch (userAnswers.get(q.getId())) {
+        // Load đáp án đã chọn (dùng index thay vì q.getId())
+        if (userAnswers.containsKey(index)) {
+            switch (userAnswers.get(index)) {
                 case "A": rbA.setChecked(true); break;
                 case "B": rbB.setChecked(true); break;
                 case "C": rbC.setChecked(true); break;
@@ -189,13 +189,14 @@ public class QuizActivity extends AppCompatActivity {
         else if (rbD.isChecked()) ans = "D";
 
         if (!ans.isEmpty()) {
-            userAnswers.put(questions.get(currentIndex).getId(), ans);
+            // Dùng currentIndex thay vì q.getId() vì Firebase questions không có id
+            userAnswers.put(currentIndex, ans);
         }
     }
 
     private void showCheckColor() {
         Question q = questions.get(currentIndex);
-        String user = userAnswers.get(q.getId());
+        String user = userAnswers.get(currentIndex);
         String correct = q.getCorrectAnswer();
 
         resetCardColor();
@@ -238,8 +239,9 @@ public class QuizActivity extends AppCompatActivity {
     private void submitQuiz() {
         int correctCount = 0;
 
-        for (Question q : questions) {
-            String user = userAnswers.get(q.getId());
+        for (int i = 0; i < questions.size(); i++) {
+            Question q = questions.get(i);
+            String user = userAnswers.get(i);
             if (user != null && user.equals(q.getCorrectAnswer())) correctCount++;
         }
 
