@@ -65,4 +65,8 @@ dependencies {
     annotationProcessor(libs.room.compiler)
 
     implementation("androidx.gridlayout:gridlayout:1.0.0")
+
+    // các gói phụ thuộc cho tính năng story telling road map
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.2.0")
 }

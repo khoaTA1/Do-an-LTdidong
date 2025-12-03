@@ -115,11 +115,14 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
-
             if (id == R.id.nav_home) {
                 return  true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_advance_mode) {
+                Intent intent = new Intent(MainActivity.this, AdvanceModeHomeActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {

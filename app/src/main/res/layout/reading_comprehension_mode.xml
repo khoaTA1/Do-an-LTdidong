@@ -8,7 +8,7 @@
     android:background="@android:color/white"
     tools:context=".activities.ReadingComprehensionActivity">
 
-    <!-- Thanh tiêu đề có nút Thoát -->
+    <!-- Thanh tiêu đề -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layoutTopBar"
         android:layout_width="0dp"

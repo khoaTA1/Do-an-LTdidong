@@ -8,34 +8,14 @@
         android:id="@+id/nav_skills"
         android:icon="@drawable/ic_reading"
         android:title="@string/skills" />
-    <item
-        android:id="@+id/nav_profile"
-        android:icon="@drawable/ic_person"
-        android:title="@string/menu_profile" />
-    <!--
-    <item
-        android:id="@+id/nav_home"
-        android:icon="@drawable/ic_home"
-        android:title="@string/menu_home" />
-    <item
-        android:id="@+id/nav_reading"
-        android:icon="@drawable/ic_reading"
-        android:title="@string/reading_skill" />
-    <item
-        android:id="@+id/nav_writing"
-        android:icon="@drawable/ic_writing"
-        android:title="@string/writing_skill" />
-    <item
-        android:id="@+id/nav_listening"
-        android:icon="@drawable/ic_listening"
-        android:title="@string/listening_skill" />
 
-    <item android:id="@+id/nav_speaking"
-        android:icon="@drawable/ic_speaking"
-        android:title="@string/speaking_skill" />
+    <item
+        android:id="@+id/nav_advance_mode"
+        android:icon="@drawable/ic_advance"
+        android:title="@string/menu_advance_mode" />
+
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/ic_person"
         android:title="@string/menu_profile" />
-        -->
 </menu>
