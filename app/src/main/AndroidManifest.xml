@@ -46,6 +46,7 @@
         <activity android:name=".activities.RCTransActivity"/>
         <activity android:name=".activities.CTTransActivity"/>
         <activity android:name=".activities.ProfileActivity"/>
+        <activity android:name=".activities.ReadingArticleActivity"/>
     </application>
 
 </manifest>
