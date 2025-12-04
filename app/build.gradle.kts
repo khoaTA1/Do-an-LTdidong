@@ -55,6 +55,9 @@ dependencies {
 
 //  Markwon
     implementation("io.noties.markwon:core:4.6.2")
+    
+//  Jsoup for web scraping
+    implementation("org.jsoup:jsoup:1.17.2")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")

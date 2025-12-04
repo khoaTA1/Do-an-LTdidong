@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.activities.ReadingArticleActivity;
 import vn.ltdidong.apphoctienganh.models.Article;
 
 public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ArticleViewHolder> {
@@ -49,12 +50,15 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ArticleV
                 .into(holder.imgArticle);
         
         holder.itemView.setOnClickListener(v -> {
-            try {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(article.getUrl()));
-                context.startActivity(browserIntent);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Intent intent = new Intent(context, ReadingArticleActivity.class);
+            intent.putExtra("title", article.getTitle());
+            intent.putExtra("description", article.getDescription());
+            intent.putExtra("content", article.getContent());
+            intent.putExtra("imageUrl", article.getUrlToImage());
+            intent.putExtra("author", article.getAuthor());
+            intent.putExtra("date", article.getPublishedAt());
+            intent.putExtra("url", article.getUrl());
+            context.startActivity(intent);
         });
     }
 
