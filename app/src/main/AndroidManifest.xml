@@ -30,6 +30,7 @@
         <activity android:name=".activities.SpeakingActivity" />
         <activity android:name=".activities.ConversationActivity" />
         <activity android:name=".activities.ListeningListActivity" />
+        <activity android:name=".activities.WishlistActivity" />
         <activity 
             android:name=".activities.LessonDetailActivity"
             android:parentActivityName=".activities.ListeningListActivity" />

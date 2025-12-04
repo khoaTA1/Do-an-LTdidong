@@ -11,6 +11,10 @@ public class WordEntry implements Serializable {
     private License license;
     private List<String> sourceUrls;
 
+    public void setWord(String word) {
+        this.word = word;
+    }
+
     public String getWord() { return word; }
     public String getPhonetic() { return phonetic; }
     public List<Phonetic> getPhonetics() { return phonetics; }
