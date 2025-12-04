@@ -54,8 +54,8 @@ public class ConversationActivity extends AppCompatActivity {
     private boolean isListening = false;
 
     private GeminiApi geminiApi;
-    // Updated API Key to match SpeakingActivity
-    private static final String API_KEY = "AIzaSyCPbPQEMjghd4vZtMPBd6XRhyjqDDstSlI";
+    // Fixed API Key
+    private static final String API_KEY = "AIzaSyAJv8mCOrdbL68sPHh6OGQE5Lmc-fFEoEk";
     private String currentTopic = "General Conversation";
 
     @Override
