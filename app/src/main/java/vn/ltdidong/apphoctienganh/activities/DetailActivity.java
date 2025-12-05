@@ -1,222 +1,164 @@
 package vn.ltdidong.apphoctienganh.activities;
 
-import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentSnapshot;
 
-import java.io.IOException;
-import java.util.HashMap;
+import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
+import vn.ltdidong.apphoctienganh.models.User;
+import vn.ltdidong.apphoctienganh.models.WordEntry;
+
 import java.util.List;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.api.DictionaryApi;
-import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
-import vn.ltdidong.apphoctienganh.models.Definition;
-import vn.ltdidong.apphoctienganh.models.Meaning;
-import vn.ltdidong.apphoctienganh.models.Phonetic;
-import vn.ltdidong.apphoctienganh.models.User;
-import vn.ltdidong.apphoctienganh.models.WordEntry;
 
 public class DetailActivity extends AppCompatActivity {
 
+    private TextView tvWord, tvPhonetic;
+    private LinearLayout layoutMeanings;
+    private ImageButton btnBack;
+    private ImageButton btnAudio, btnFavorite;
+    private WordEntry wordEntry;
     private MediaPlayer mediaPlayer;
-    private DictionaryApi dictionaryApi;
-    private FirebaseFirestore db; // Thêm Firestore
-
-    // UI
-    private TextView tvWord, tvPhonetic, tvContent;
-    private ImageButton btnBack, btnPlayAudio, btnFavorite;
-
-    // Biến quản lý trạng thái
+    private FirebaseFirestore db;
+    private String userID;
     private boolean isFavorite = false;
-    private SharedPreferences sharedPreferences;
-    private static final String PREF_NAME = "MyFavoriteDictionary";
-    private String userID; // ID người dùng để lưu lên mây
+    private DictionaryApi dictionaryApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        // 1. Khởi tạo các thành phần
-        db = FirebaseFirestore.getInstance();
-        sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        // Ánh xạ View (Bây giờ XML đã có ID này nên sẽ không lỗi nữa)
+        tvWord = findViewById(R.id.tv_detail_word);
+        tvPhonetic = findViewById(R.id.tv_detail_phonetic);
+        layoutMeanings = findViewById(R.id.layout_meanings);
+        btnBack = findViewById(R.id.btn_back_detail);
+        btnAudio = findViewById(R.id.btn_detail_audio);
+        btnFavorite = findViewById(R.id.btn_detail_favorite);
 
-        // Lấy User ID từ Manager của bạn
-        User user = SharedPreferencesManager.getInstance(this).getUser();
-        if (user != null) {
-            userID = String.valueOf(user.getId());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
         }
 
-        // Cấu hình Retrofit
-        Retrofit dictionaryRetrofit = new Retrofit.Builder()
+        if (btnAudio != null) {
+            btnAudio.setOnClickListener(v -> {
+                if (wordEntry != null) {
+                    String audioUrl = wordEntry.getAudioUrl();
+                    playAudio(audioUrl);
+                }
+            });
+        }
+
+        if (btnFavorite != null) {
+            btnFavorite.setOnClickListener(v -> {
+                if (userID == null) {
+                    Toast.makeText(this, "Vui lòng đăng nhập để thêm yêu thích", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (wordEntry == null || wordEntry.getWord() == null)
+                    return;
+
+                if (isFavorite) {
+                    db.collection("users").document(userID)
+                            .collection("favorites").document(wordEntry.getWord())
+                            .delete()
+                            .addOnSuccessListener(aVoid -> {
+                                isFavorite = false;
+                                updateFavoriteIcon();
+                                Toast.makeText(this, "Đã bỏ yêu thích", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(
+                                    e -> Toast.makeText(this, "Lỗi khi bỏ yêu thích", Toast.LENGTH_SHORT).show());
+                } else {
+                    db.collection("users").document(userID)
+                            .collection("favorites").document(wordEntry.getWord())
+                            .set(wordEntry)
+                            .addOnSuccessListener(aVoid -> {
+                                isFavorite = true;
+                                updateFavoriteIcon();
+                                Toast.makeText(this, "Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(
+                                    e -> Toast.makeText(this, "Thêm thất bại", Toast.LENGTH_SHORT).show());
+                }
+            });
+        }
+
+        db = FirebaseFirestore.getInstance();
+        User user = SharedPreferencesManager.getInstance(this).getUser();
+        if (user != null)
+            userID = String.valueOf(user.getId());
+
+        Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.dictionaryapi.dev/api/v2/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
-        dictionaryApi = dictionaryRetrofit.create(DictionaryApi.class);
+        dictionaryApi = retrofit.create(DictionaryApi.class);
 
-        // 2. Ánh xạ View
-        tvWord = findViewById(R.id.tvDetailWord);
-        tvPhonetic = findViewById(R.id.tvDetailPhonetic);
-        tvContent = findViewById(R.id.tvDetailContent);
-        btnBack = findViewById(R.id.btnBack);
-        btnPlayAudio = findViewById(R.id.btnPlayAudio);
-        btnFavorite = findViewById(R.id.btnFavorite);
-
-        btnBack.setOnClickListener(v -> finish());
-
-        // 3. Nhận dữ liệu
-        WordEntry wordEntry = (WordEntry) getIntent().getSerializableExtra("WORD_DATA");
+        wordEntry = (WordEntry) getIntent().getSerializableExtra("WORD_DATA");
 
         if (wordEntry != null) {
-            String currentWord = wordEntry.getWord();
-            tvWord.setText(currentWord);
-
-            // Kiểm tra xem đã thích chưa (Ưu tiên check SharedPreferences cho nhanh)
-            isFavorite = sharedPreferences.getBoolean(currentWord, false);
-            updateFavoriteIcon();
-
-            // Setup sự kiện click Tim
-            setupFavoriteClick(currentWord);
-
-            // --- LOGIC GỌI API ---
-            if (wordEntry.getMeanings() == null || wordEntry.getMeanings().isEmpty()) {
-                // Nếu thiếu dữ liệu (vào từ Wishlist) -> Gọi API
-                fetchWordDetails(currentWord);
-            } else {
-                // Nếu đủ dữ liệu (vào từ Search) -> Hiển thị luôn
-                displayWordData(wordEntry);
-            }
+            if (userID != null)
+                checkFavoriteInitial();
+            ensureFullDataThenDisplay();
+        } else {
+            Toast.makeText(this, "Không có dữ liệu", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void setupFavoriteClick(String currentWord) {
-        btnFavorite.setOnClickListener(v -> {
-            if (userID == null) {
-                Toast.makeText(DetailActivity.this, "Bạn cần đăng nhập để lưu từ!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            isFavorite = !isFavorite; // Đảo trạng thái
-
-            // 1. Lưu vào SharedPreferences (để lần sau vào app thấy ngay tim đỏ)
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            if (isFavorite) {
-                editor.putBoolean(currentWord, true);
-            } else {
-                editor.remove(currentWord);
-            }
-            editor.apply();
-
-            // 2. Cập nhật giao diện ngay lập tức
-            updateFavoriteIcon();
-
-            // 3. Lưu lên FIRESTORE (Quan trọng: Để Wishlist thấy được)
-            if (isFavorite) {
-                // Tạo dữ liệu trống hoặc có timestamp tùy ý
-                Map<String, Object> data = new HashMap<>();
-                data.put("timestamp", System.currentTimeMillis());
-
-                db.collection("users").document(userID)
-                        .collection("favorites").document(currentWord)
-                        .set(data)
-                        .addOnSuccessListener(aVoid -> Toast.makeText(DetailActivity.this, "Đã lưu vào Wishlist", Toast.LENGTH_SHORT).show())
-                        .addOnFailureListener(e -> Toast.makeText(DetailActivity.this, "Lỗi lưu mạng: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-            } else {
-                // Xóa khỏi Firestore
-                db.collection("users").document(userID)
-                        .collection("favorites").document(currentWord)
-                        .delete()
-                        .addOnSuccessListener(aVoid -> Toast.makeText(DetailActivity.this, "Đã xóa khỏi Wishlist", Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-
-    private void fetchWordDetails(String word) {
-        // Toast.makeText(this, "Đang tải dữ liệu...", Toast.LENGTH_SHORT).show();
-        dictionaryApi.getDefinition(word).enqueue(new Callback<List<WordEntry>>() {
+    private void ensureFullDataThenDisplay() {
+        boolean missing = (wordEntry.getMeanings() == null || wordEntry.getMeanings().isEmpty());
+        if (!missing) {
+            displayData();
+            return;
+        }
+        dictionaryApi.getDefinition(wordEntry.getWord()).enqueue(new Callback<List<WordEntry>>() {
             @Override
             public void onResponse(Call<List<WordEntry>> call, Response<List<WordEntry>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    displayWordData(response.body().get(0));
+                    wordEntry = response.body().get(0);
+                    displayData();
                 } else {
-                    tvContent.setText("Không tìm thấy thông tin chi tiết.");
+                    displayData();
                 }
             }
 
             @Override
             public void onFailure(Call<List<WordEntry>> call, Throwable t) {
-                tvContent.setText("Lỗi kết nối mạng.");
+                displayData();
             }
         });
     }
 
-    private void displayWordData(WordEntry wordEntry) {
-        // Logic hiển thị cũ (Phonetic, Audio, Meaning)
-        String textPhonetic = "";
-        String audioUrl = "";
-
-        if (wordEntry.getPhonetics() != null) {
-            for (Phonetic p : wordEntry.getPhonetics()) {
-                if (TextUtils.isEmpty(textPhonetic) && !TextUtils.isEmpty(p.getText())) {
-                    textPhonetic = p.getText();
-                }
-                if (TextUtils.isEmpty(audioUrl) && !TextUtils.isEmpty(p.getAudio())) {
-                    audioUrl = p.getAudio();
-                }
-            }
-        }
-        tvPhonetic.setText(TextUtils.isEmpty(textPhonetic) ? "" : textPhonetic);
-
-        if (!TextUtils.isEmpty(audioUrl)) {
-            btnPlayAudio.setVisibility(View.VISIBLE);
-            if (audioUrl.startsWith("//")) {
-                audioUrl = "https:" + audioUrl;
-            }
-            String finalAudioUrl = audioUrl;
-            btnPlayAudio.setOnClickListener(v -> playAudio(finalAudioUrl));
-        } else {
-            btnPlayAudio.setVisibility(View.GONE);
-        }
-
-        StringBuilder content = new StringBuilder();
-        if (wordEntry.getMeanings() != null) {
-            for (Meaning meaning : wordEntry.getMeanings()) {
-                content.append("★ ").append(meaning.getPartOfSpeech().toUpperCase()).append("\n");
-                if (meaning.getDefinitions() != null) {
-                    int count = 1;
-                    for (Definition def : meaning.getDefinitions()) {
-                        content.append("   ").append(count).append(". ").append(def.getDefinition()).append("\n");
-                        if (!TextUtils.isEmpty(def.getExample())) {
-                            content.append("      Ex: \"").append(def.getExample()).append("\"\n");
-                        }
-                        count++;
-                    }
-                }
-                content.append("\n────────────────────\n\n");
-            }
-        }
-        tvContent.setText(content.toString());
+    private void checkFavoriteInitial() {
+        db.collection("users").document(userID)
+                .collection("favorites").document(wordEntry.getWord())
+                .get()
+                .addOnSuccessListener(doc -> {
+                    isFavorite = doc != null && doc.exists();
+                    updateFavoriteIcon();
+                });
     }
 
     private void updateFavoriteIcon() {
+        if (btnFavorite == null)
+            return;
         if (isFavorite) {
             btnFavorite.setImageResource(R.drawable.ic_favorite_red);
         } else {
@@ -224,31 +166,85 @@ public class DetailActivity extends AppCompatActivity {
         }
     }
 
-    private void playAudio(String url) {
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
+    private void displayData() {
+        tvWord.setText(wordEntry.getWord());
+
+        // Xử lý Phonetic
+        String phoneticText = "";
+        if (wordEntry.getPhonetics() != null) {
+            for (WordEntry.Phonetic p : wordEntry.getPhonetics()) {
+                if (p.getText() != null && !p.getText().isEmpty()) {
+                    phoneticText = p.getText();
+                    break;
+                }
+            }
+        }
+        if (phoneticText.isEmpty() && wordEntry.getPhonetic() != null) {
+            phoneticText = wordEntry.getPhonetic();
+        }
+        tvPhonetic.setText(phoneticText);
+
+        // Xử lý Meaning
+        if (layoutMeanings != null) {
+            layoutMeanings.removeAllViews();
+            if (wordEntry.getMeanings() != null) {
+                for (WordEntry.Meaning m : wordEntry.getMeanings()) {
+                    // Loại từ
+                    TextView tvPart = new TextView(this);
+                    tvPart.setText("- " + m.getPartOfSpeech());
+                    tvPart.setTextSize(18);
+                    tvPart.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvPart.setPadding(0, 16, 0, 8);
+                    layoutMeanings.addView(tvPart);
+
+                    // Định nghĩa
+                    if (m.getDefinitions() != null) {
+                        for (WordEntry.Definition d : m.getDefinitions()) {
+                            TextView tvDef = new TextView(this);
+                            tvDef.setText(" • " + d.getDefinition());
+                            tvDef.setTextSize(16);
+                            tvDef.setPadding(16, 0, 0, 8);
+                            layoutMeanings.addView(tvDef);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void playAudio(String audioUrl) {
+        stopAudio();
+        if (audioUrl == null || audioUrl.isEmpty()) {
+            Toast.makeText(this, "Không có file âm thanh", Toast.LENGTH_SHORT).show();
+            return;
         }
         try {
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build());
-            mediaPlayer.setDataSource(url);
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .setUsage(AudioAttributes.USAGE_MEDIA).build());
+            mediaPlayer.setDataSource(audioUrl);
             mediaPlayer.prepareAsync();
-            mediaPlayer.setOnPreparedListener(mp -> mp.start());
-        } catch (IOException e) {
-            e.printStackTrace();
+            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+        } catch (Exception e) {
+        }
+    }
+
+    private void stopAudio() {
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying())
+                    mediaPlayer.stop();
+                mediaPlayer.release();
+            } catch (Exception e) {
+            }
+            mediaPlayer = null;
         }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
+    protected void onStop() {
+        super.onStop();
+        stopAudio();
     }
 }
