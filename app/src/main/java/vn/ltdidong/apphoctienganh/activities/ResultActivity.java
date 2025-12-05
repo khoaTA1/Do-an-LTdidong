@@ -12,7 +12,13 @@ import androidx.lifecycle.ViewModelProvider;
 import com.google.android.material.button.MaterialButton;
 
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.database.AppDatabase;
+import vn.ltdidong.apphoctienganh.database.UserProgressDao;
+import vn.ltdidong.apphoctienganh.database.UserStreakDao;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
+import vn.ltdidong.apphoctienganh.models.UserProgress;
+import vn.ltdidong.apphoctienganh.models.UserStreak;
 import vn.ltdidong.apphoctienganh.viewmodel.ListeningViewModel;
 
 /**
@@ -29,7 +35,6 @@ public class ResultActivity extends AppCompatActivity {
     private ListeningLesson lesson;
     
     // UI components
-    private TextView tvScore;
     private TextView tvScorePercentage;
     private TextView tvCorrectAnswers;
     private TextView tvResultMessage;
@@ -60,6 +65,9 @@ public class ResultActivity extends AppCompatActivity {
         // Display results
         displayResults();
         
+        // Save progress to database
+        saveUserProgress();
+        
         // Setup buttons
         setupButtons();
     }
@@ -68,7 +76,6 @@ public class ResultActivity extends AppCompatActivity {
      * Khởi tạo tất cả views
      */
     private void initViews() {
-        tvScore = null;
         tvScorePercentage = findViewById(R.id.tvScorePercentage);
         tvCorrectAnswers = findViewById(R.id.tvCorrectAnswers);
         tvResultMessage = findViewById(R.id.tvMessage);
@@ -87,14 +94,77 @@ public class ResultActivity extends AppCompatActivity {
     }
     
     /**
+     * Lưu tiến độ học tập vào database
+     */
+    private void saveUserProgress() {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null || lessonId == -1) {
+            return;
+        }
+        
+        long currentTime = System.currentTimeMillis();
+        
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            AppDatabase db = AppDatabase.getDatabase(this);
+            UserProgressDao progressDao = db.userProgressDao();
+            UserStreakDao streakDao = db.userStreakDao();
+            
+            // 1. Cập nhật UserProgress
+            UserProgress existingProgress = progressDao.getProgressByUserAndLessonSync(userId, lessonId);
+            
+            if (existingProgress != null) {
+                // Cập nhật progress hiện có
+                existingProgress.setCorrectAnswers(correctAnswers);
+                existingProgress.setTotalQuestions(totalQuestions);
+                existingProgress.setScore(score);
+                existingProgress.setStatus("COMPLETED");
+                existingProgress.setCompletedAt(currentTime);
+                existingProgress.setAttempts(existingProgress.getAttempts() + 1);
+                existingProgress.updateBestScore();
+                
+                progressDao.updateProgress(existingProgress);
+            } else {
+                // Tạo progress mới
+                UserProgress newProgress = new UserProgress(
+                    userId,
+                    lessonId,
+                    correctAnswers,
+                    totalQuestions,
+                    score,
+                    "COMPLETED",
+                    currentTime
+                );
+                
+                progressDao.insertProgress(newProgress);
+            }
+            
+            // 2. Cập nhật UserStreak
+            UserStreak streak = streakDao.getStreakByUserSync(userId);
+            
+            if (streak == null) {
+                // Tạo streak mới
+                streak = new UserStreak(userId);
+            }
+            
+            // Cập nhật streak (chỉ cập nhật 1 lần mỗi ngày)
+            if (streak.shouldUpdateStreak(currentTime)) {
+                streak.updateStreak(currentTime);
+                
+                if (streak.getId() == 0) {
+                    streakDao.insertStreak(streak);
+                } else {
+                    streakDao.updateStreak(streak);
+                }
+            }
+        });
+    }
+    
+    /**
      * Hiển thị kết quả
      */
     private void displayResults() {
         // Score percentage
         tvScorePercentage.setText(String.format("%.0f%%", score));
-        
-        // Score fraction - included in tvCorrectAnswers
-        // tvScore.setText(correctAnswers + "/" + totalQuestions);
         
         // Correct answers
         tvCorrectAnswers.setText("Correct Answers: " + correctAnswers + "/" + totalQuestions);
@@ -186,6 +256,7 @@ public class ResultActivity extends AppCompatActivity {
     
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         // Quay về ListeningListActivity
         Intent intent = new Intent(ResultActivity.this, ListeningListActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

@@ -47,4 +47,8 @@
     <color name="result_great">#8BC34A</color>
     <color name="result_good">#FF9800</color>
     <color name="result_try_again">#F44336</color>
+    
+    <!-- Fill-in-the-blank Colors -->
+    <color name="hint_background">#FFF9C4</color>
+    <color name="text_secondary">#757575</color>
 </resources>

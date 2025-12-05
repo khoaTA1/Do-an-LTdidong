@@ -1,0 +1,259 @@
+{
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Basic Greetings",
+      "description": "Learn how to greet people in English",
+      "difficulty": "EASY",
+      "audioUrl": "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/audio%2Fsmalltalka0101.mp3?alt=media",
+      "duration": 23,
+      "transcript": "Hello! My name is Sarah. Nice to meet you. How are you today? I'm doing great, thank you!",
+      "imageUrl": "ic_lesson_1",
+      "questionCount": 3,
+      "questions": [
+        {
+          "questionText": "What is the man doing right now?",
+          "optionA": "Working full-time",
+          "optionB": "Staying at home",
+          "optionC": "Going to school",
+          "optionD": "Traveling",
+          "correctAnswer": "C",
+          "explanation": "The speaker clearly says 'I've been good. I'm in school right now'",
+          "orderIndex": 1
+        },
+        {
+          "questionText": "Which school does the men go to?",
+          "optionA": "UCLA",
+          "optionB": "PCC",
+          "optionC": "Harvard",
+          "optionD": "USC",
+          "correctAnswer": "B",
+          "explanation": "The speaker says 'I go to PCC'",
+          "orderIndex": 2
+        },
+        {
+          "questionText": "What does the woman say to the man at the end of the conversation?",
+          "optionA": "Good luck with your new job",
+          "optionB": "Good luck on your exam",
+          "optionC": "Good luck with school",
+          "optionD": "Have a nice day",
+          "correctAnswer": "C",
+          "explanation": "Good luck with school",
+          "orderIndex": 3
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Daily Routine",
+      "description": "Listen about someone's daily activities",
+      "difficulty": "EASY",
+      "audioUrl": "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/audio%2Fsample_audio_2.mp3?alt=media",
+      "duration": 60,
+      "transcript": "I wake up at 7 AM every day. First, I brush my teeth and take a shower. Then I have breakfast with my family. After that, I go to school at 8 AM.",
+      "imageUrl": "ic_lesson_2",
+      "questionCount": 3,
+      "questions": [
+        {
+          "questionText": "What time does the speaker wake up?",
+          "optionA": "6 AM",
+          "optionB": "7 AM",
+          "optionC": "8 AM",
+          "optionD": "9 AM",
+          "correctAnswer": "B",
+          "explanation": "The speaker says 'I wake up at 7 AM'",
+          "orderIndex": 1
+        },
+        {
+          "questionText": "What does the speaker do first after waking up?",
+          "optionA": "Have breakfast",
+          "optionB": "Go to school",
+          "optionC": "Brush teeth",
+          "optionD": "Watch TV",
+          "correctAnswer": "C",
+          "explanation": "First activity is 'brush my teeth'",
+          "orderIndex": 2
+        },
+        {
+          "questionText": "What time does the speaker go to school?",
+          "optionA": "7 AM",
+          "optionB": "8 AM",
+          "optionC": "9 AM",
+          "optionD": "10 AM",
+          "correctAnswer": "B",
+          "explanation": "The speaker goes to school at 8 AM",
+          "orderIndex": 3
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Shopping at the Mall",
+      "description": "A conversation about shopping",
+      "difficulty": "MEDIUM",
+      "audioUrl": "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/audio%2Fsample_audio_3.mp3?alt=media",
+      "duration": 90,
+      "transcript": "Customer: Excuse me, how much is this blue jacket?\nSalesperson: It's $45, but we have a 20% discount today.\nCustomer: That's great! I'll take it. Do you accept credit cards?\nSalesperson: Yes, we do. Cash and credit cards are both fine.",
+      "imageUrl": "ic_lesson_3",
+      "questionCount": 4,
+      "questions": [
+        {
+          "questionText": "How much is the jacket originally?",
+          "optionA": "$35",
+          "optionB": "$40",
+          "optionC": "$45",
+          "optionD": "$50",
+          "correctAnswer": "C",
+          "explanation": "The salesperson says it's $45",
+          "orderIndex": 1
+        },
+        {
+          "questionText": "What discount is available?",
+          "optionA": "10%",
+          "optionB": "15%",
+          "optionC": "20%",
+          "optionD": "25%",
+          "correctAnswer": "C",
+          "explanation": "There is a 20% discount today",
+          "orderIndex": 2
+        },
+        {
+          "questionText": "What color is the jacket?",
+          "optionA": "Red",
+          "optionB": "Blue",
+          "optionC": "Green",
+          "optionD": "Black",
+          "correctAnswer": "B",
+          "explanation": "The customer asks about 'this blue jacket'",
+          "orderIndex": 3
+        },
+        {
+          "questionText": "What payment methods are accepted?",
+          "optionA": "Only cash",
+          "optionB": "Only credit cards",
+          "optionC": "Cash and credit cards",
+          "optionD": "Only mobile payment",
+          "correctAnswer": "C",
+          "explanation": "Both cash and credit cards are accepted",
+          "orderIndex": 4
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Weather Forecast",
+      "description": "Listen to a weather report",
+      "difficulty": "MEDIUM",
+      "audioUrl": "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/audio%2Fsample_audio_4.mp3?alt=media",
+      "duration": 75,
+      "transcript": "Good morning! Here's today's weather forecast. It will be sunny in the morning with temperatures around 25 degrees Celsius. In the afternoon, we expect some clouds and the temperature will rise to 30 degrees. There's a 40% chance of rain in the evening, so don't forget your umbrella!",
+      "imageUrl": "ic_lesson_4",
+      "questionCount": 4,
+      "questions": [
+        {
+          "questionText": "How will the morning weather be?",
+          "optionA": "Rainy",
+          "optionB": "Cloudy",
+          "optionC": "Sunny",
+          "optionD": "Snowy",
+          "correctAnswer": "C",
+          "explanation": "It will be sunny in the morning",
+          "orderIndex": 1
+        },
+        {
+          "questionText": "What's the morning temperature?",
+          "optionA": "20°C",
+          "optionB": "25°C",
+          "optionC": "30°C",
+          "optionD": "35°C",
+          "correctAnswer": "B",
+          "explanation": "Morning temperature is around 25 degrees",
+          "orderIndex": 2
+        },
+        {
+          "questionText": "When might it rain?",
+          "optionA": "Morning",
+          "optionB": "Afternoon",
+          "optionC": "Evening",
+          "optionD": "Night",
+          "correctAnswer": "C",
+          "explanation": "40% chance of rain in the evening",
+          "orderIndex": 3
+        },
+        {
+          "questionText": "What should you bring?",
+          "optionA": "Sunglasses",
+          "optionB": "Umbrella",
+          "optionC": "Hat",
+          "optionD": "Coat",
+          "correctAnswer": "B",
+          "explanation": "Don't forget your umbrella!",
+          "orderIndex": 4
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Job Interview",
+      "description": "A conversation during a job interview",
+      "difficulty": "HARD",
+      "audioUrl": "https://firebasestorage.googleapis.com/v0/b/your-project-id.appspot.com/o/audio%2Fsample_audio_5.mp3?alt=media",
+      "duration": 120,
+      "transcript": "Interviewer: Thank you for coming, Mr. Johnson. Can you tell me about your previous work experience?\nCandidate: Certainly. I worked as a marketing manager for five years at Tech Solutions Inc. I was responsible for developing marketing strategies and managing a team of ten people. We successfully increased sales by 35% during my tenure.\ninterviewer: That's impressive. Why are you interested in joining our company?\nCandidate: I've been following your company's growth for the past two years. I'm particularly interested in your innovative approach to digital marketing, and I believe my experience would be valuable to your team.",
+      "imageUrl": "ic_lesson_5",
+      "questionCount": 5,
+      "questions": [
+        {
+          "questionText": "What was the candidate's previous position?",
+          "optionA": "Sales Manager",
+          "optionB": "Marketing Manager",
+          "optionC": "Project Manager",
+          "optionD": "Product Manager",
+          "correctAnswer": "B",
+          "explanation": "He worked as a marketing manager",
+          "orderIndex": 1
+        },
+        {
+          "questionText": "How long did he work at his previous company?",
+          "optionA": "3 years",
+          "optionB": "4 years",
+          "optionC": "5 years",
+          "optionD": "6 years",
+          "correctAnswer": "C",
+          "explanation": "He worked for five years",
+          "orderIndex": 2
+        },
+        {
+          "questionText": "How many people did he manage?",
+          "optionA": "5 people",
+          "optionB": "10 people",
+          "optionC": "15 people",
+          "optionD": "20 people",
+          "correctAnswer": "B",
+          "explanation": "He managed a team of ten people",
+          "orderIndex": 3
+        },
+        {
+          "questionText": "By how much did sales increase?",
+          "optionA": "25%",
+          "optionB": "30%",
+          "optionC": "35%",
+          "optionD": "40%",
+          "correctAnswer": "C",
+          "explanation": "Sales increased by 35%",
+          "orderIndex": 4
+        },
+        {
+          "questionText": "How long has he been following the company?",
+          "optionA": "1 year",
+          "optionB": "2 years",
+          "optionC": "3 years",
+          "optionD": "4 years",
+          "correctAnswer": "B",
+          "explanation": "He's been following for the past two years",
+          "orderIndex": 5
+        }
+      ]
+    }
+  ]
+}
