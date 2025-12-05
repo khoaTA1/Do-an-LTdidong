@@ -1,8 +1,12 @@
 package vn.ltdidong.apphoctienganh.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -11,8 +15,11 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,18 +41,21 @@ import vn.ltdidong.apphoctienganh.models.GeminiResponse;
 
 public class ConversationActivity extends AppCompatActivity {
 
-    private static final int REQ_CODE_SPEECH_INPUT = 100;
+    private static final int PERMISSION_REQUEST_CODE = 200;
     private RecyclerView recyclerView;
     private ChatAdapter chatAdapter;
     private List<ChatMessage> messageList;
     private ImageButton btnMic, btnBack;
-    private EditText etInput; // Optional: for typing if needed later
     private TextView tvTopicTitle;
 
     private TextToSpeech textToSpeech;
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechRecognizerIntent;
+    private boolean isListening = false;
+
     private GeminiApi geminiApi;
-    // Updated API Key to match SpeakingActivity
-    private static final String API_KEY = "AIzaSyCJvhWIWINzPIr0liu_WKEUHiqw5wpgLCo"; 
+    // Fixed API Key
+    private static final String API_KEY = "AIzaSyAJv8mCOrdbL68sPHh6OGQE5Lmc-fFEoEk";
     private String currentTopic = "General Conversation";
 
     @Override
@@ -62,6 +72,7 @@ public class ConversationActivity extends AppCompatActivity {
         setupRecyclerView();
         setupGemini();
         setupTTS();
+        setupSpeechRecognizer();
 
         // Start with a greeting from AI
         sendInitialGreeting();
@@ -76,7 +87,18 @@ public class ConversationActivity extends AppCompatActivity {
         tvTopicTitle.setText("Topic: " + currentTopic);
 
         btnBack.setOnClickListener(v -> finish());
-        btnMic.setOnClickListener(v -> startVoiceInput());
+        
+        btnMic.setOnClickListener(v -> {
+            if (checkPermission()) {
+                if (!isListening) {
+                    startListening();
+                } else {
+                    stopListening();
+                }
+            } else {
+                requestPermission();
+            }
+        });
     }
 
     private void setupRecyclerView() {
@@ -102,36 +124,93 @@ public class ConversationActivity extends AppCompatActivity {
         });
     }
 
-    private void sendInitialGreeting() {
-        String prompt = "You are an English tutor. Start a conversation about the topic: '" + currentTopic + "'. Ask a question to start.";
-        callGemini(prompt, false);
+    private void setupSpeechRecognizer() {
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
+
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                btnMic.setImageResource(android.R.drawable.ic_btn_speak_now); // Indicate listening
+                Toast.makeText(ConversationActivity.this, "Listening...", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {}
+
+            @Override
+            public void onRmsChanged(float rmsdB) {}
+
+            @Override
+            public void onBufferReceived(byte[] buffer) {}
+
+            @Override
+            public void onEndOfSpeech() {
+                btnMic.setImageResource(R.drawable.ic_speaking); // Reset icon (assuming ic_speaking exists or use default mic icon)
+                isListening = false;
+            }
+
+            @Override
+            public void onError(int error) {
+                btnMic.setImageResource(R.drawable.ic_speaking); 
+                isListening = false;
+                // Optional: Show error message
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (matches != null && !matches.isEmpty()) {
+                    String userMessage = matches.get(0);
+                    addMessage(userMessage, true);
+                    processUserMessage(userMessage);
+                }
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {}
+
+            @Override
+            public void onEvent(int eventType, Bundle params) {}
+        });
     }
 
-    private void startVoiceInput() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...");
-        try {
-            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
-        } catch (Exception e) {
-            Toast.makeText(this, "Speech input not supported", Toast.LENGTH_SHORT).show();
-        }
+    private void startListening() {
+        speechRecognizer.startListening(speechRecognizerIntent);
+        isListening = true;
+    }
+
+    private void stopListening() {
+        speechRecognizer.stopListening();
+        isListening = false;
+        btnMic.setImageResource(R.drawable.ic_speaking);
+    }
+
+    private boolean checkPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_CODE);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQ_CODE_SPEECH_INPUT && resultCode == RESULT_OK && data != null) {
-            ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (result != null && !result.isEmpty()) {
-                String userMessage = result.get(0);
-                addMessage(userMessage, true);
-                
-                // Generate AI response
-                processUserMessage(userMessage);
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening();
+            } else {
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void sendInitialGreeting() {
+        String prompt = "You are an English tutor. Start a conversation about the topic: '" + currentTopic + "'. Ask a question to start.";
+        callGemini(prompt, false);
     }
 
     private void addMessage(String text, boolean isUser) {
@@ -170,6 +249,9 @@ public class ConversationActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
         if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
