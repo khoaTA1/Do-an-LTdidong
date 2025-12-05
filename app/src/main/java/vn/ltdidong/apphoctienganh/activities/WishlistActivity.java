@@ -3,6 +3,7 @@ package vn.ltdidong.apphoctienganh.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -20,51 +21,45 @@ import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.adapters.WishlistAdapter;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.User;
-// Lưu ý: Import WordEntry của bạn để chuyển màn hình
 import vn.ltdidong.apphoctienganh.models.WordEntry;
 
 public class WishlistActivity extends AppCompatActivity {
 
     private RecyclerView rvWishlist;
     private WishlistAdapter adapter;
-    private List<String> favoriteList;
+    private List<String> favoriteListNames; // Dùng cho Adapter (hiển thị tên)
+    private ArrayList<WordEntry> flashcardDataList; // Dùng gửi sang Flashcard
     private FirebaseFirestore db;
     private String userID;
+    private Button btnStartFlashcard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wishlist);
 
-        // 1. Khởi tạo
         db = FirebaseFirestore.getInstance();
         rvWishlist = findViewById(R.id.rvWishlist);
         ImageButton btnBack = findViewById(R.id.btnBackWishlist);
+        btnStartFlashcard = findViewById(R.id.btnStartFlashcard);
 
-        favoriteList = new ArrayList<>();
+        favoriteListNames = new ArrayList<>();
+        flashcardDataList = new ArrayList<>();
 
-        // Cấu hình RecyclerView
         rvWishlist.setLayoutManager(new LinearLayoutManager(this));
 
-        // Xử lý sự kiện Adapter
-        adapter = new WishlistAdapter(favoriteList, new WishlistAdapter.OnItemClickListener() {
+        // Setup Adapter
+        adapter = new WishlistAdapter(favoriteListNames, new WishlistAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(String word) {
-                // KHI CLICK VÀO TỪ:
-                // Lưu ý: Vì ta chỉ lưu mỗi cái Tên từ trên Firestore,
-                // nên khi click vào đây, ta cần tạo một WordEntry giả chỉ có tên
-                // và chuyển sang DetailActivity.
-                // DetailActivity cần code gọi lại API nếu thiếu dữ liệu (hoặc bạn phải sửa logic lưu cả object JSON).
-
-                WordEntry entry = new WordEntry();
-                entry.setWord(word);
-
+                WordEntry selectedEntry = findEntryByWord(word);
+                if (selectedEntry == null) {
+                    selectedEntry = new WordEntry();
+                    selectedEntry.setWord(word);
+                }
                 Intent intent = new Intent(WishlistActivity.this, DetailActivity.class);
-                intent.putExtra("WORD_DATA", entry);
+                intent.putExtra("WORD_DATA", selectedEntry);
                 startActivity(intent);
-
-                // Gợi ý: Tại DetailActivity, bạn nên thêm logic check:
-                // Nếu wordEntry.getMeanings() == null thì gọi lại API Dictionary để lấy nghĩa.
             }
 
             @Override
@@ -75,38 +70,62 @@ public class WishlistActivity extends AppCompatActivity {
 
         rvWishlist.setAdapter(adapter);
 
-        btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
-        // 2. Lấy UserID và tải dữ liệu
+        // --- SỰ KIỆN NÚT ÔN TẬP ---
+        if (btnStartFlashcard != null) {
+            btnStartFlashcard.setOnClickListener(v -> {
+                if (flashcardDataList == null || flashcardDataList.isEmpty()) {
+                    Toast.makeText(this, "Danh sách trống, hãy thêm từ vựng!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                // Gửi list object sang FlashcardActivity
+                Intent intent = new Intent(WishlistActivity.this, FlashcardActivity.class);
+                intent.putExtra("FLASHCARD_LIST", flashcardDataList);
+                startActivity(intent);
+            });
+        }
+
+        // Lấy User và Load Data
         User user = SharedPreferencesManager.getInstance(this).getUser();
         if (user != null) {
             userID = String.valueOf(user.getId());
             loadWishlistData();
         } else {
             Toast.makeText(this, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 
+    private WordEntry findEntryByWord(String word) {
+        for (WordEntry entry : flashcardDataList) {
+            if (entry.getWord().equalsIgnoreCase(word)) return entry;
+        }
+        return null;
+    }
+
     private void loadWishlistData() {
-        // Đường dẫn: users -> [userID] -> favorites
         db.collection("users").document(userID).collection("favorites")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    favoriteList.clear();
+                    favoriteListNames.clear();
+                    flashcardDataList.clear();
+
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                        // Lấy ID của document chính là từ vựng (ví dụ: "apple")
-                        favoriteList.add(doc.getId());
+                        favoriteListNames.add(doc.getId());
+
+                        WordEntry entry = doc.toObject(WordEntry.class);
+                        if (entry != null) {
+                            // Đảm bảo có tên từ vựng
+                            if (entry.getWord() == null || entry.getWord().isEmpty()) {
+                                entry.setWord(doc.getId());
+                            }
+                            flashcardDataList.add(entry);
+                        }
                     }
                     adapter.notifyDataSetChanged();
-
-                    if (favoriteList.isEmpty()) {
-                        Toast.makeText(this, "Danh sách trống", Toast.LENGTH_SHORT).show();
-                    }
                 })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Lỗi tải dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    Log.e("Wishlist", "Error", e);
-                });
+                .addOnFailureListener(e -> Log.e("Wishlist", "Lỗi tải data: " + e.getMessage()));
     }
 
     private void deleteWordFromFirestore(String word, int position) {
@@ -114,10 +133,19 @@ public class WishlistActivity extends AppCompatActivity {
                 .collection("favorites").document(word)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    // Xóa thành công trên Server thì mới xóa trên Giao diện
-                    favoriteList.remove(position);
-                    adapter.notifyItemRemoved(position);
-                    adapter.notifyItemRangeChanged(position, favoriteList.size());
+                    if (position >= 0 && position < favoriteListNames.size()) {
+                        favoriteListNames.remove(position);
+
+                        // Xóa trong list data
+                        for (int i = 0; i < flashcardDataList.size(); i++) {
+                            if (flashcardDataList.get(i).getWord().equals(word)) {
+                                flashcardDataList.remove(i);
+                                break;
+                            }
+                        }
+                        adapter.notifyItemRemoved(position);
+                        adapter.notifyItemRangeChanged(position, favoriteListNames.size());
+                    }
                     Toast.makeText(this, "Đã xóa " + word, Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> Toast.makeText(this, "Xóa thất bại!", Toast.LENGTH_SHORT).show());
