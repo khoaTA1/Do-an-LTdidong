@@ -113,7 +113,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                 new String[]{"Nghe cơ bản"});
 
         setupSkill(speakingSkill.getId(), "Speaking", R.drawable.ic_speaking,
-                new String[]{"Luyện nói", "Nói chuyện"});
+                new String[]{"Luyện nói", "Ngữ điệu", "Nói chuyện"});
 
         setupSkill(writingSkill.getId(), "Writing", R.drawable.ic_writing,
                 new String[]{"Viết câu"});
@@ -171,6 +171,8 @@ public class SkillHomeActivity extends AppCompatActivity {
                     startActivity(new Intent(this, SpeakingActivity.class));
                 } else if (mode.equals("Nói chuyện")) {
                     showTopicDialog();
+                } else if (mode.equals("Ngữ điệu")) {
+                    startActivity(new Intent(this, IntonationActivity.class));
                 }
                 break;
 
