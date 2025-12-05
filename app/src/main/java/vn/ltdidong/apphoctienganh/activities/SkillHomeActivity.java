@@ -116,7 +116,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                 new String[]{"Luyện nói", "Ngữ điệu", "Nói chuyện"});
 
         setupSkill(writingSkill.getId(), "Writing", R.drawable.ic_writing,
-                new String[]{"Viết câu"});
+                new String[]{"Viết câu", "Dịch tương tác"});
     }
 
     private void setupSkill(int skillId, String title, int iconRes, String[] modes) {
@@ -181,6 +181,8 @@ public class SkillHomeActivity extends AppCompatActivity {
             case "Writing":
                 if (mode.equals("Viết câu")) {
                     startActivity(new Intent(this, WritingActivity.class));
+                } else if (mode.equals("Dịch tương tác")) {
+                    startActivity(new Intent(this, InteractiveTranslationActivity.class));
                 }
                 break;
         }
