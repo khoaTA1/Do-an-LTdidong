@@ -1,0 +1,174 @@
+{
+  "lessons_with_fill_blank": [
+    {
+      "lesson_id": 1,
+      "lesson_title": "Basic Greetings",
+      "fill_blank_questions": [
+        {
+          "sentenceWithBlanks": "Hello! My name is {blank}.",
+          "correctAnswers": "Sarah",
+          "hint": "What's the speaker's name?",
+          "orderIndex": 1,
+          "audioTimestamp": 0
+        },
+        {
+          "sentenceWithBlanks": "{blank} to meet you.",
+          "correctAnswers": "Nice",
+          "hint": "Common greeting phrase",
+          "orderIndex": 2,
+          "audioTimestamp": 3
+        },
+        {
+          "sentenceWithBlanks": "How are you {blank}?",
+          "correctAnswers": "today",
+          "hint": "Time reference",
+          "orderIndex": 3,
+          "audioTimestamp": 6
+        }
+      ]
+    },
+    {
+      "lesson_id": 2,
+      "lesson_title": "Daily Routine",
+      "fill_blank_questions": [
+        {
+          "sentenceWithBlanks": "I wake up at {blank} every day.",
+          "correctAnswers": "7 AM",
+          "hint": "What time? (Format: number + AM/PM)",
+          "orderIndex": 1,
+          "audioTimestamp": 0
+        },
+        {
+          "sentenceWithBlanks": "First, I {blank} and take a shower.",
+          "correctAnswers": "brush my teeth",
+          "hint": "What do you do first in the morning?",
+          "orderIndex": 2,
+          "audioTimestamp": 5
+        },
+        {
+          "sentenceWithBlanks": "Then I have {blank} with my family.",
+          "correctAnswers": "breakfast",
+          "hint": "What meal do you eat in the morning?",
+          "orderIndex": 3,
+          "audioTimestamp": 10
+        },
+        {
+          "sentenceWithBlanks": "After that, I go to {blank} at 8 AM.",
+          "correctAnswers": "school",
+          "hint": "Where do students go?",
+          "orderIndex": 4,
+          "audioTimestamp": 15
+        }
+      ]
+    },
+    {
+      "lesson_id": 3,
+      "lesson_title": "Shopping at the Mall",
+      "fill_blank_questions": [
+        {
+          "sentenceWithBlanks": "Excuse me, how much is this {blank} jacket?",
+          "correctAnswers": "blue",
+          "hint": "What color?",
+          "orderIndex": 1,
+          "audioTimestamp": 0
+        },
+        {
+          "sentenceWithBlanks": "It's ${blank}, but we have a 20% discount today.",
+          "correctAnswers": "45",
+          "hint": "Original price (number only)",
+          "orderIndex": 2,
+          "audioTimestamp": 4
+        },
+        {
+          "sentenceWithBlanks": "Do you accept {blank} cards?",
+          "correctAnswers": "credit",
+          "hint": "Type of payment card",
+          "orderIndex": 3,
+          "audioTimestamp": 8
+        },
+        {
+          "sentenceWithBlanks": "Yes, we do. {blank} and credit cards are both fine.",
+          "correctAnswers": "Cash",
+          "hint": "Alternative payment method",
+          "orderIndex": 4,
+          "audioTimestamp": 12
+        }
+      ]
+    },
+    {
+      "lesson_id": 4,
+      "lesson_title": "Weather Forecast",
+      "fill_blank_questions": [
+        {
+          "sentenceWithBlanks": "It will be {blank} in the morning.",
+          "correctAnswers": "sunny",
+          "hint": "Weather condition (opposite of cloudy)",
+          "orderIndex": 1,
+          "audioTimestamp": 2
+        },
+        {
+          "sentenceWithBlanks": "The temperature will be around {blank} degrees Celsius.",
+          "correctAnswers": "25",
+          "hint": "Number only",
+          "orderIndex": 2,
+          "audioTimestamp": 6
+        },
+        {
+          "sentenceWithBlanks": "There's a 40% chance of {blank} in the evening.",
+          "correctAnswers": "rain",
+          "hint": "Weather phenomenon with water",
+          "orderIndex": 3,
+          "audioTimestamp": 10
+        },
+        {
+          "sentenceWithBlanks": "Don't forget your {blank}!",
+          "correctAnswers": "umbrella",
+          "hint": "What do you use when it rains?",
+          "orderIndex": 4,
+          "audioTimestamp": 14
+        }
+      ]
+    },
+    {
+      "lesson_id": 5,
+      "lesson_title": "Job Interview",
+      "fill_blank_questions": [
+        {
+          "sentenceWithBlanks": "I worked as a {blank} manager for five years.",
+          "correctAnswers": "marketing",
+          "hint": "Type of manager (related to promotion)",
+          "orderIndex": 1,
+          "audioTimestamp": 5
+        },
+        {
+          "sentenceWithBlanks": "I was responsible for managing a team of {blank} people.",
+          "correctAnswers": "ten",
+          "hint": "Number (word form)",
+          "orderIndex": 2,
+          "audioTimestamp": 10
+        },
+        {
+          "sentenceWithBlanks": "We successfully increased sales by {blank}%.",
+          "correctAnswers": "35",
+          "hint": "Percentage (number only)",
+          "orderIndex": 3,
+          "audioTimestamp": 15
+        },
+        {
+          "sentenceWithBlanks": "I've been following your company's {blank} for the past two years.",
+          "correctAnswers": "growth",
+          "hint": "What you follow about a company?",
+          "orderIndex": 4,
+          "audioTimestamp": 20
+        },
+        {
+          "sentenceWithBlanks": "I'm interested in your innovative approach to digital {blank}.",
+          "correctAnswers": "marketing",
+          "hint": "Same field as question 1",
+          "orderIndex": 5,
+          "audioTimestamp": 25
+        }
+      ]
+    }
+  ]
+}

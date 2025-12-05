@@ -14,41 +14,43 @@ import java.util.List;
 
 /**
  * DAO cho UserProgress entity
- * Quản lý tiến độ học tập của người dùng
+ * Quản lý tiến độ học tập của người dùng theo từng userId
  */
 @Dao
 public interface UserProgressDao {
     
     /**
-     * Lấy tất cả tiến độ của người dùng
+     * Lấy tất cả tiến độ của một user cụ thể
+     * @param userId ID của user
      */
-    @Query("SELECT * FROM user_progress ORDER BY completedAt DESC")
-    LiveData<List<UserProgress>> getAllProgress();
+    @Query("SELECT * FROM user_progress WHERE userId = :userId ORDER BY completedAt DESC")
+    LiveData<List<UserProgress>> getAllProgressByUser(String userId);
     
     /**
-     * Lấy tiến độ của một bài học cụ thể
+     * Lấy tiến độ của một bài học cụ thể cho user
+     * @param userId ID của user
      * @param lessonId ID của bài học
      */
-    @Query("SELECT * FROM user_progress WHERE lessonId = :lessonId LIMIT 1")
-    LiveData<UserProgress> getProgressByLesson(int lessonId);
+    @Query("SELECT * FROM user_progress WHERE userId = :userId AND lessonId = :lessonId LIMIT 1")
+    LiveData<UserProgress> getProgressByUserAndLesson(String userId, int lessonId);
     
     /**
      * Lấy tiến độ của một bài học (không dùng LiveData)
      */
-    @Query("SELECT * FROM user_progress WHERE lessonId = :lessonId LIMIT 1")
-    UserProgress getProgressByLessonSync(int lessonId);
+    @Query("SELECT * FROM user_progress WHERE userId = :userId AND lessonId = :lessonId LIMIT 1")
+    UserProgress getProgressByUserAndLessonSync(String userId, int lessonId);
     
     /**
-     * Lấy tất cả bài học đã hoàn thành
+     * Lấy tất cả bài học đã hoàn thành của user
      */
-    @Query("SELECT * FROM user_progress WHERE status = 'COMPLETED' ORDER BY completedAt DESC")
-    LiveData<List<UserProgress>> getCompletedLessons();
+    @Query("SELECT * FROM user_progress WHERE userId = :userId AND status = 'COMPLETED' ORDER BY completedAt DESC")
+    LiveData<List<UserProgress>> getCompletedLessonsByUser(String userId);
     
     /**
-     * Lấy tất cả bài học đang làm dở
+     * Lấy tất cả bài học đang làm dở của user
      */
-    @Query("SELECT * FROM user_progress WHERE status = 'IN_PROGRESS' ORDER BY completedAt DESC")
-    LiveData<List<UserProgress>> getInProgressLessons();
+    @Query("SELECT * FROM user_progress WHERE userId = :userId AND status = 'IN_PROGRESS' ORDER BY completedAt DESC")
+    LiveData<List<UserProgress>> getInProgressLessonsByUser(String userId);
     
     /**
      * Thêm hoặc cập nhật tiến độ
@@ -70,32 +72,32 @@ public interface UserProgressDao {
     void deleteProgress(UserProgress progress);
     
     /**
-     * Xóa tiến độ của một bài học
+     * Xóa tiến độ của một user cho một bài học
      */
-    @Query("DELETE FROM user_progress WHERE lessonId = :lessonId")
-    void deleteProgressByLesson(int lessonId);
+    @Query("DELETE FROM user_progress WHERE userId = :userId AND lessonId = :lessonId")
+    void deleteProgressByUserAndLesson(String userId, int lessonId);
     
     /**
-     * Xóa tất cả tiến độ
+     * Xóa tất cả tiến độ của một user
      */
-    @Query("DELETE FROM user_progress")
-    void deleteAllProgress();
+    @Query("DELETE FROM user_progress WHERE userId = :userId")
+    void deleteAllProgressByUser(String userId);
     
     /**
-     * Tính tổng điểm trung bình của tất cả bài đã hoàn thành
+     * Tính tổng điểm trung bình của user
      */
-    @Query("SELECT AVG(score) FROM user_progress WHERE status = 'COMPLETED'")
-    LiveData<Float> getAverageScore();
+    @Query("SELECT AVG(score) FROM user_progress WHERE userId = :userId AND status = 'COMPLETED'")
+    LiveData<Float> getAverageScoreByUser(String userId);
     
     /**
-     * Đếm số bài đã hoàn thành
+     * Đếm số bài đã hoàn thành của user
      */
-    @Query("SELECT COUNT(*) FROM user_progress WHERE status = 'COMPLETED'")
-    LiveData<Integer> getCompletedLessonCount();
+    @Query("SELECT COUNT(*) FROM user_progress WHERE userId = :userId AND status = 'COMPLETED'")
+    LiveData<Integer> getCompletedLessonCountByUser(String userId);
     
     /**
-     * Lấy điểm cao nhất
+     * Lấy điểm cao nhất của user
      */
-    @Query("SELECT MAX(bestScore) FROM user_progress")
-    LiveData<Float> getHighestScore();
+    @Query("SELECT MAX(bestScore) FROM user_progress WHERE userId = :userId")
+    LiveData<Float> getHighestScoreByUser(String userId);
 }
