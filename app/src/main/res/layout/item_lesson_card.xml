@@ -1,175 +1,348 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Layout cho một item trong RecyclerView - Card của bài học -->
+<!-- Modern Lesson Card with Gradient and Glassmorphism -->
 <com.google.android.material.card.MaterialCardView 
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="12dp"
-    app:cardBackgroundColor="@android:color/white">
+    android:layout_marginBottom="16dp"
+    app:cardElevation="8dp"
+    app:cardCornerRadius="20dp"
+    app:cardBackgroundColor="@android:color/white"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
-        <!-- Icon/Thumbnail cho bài học -->
-        <ImageView
-            android:id="@+id/ivLessonImage"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:src="@android:drawable/ic_lock_silent_mode_off"
-            android:contentDescription="Hình ảnh bài học"
-            android:scaleType="centerCrop"
+        <!-- Gradient Header Background -->
+        <View
+            android:id="@+id/headerGradient"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="@drawable/card_gradient_header"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Tiêu đề bài học -->
+        <!-- Difficulty Badge -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/difficultyBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#4CAF50"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <TextView
+                android:id="@+id/tvDifficultyBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:fontFamily="sans-serif-medium"
+                tools:text="EASY" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Lesson Icon with Circle Background -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/iconContainer"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            app:cardElevation="6dp"
+            app:cardCornerRadius="40dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/ivLessonImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:src="@drawable/ic_listening"
+                android:contentDescription="Listening icon"
+                android:scaleType="fitCenter"
+                app:tint="#2196F3" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Lesson Title -->
         <TextView
             android:id="@+id/tvLessonTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="8dp"
-            android:textSize="18sp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="24dp"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:maxLines="1"
-            android:ellipsize="end"
-            tools:text="Basic Greetings"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/ivLessonImage"
-            app:layout_constraintEnd_toStartOf="@id/chipDifficulty" />
-
-        <!-- Chip hiển thị độ khó -->
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipDifficulty"
-            style="@style/Widget.MaterialComponents.Chip.Action"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:textSize="12sp"
-            app:chipBackgroundColor="@android:color/holo_blue_light"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="EASY" />
-
-        <!-- Mô tả ngắn -->
-        <TextView
-            android:id="@+id/tvLessonDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="4dp"
-            android:textSize="14sp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@android:color/white"
             android:maxLines="2"
             android:ellipsize="end"
-            tools:text="Học cách chào hỏi bằng tiếng Anh"
-            app:layout_constraintTop_toBottomOf="@id/tvLessonTitle"
-            app:layout_constraintStart_toEndOf="@id/ivLessonImage"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:fontFamily="sans-serif-medium"
+            android:shadowColor="#40000000"
+            android:shadowDx="0"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            tools:text="Daily Conversation Practice"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iconContainer"
+            app:layout_constraintEnd_toStartOf="@id/difficultyBadge" />
 
-        <!-- Divider -->
-        <View
-            android:id="@+id/divider"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:background="@android:color/darker_gray"
-            app:layout_constraintTop_toBottomOf="@id/ivLessonImage"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- Thông tin bổ sung: Duration và Questions -->
+        <!-- Content Container -->
         <LinearLayout
-            android:id="@+id/layoutInfo"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/divider"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/layoutProgress">
-
-            <!-- Duration icon và text -->
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@android:drawable/ic_lock_idle_alarm"
-                android:contentDescription="Thời lượng"
-                app:tint="@android:color/darker_gray" />
-
-            <TextView
-                android:id="@+id/tvDuration"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="16dp"
-                android:textSize="13sp"
-                android:textColor="@android:color/darker_gray"
-                tools:text="2:30" />
-
-            <!-- Questions icon và text -->
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@android:drawable/ic_menu_help"
-                android:contentDescription="Số câu hỏi"
-                app:tint="@android:color/darker_gray" />
-
-            <TextView
-                android:id="@+id/tvQuestionCount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:textSize="13sp"
-                android:textColor="@android:color/darker_gray"
-                tools:text="5 câu hỏi" />
-
-        </LinearLayout>
-
-        <!-- Tiến độ và điểm số -->
-        <LinearLayout
-            android:id="@+id/layoutProgress"
-            android:layout_width="wrap_content"
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="end"
-            app:layout_constraintTop_toTopOf="@id/layoutInfo"
+            android:padding="20dp"
+            android:layout_marginTop="120dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
-            <!-- Status badge -->
+            <!-- Description -->
             <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvLessonDescription"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="8dp"
-                android:paddingVertical="4dp"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white"
-                android:background="@android:color/darker_gray"
-                android:visibility="gone"
-                tools:text="Hoàn thành"
-                tools:visibility="visible" />
+                android:textSize="14sp"
+                android:textColor="#757575"
+                android:lineSpacingExtra="4dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                tools:text="Practice everyday English conversations with native speakers" />
 
-            <!-- Best score -->
-            <TextView
-                android:id="@+id/tvBestScore"
-                android:layout_width="wrap_content"
+            <!-- Info Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/holo_green_light"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <!-- Duration -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:cardElevation="0dp"
+                        app:cardCornerRadius="18dp"
+                        app:cardBackgroundColor="#E3F2FD">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@android:drawable/ic_lock_idle_alarm"
+                            android:contentDescription="Duration"
+                            app:tint="#2196F3" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:id="@+id/tvDuration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:fontFamily="sans-serif-medium"
+                            tools:text="3:45" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="phút"
+                            android:textSize="10sp"
+                            android:textColor="#9E9E9E" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Questions -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:cardElevation="0dp"
+                        app:cardCornerRadius="18dp"
+                        app:cardBackgroundColor="#FFF3E0">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@android:drawable/ic_menu_help"
+                            android:contentDescription="Questions"
+                            app:tint="#FF9800" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="8dp">
+
+                        <TextView
+                            android:id="@+id/tvQuestionCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:fontFamily="sans-serif-medium"
+                            tools:text="8 câu hỏi" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="câu hỏi"
+                            android:textSize="10sp"
+                            android:textColor="#9E9E9E"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Progress Circle -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/progressContainer"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    app:cardElevation="4dp"
+                    app:cardCornerRadius="30dp"
+                    app:cardBackgroundColor="#F5F5F5">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ProgressBar
+                            android:id="@+id/progressCircle"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="4dp"
+                            android:indeterminate="false"
+                            android:max="100"
+                            android:progress="0"
+                            android:progressDrawable="@drawable/circular_progress"
+                            tools:progress="75" />
+
+                        <TextView
+                            android:id="@+id/tvProgressPercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="#4CAF50"
+                            android:fontFamily="sans-serif-medium"
+                            tools:text="75%" />
+
+                    </FrameLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <!-- Status and Score Row -->
+            <LinearLayout
+                android:id="@+id/statusScoreLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:visibility="gone"
-                tools:text="Tốt nhất: 85%"
-                tools:visibility="visible" />
+                tools:visibility="visible">
+
+                <!-- Status Badge -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardElevation="0dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="#E8F5E9">
+
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#4CAF50"
+                        android:gravity="center"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="✓ Hoàn thành" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Best Score -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardElevation="0dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="#FFF3E0">
+
+                    <TextView
+                        android:id="@+id/tvBestScore"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF9800"
+                        android:gravity="center"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="⭐ Điểm cao: 92%" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
 
         </LinearLayout>
 

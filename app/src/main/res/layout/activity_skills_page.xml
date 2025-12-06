@@ -65,9 +65,18 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:paddingTop="2dp"
-                            android:text="Level 5"
+                            android:text="Level 1"
                             android:textColor="@color/text_1"
                             android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/user_xp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="2dp"
+                            android:text="0 / 100 XP"
+                            android:textColor="@color/text_1"
+                            android:textSize="12sp" />
 
                         <ProgressBar
                             android:id="@+id/learning_progress"
@@ -75,7 +84,7 @@
                             android:layout_height="8dp"
                             style="?android:attr/progressBarStyleHorizontal"
                             android:max="100"
-                            android:progress="45"
+                            android:progress="0"
                             android:progressDrawable="@drawable/progress_style"
                             android:layout_marginTop="8dp"/>
                     </LinearLayout>

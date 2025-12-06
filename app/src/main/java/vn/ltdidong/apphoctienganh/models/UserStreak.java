@@ -1,6 +1,7 @@
 package vn.ltdidong.apphoctienganh.models;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -37,6 +38,7 @@ public class UserStreak {
         this.streakStartDate = 0;
     }
     
+    @Ignore
     public UserStreak(String userId) {
         this.userId = userId;
         this.currentStreak = 0;

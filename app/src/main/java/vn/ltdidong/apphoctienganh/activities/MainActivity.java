@@ -104,6 +104,12 @@ public class MainActivity extends AppCompatActivity {
         
         // Load user progress
         loadUserProgress();
+        
+        // Practice Now button click
+        findViewById(R.id.btnPracticeNow).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
+            startActivity(intent);
+        });
 
         // 3. Search Event
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {

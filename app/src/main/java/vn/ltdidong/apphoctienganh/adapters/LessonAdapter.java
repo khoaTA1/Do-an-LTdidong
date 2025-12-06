@@ -9,7 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.chip.Chip;
+import com.google.android.material.card.MaterialCardView;
 
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
@@ -25,26 +25,27 @@ import java.util.Map;
  * Quản lý việc bind data vào các ViewHolder
  */
 public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonViewHolder> {
-    
+
     private List<ListeningLesson> lessons = new ArrayList<>();
     private Map<Integer, UserProgress> progressMap = new HashMap<>();
     private OnLessonClickListener listener;
-    
+
     /**
      * Interface để handle click event
      */
     public interface OnLessonClickListener {
         void onLessonClick(ListeningLesson lesson);
     }
-    
+
     /**
      * Constructor
+     * 
      * @param listener Listener để handle click events
      */
     public LessonAdapter(OnLessonClickListener listener) {
         this.listener = listener;
     }
-    
+
     @NonNull
     @Override
     public LessonViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -53,7 +54,7 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonView
                 .inflate(R.layout.item_lesson_card, parent, false);
         return new LessonViewHolder(view);
     }
-    
+
     @Override
     public void onBindViewHolder(@NonNull LessonViewHolder holder, int position) {
         // Bind data cho ViewHolder
@@ -61,23 +62,25 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonView
         UserProgress progress = progressMap.get(lesson.getId());
         holder.bind(lesson, progress);
     }
-    
+
     @Override
     public int getItemCount() {
         return lessons.size();
     }
-    
+
     /**
      * Cập nhật danh sách bài học
+     * 
      * @param newLessons Danh sách bài học mới
      */
     public void setLessons(List<ListeningLesson> newLessons) {
         this.lessons = newLessons;
         notifyDataSetChanged();
     }
-    
+
     /**
      * Cập nhật tiến độ học tập
+     * 
      * @param progressList Danh sách tiến độ
      */
     public void setProgress(List<UserProgress> progressList) {
@@ -89,38 +92,43 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonView
         }
         notifyDataSetChanged();
     }
-    
+
     /**
      * ViewHolder cho mỗi item trong RecyclerView
      */
     class LessonViewHolder extends RecyclerView.ViewHolder {
-        
+
         private ImageView ivLessonImage;
         private TextView tvLessonTitle;
         private TextView tvLessonDescription;
-        private Chip chipDifficulty;
+        private MaterialCardView difficultyBadge;
+        private TextView tvDifficultyBadge;
         private TextView tvDuration;
         private TextView tvQuestionCount;
+        private View statusScoreLayout;
         private TextView tvStatus;
         private TextView tvBestScore;
-        
+
         public LessonViewHolder(@NonNull View itemView) {
             super(itemView);
-            
+
             // Khởi tạo các views
             ivLessonImage = itemView.findViewById(R.id.ivLessonImage);
             tvLessonTitle = itemView.findViewById(R.id.tvLessonTitle);
             tvLessonDescription = itemView.findViewById(R.id.tvLessonDescription);
-            chipDifficulty = itemView.findViewById(R.id.chipDifficulty);
+            difficultyBadge = itemView.findViewById(R.id.difficultyBadge);
+            tvDifficultyBadge = itemView.findViewById(R.id.tvDifficultyBadge);
             tvDuration = itemView.findViewById(R.id.tvDuration);
             tvQuestionCount = itemView.findViewById(R.id.tvQuestionCount);
+            statusScoreLayout = itemView.findViewById(R.id.statusScoreLayout);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvBestScore = itemView.findViewById(R.id.tvBestScore);
         }
-        
+
         /**
          * Bind data vào views
-         * @param lesson Bài học cần hiển thị
+         * 
+         * @param lesson   Bài học cần hiển thị
          * @param progress Tiến độ của bài học (có thể null)
          */
         public void bind(ListeningLesson lesson, UserProgress progress) {
@@ -129,30 +137,21 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonView
             tvLessonDescription.setText(lesson.getDescription());
             tvDuration.setText(lesson.getFormattedDuration());
             tvQuestionCount.setText(lesson.getQuestionCount() + " câu hỏi");
-            
-            // Set difficulty chip
-            chipDifficulty.setText(lesson.getDifficulty());
+
+            // Set difficulty badge
+            tvDifficultyBadge.setText(lesson.getDifficulty());
             int difficultyColor = getDifficultyColor(lesson.getDifficulty());
-            chipDifficulty.setChipBackgroundColorResource(difficultyColor);
-            
+            difficultyBadge.setCardBackgroundColor(itemView.getContext().getColor(difficultyColor));
+
             // Set progress info nếu có
-            if (progress != null) {
-                tvStatus.setVisibility(View.VISIBLE);
-                tvStatus.setText(getStatusText(progress.getStatus()));
-                tvStatus.setBackgroundColor(itemView.getContext()
-                        .getColor(getStatusColor(progress.getStatus())));
-                
-                if (progress.getStatus().equals("COMPLETED")) {
-                    tvBestScore.setVisibility(View.VISIBLE);
-                    tvBestScore.setText(String.format("Tốt nhất: %.0f%%", progress.getBestScore()));
-                } else {
-                    tvBestScore.setVisibility(View.GONE);
-                }
+            if (progress != null && progress.getStatus() != null && progress.getStatus().equals("COMPLETED")) {
+                statusScoreLayout.setVisibility(View.VISIBLE);
+                tvStatus.setText("✓ Hoàn thành");
+                tvBestScore.setText(String.format("⭐ Điểm cao: %.0f%%", progress.getBestScore()));
             } else {
-                tvStatus.setVisibility(View.GONE);
-                tvBestScore.setVisibility(View.GONE);
+                statusScoreLayout.setVisibility(View.GONE);
             }
-            
+
             // Handle click
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
@@ -160,7 +159,7 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonView
                 }
             });
         }
-        
+
         /**
          * Lấy màu theo độ khó
          */
@@ -174,34 +173,6 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.LessonView
                     return R.color.difficulty_hard;
                 default:
                     return android.R.color.holo_blue_light;
-            }
-        }
-        
-        /**
-         * Lấy text hiển thị cho status
-         */
-        private String getStatusText(String status) {
-            switch (status) {
-                case "COMPLETED":
-                    return "Hoàn thành";
-                case "IN_PROGRESS":
-                    return "Đang học";
-                default:
-                    return "Chưa bắt đầu";
-            }
-        }
-        
-        /**
-         * Lấy màu cho status badge
-         */
-        private int getStatusColor(String status) {
-            switch (status) {
-                case "COMPLETED":
-                    return android.R.color.holo_green_light;
-                case "IN_PROGRESS":
-                    return android.R.color.holo_orange_light;
-                default:
-                    return android.R.color.darker_gray;
             }
         }
     }

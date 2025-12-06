@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -29,6 +30,11 @@ public class ListeningListActivity extends AppCompatActivity {
     private ChipGroup chipGroupFilter;
     private View emptyStateLayout;
     private ProgressBar progressBar;
+
+    // Stats card views
+    private TextView tvTotalLessons;
+    private TextView tvCompleted;
+    private TextView tvAvgScore;
 
     private String currentFilter = "ALL"; // ALL, EASY, MEDIUM, HARD
 
@@ -62,12 +68,17 @@ public class ListeningListActivity extends AppCompatActivity {
         emptyStateLayout = findViewById(R.id.emptyStateLayout);
         progressBar = findViewById(R.id.progressBar);
 
+        // Stats card views
+        tvTotalLessons = findViewById(R.id.tvTotalLessons);
+        tvCompleted = findViewById(R.id.tvCompleted);
+        tvAvgScore = findViewById(R.id.tvAvgScore);
+
         // Setup toolbar
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Bài học Listening");
+            getSupportActionBar().setTitle("Listening Practice");
         }
     }
 
@@ -116,10 +127,13 @@ public class ListeningListActivity extends AppCompatActivity {
 
         // Observe progress để hiển thị trên từng card
         viewModel.getAllProgress().observe(this, progressList -> {
-            if(progressList != null) {
+            if (progressList != null) {
                 adapter.setProgress(progressList);
             }
         });
+
+        // Update stats card
+        updateStats();
     }
 
     /**
@@ -136,7 +150,6 @@ public class ListeningListActivity extends AppCompatActivity {
         // Remove previous observers to avoid multiple triggers
         viewModel.getAllLessons().removeObservers(this);
         viewModel.getLessonsByDifficulty(currentFilter).removeObservers(this);
-
 
         if (currentFilter.equals("ALL")) {
             // Lấy tất cả bài học
@@ -167,6 +180,60 @@ public class ListeningListActivity extends AppCompatActivity {
             emptyStateLayout.setVisibility(View.GONE);
             adapter.setLessons(lessons);
         }
+    }
+
+    /**
+     * Cập nhật stats card với thống kê từ Firebase
+     */
+    private void updateStats() {
+        // Observe all lessons để tính tổng
+        viewModel.getAllLessons().observe(this, lessons -> {
+            if (lessons != null) {
+                // Tổng số bài học
+                int totalLessons = lessons.size();
+                tvTotalLessons.setText(String.valueOf(totalLessons));
+
+                // Observe progress để tính completed và average score
+                viewModel.getAllProgress().observe(this, progressList -> {
+                    if (progressList != null) {
+                        int completedCount = 0;
+                        double totalScore = 0;
+                        int scoredLessons = 0;
+
+                        // Đếm số bài hoàn thành và tính điểm trung bình
+                        for (vn.ltdidong.apphoctienganh.models.UserProgress progress : progressList) {
+                            if (progress.getStatus() != null && progress.getStatus().equals("COMPLETED")) {
+                                completedCount++;
+                            }
+                            if (progress.getBestScore() > 0) {
+                                totalScore += progress.getBestScore();
+                                scoredLessons++;
+                            }
+                        }
+
+                        // Cập nhật UI
+                        tvCompleted.setText(String.valueOf(completedCount));
+
+                        // Tính điểm trung bình
+                        if (scoredLessons > 0) {
+                            int avgScore = (int) (totalScore / scoredLessons);
+                            tvAvgScore.setText(avgScore + "%");
+                        } else {
+                            tvAvgScore.setText("0%");
+                        }
+                    } else {
+                        // Không có progress data
+                        tvCompleted.setText("0");
+                        tvAvgScore.setText("0%");
+                    }
+                });
+            } else {
+                // Không có lessons
+                tvTotalLessons.setText("0");
+                tvCompleted.setText("0");
+                tvAvgScore.setText("0%");
+            }
+        });
     }
 
     @Override
