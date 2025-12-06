@@ -99,7 +99,10 @@ public class ResultActivity extends AppCompatActivity {
      */
     private void saveUserProgress() {
         String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        android.util.Log.d("ResultActivity", "saveUserProgress - userId: " + userId + ", lessonId: " + lessonId);
+        
         if (userId == null || lessonId == -1) {
+            android.util.Log.e("ResultActivity", "Cannot save progress - userId is null or lessonId is invalid");
             return;
         }
         
@@ -157,10 +160,10 @@ public class ResultActivity extends AppCompatActivity {
                     streakDao.updateStreak(streak);
                 }
             }
-            
-            // 3. Cập nhật XP cho User và đồng bộ lên Firebase
-            updateUserXP(userId, correctAnswers, totalQuestions);
         });
+        
+        // 3. Cập nhật XP cho User và đồng bộ lên Firebase (chạy trên main thread)
+        updateUserXP(userId, correctAnswers, totalQuestions);
     }
     
     /**
@@ -171,12 +174,15 @@ public class ResultActivity extends AppCompatActivity {
         // 10 XP cho mỗi câu đúng
         final int earnedXP = correctAnswers * 10 + (correctAnswers == totalQuestions ? 20 : 0);
         
+        android.util.Log.d("ResultActivity", "updateUserXP - userId: " + userId + ", earnedXP: " + earnedXP);
+        
         // Lấy thông tin user từ Firebase và cập nhật XP
         com.google.firebase.firestore.FirebaseFirestore.getInstance()
                 .collection("users")
                 .document(userId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
+                    android.util.Log.d("ResultActivity", "Firebase get user - success: " + documentSnapshot.exists());
                     if (documentSnapshot.exists()) {
                         // Lấy XP hiện tại
                         Long currentTotalXP = documentSnapshot.getLong("total_xp");
@@ -216,18 +222,19 @@ public class ResultActivity extends AppCompatActivity {
                         updates.put("current_level_xp", finalLevelXP);
                         updates.put("xp_to_next_level", finalNextLevelXP);
                         
+                        android.util.Log.d("ResultActivity", "Updating Firebase - totalXP: " + finalTotalXP + ", level: " + finalLevel + ", levelXP: " + finalLevelXP);
+                        
                         com.google.firebase.firestore.FirebaseFirestore.getInstance()
                                 .collection("users")
                                 .document(userId)
                                 .update(updates)
                                 .addOnSuccessListener(aVoid -> {
-                                    runOnUiThread(() -> {
-                                        String xpMessage = "+" + earnedXP + " XP earned!";
-                                        if (finalLeveledUp) {
-                                            xpMessage += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
-                                        }
-                                        android.widget.Toast.makeText(ResultActivity.this, xpMessage, android.widget.Toast.LENGTH_LONG).show();
-                                    });
+                                    android.util.Log.d("ResultActivity", "Firebase update SUCCESS");
+                                    String xpMessage = "+" + earnedXP + " XP earned!";
+                                    if (finalLeveledUp) {
+                                        xpMessage += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
+                                    }
+                                    android.widget.Toast.makeText(ResultActivity.this, xpMessage, android.widget.Toast.LENGTH_LONG).show();
                                 })
                                 .addOnFailureListener(e -> {
                                     android.util.Log.e("ResultActivity", "Error updating user XP", e);
