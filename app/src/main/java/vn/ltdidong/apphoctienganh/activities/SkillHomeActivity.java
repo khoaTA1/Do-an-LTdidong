@@ -128,6 +128,7 @@ public class SkillHomeActivity extends AppCompatActivity {
 
         setupSkill(writingSkill.getId(), "Writing", R.drawable.ic_writing,
                 new String[]{"Viết câu", "Dịch tương tác"});
+                new String[]{"Viết câu", "Dịch tương tác"});
     }
 
     private void setupSkill(int skillId, String title, int iconRes, String[] modes) {

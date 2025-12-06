@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="#F5F5F5">
 
@@ -33,8 +34,20 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvWishlist"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:padding="8dp"
         android:clipToPadding="false"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnStartFlashcard"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_margin="16dp"
+        android:text="Ôn tập Flashcard"
+        android:textSize="18sp"
+        android:backgroundTint="#2196F3"
+        android:textColor="#FFFFFF"
+        app:cornerRadius="8dp"/>
 
 </LinearLayout>

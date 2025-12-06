@@ -31,6 +31,7 @@
         <activity android:name=".activities.ConversationActivity" />
         <activity android:name=".activities.ListeningListActivity" />
         <activity android:name=".activities.WishlistActivity" />
+        <activity android:name=".activities.FlashcardActivity" />
         <activity 
             android:name=".activities.LessonDetailActivity"
             android:parentActivityName=".activities.ListeningListActivity" />
@@ -51,6 +52,7 @@
         <activity android:name=".activities.ProfileActivity"/>
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
+        <activity android:name=".activities.InteractiveTranslationActivity"/>
     </application>
 
 </manifest>
