@@ -52,16 +52,39 @@
         app:layout_constraintTop_toBottomOf="@id/layoutTopBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/interact_content"
+        app:layout_constraintBottom_toTopOf="@id/direction"
         app:layout_constraintVertical_weight="1"/>
 
+    <!-- chỉ đường bằng text -->
+    <LinearLayout
+        android:id="@+id/direction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/map"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/interact_content"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            tools:text="600m"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableTint=""/>
+    </LinearLayout>
 
     <!-- Nội dung tương tác -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/interact_content"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/map"
+        app:layout_constraintTop_toBottomOf="@id/direction"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
