@@ -50,6 +50,12 @@
         <activity android:name=".activities.RCTransActivity"/>
         <activity android:name=".activities.CTTransActivity"/>
         <activity android:name=".activities.ProfileActivity"/>
+        <activity 
+            android:name=".activities.SettingsActivity"
+            android:parentActivityName=".activities.ProfileActivity"/>
+        <activity 
+            android:name=".activities.HelpActivity"
+            android:parentActivityName=".activities.ProfileActivity"/>
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
         <activity android:name=".activities.InteractiveTranslationActivity"/>
