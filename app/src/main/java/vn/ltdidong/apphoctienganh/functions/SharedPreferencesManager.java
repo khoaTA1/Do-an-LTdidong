@@ -101,6 +101,14 @@ public class SharedPreferencesManager {
     }
 
     /**
+     * Lưu tên user
+     */
+    public void saveUserName(String name) {
+        editor.putString(KEY_USER_NAME, name);
+        editor.apply();
+    }
+
+    /**
      * Lấy số điện thoại
      */
     public String getUserPhone() {
@@ -133,6 +141,44 @@ public class SharedPreferencesManager {
      */
     public void saveUserRole(String role) {
         editor.putString(KEY_USER_ROLE, role);
+        editor.apply();
+    }
+    
+    // Profile Settings Methods
+    
+    public String getDailyGoal() {
+        return sharedPreferences.getString("daily_goal", "15 phút/ngày");
+    }
+    
+    public void setDailyGoal(String goal) {
+        editor.putString("daily_goal", goal);
+        editor.apply();
+    }
+    
+    public boolean getNotificationsEnabled() {
+        return sharedPreferences.getBoolean("notifications_enabled", true);
+    }
+    
+    public void setNotificationsEnabled(boolean enabled) {
+        editor.putBoolean("notifications_enabled", enabled);
+        editor.apply();
+    }
+    
+    public boolean getSoundEnabled() {
+        return sharedPreferences.getBoolean("sound_enabled", true);
+    }
+    
+    public void setSoundEnabled(boolean enabled) {
+        editor.putBoolean("sound_enabled", enabled);
+        editor.apply();
+    }
+    
+    public boolean getVibrateEnabled() {
+        return sharedPreferences.getBoolean("vibrate_enabled", true);
+    }
+    
+    public void setVibrateEnabled(boolean enabled) {
+        editor.putBoolean("vibrate_enabled", enabled);
         editor.apply();
     }
 
