@@ -55,12 +55,18 @@ dependencies {
 
 //  Markwon
     implementation("io.noties.markwon:core:4.6.2")
+    
+//  Jsoup for web scraping
+    implementation("org.jsoup:jsoup:1.17.2")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
+
+    implementation ("com.google.firebase:firebase-auth")
+    implementation ("com.google.firebase:firebase-database")
 
     annotationProcessor(libs.room.compiler)
 

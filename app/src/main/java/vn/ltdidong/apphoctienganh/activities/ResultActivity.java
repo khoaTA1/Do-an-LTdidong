@@ -10,9 +10,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.database.AppDatabase;
+import vn.ltdidong.apphoctienganh.database.UserProgressDao;
+import vn.ltdidong.apphoctienganh.database.UserStreakDao;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
+import vn.ltdidong.apphoctienganh.models.UserProgress;
+import vn.ltdidong.apphoctienganh.models.UserStreak;
 import vn.ltdidong.apphoctienganh.viewmodel.ListeningViewModel;
 
 /**
@@ -29,7 +36,6 @@ public class ResultActivity extends AppCompatActivity {
     private ListeningLesson lesson;
     
     // UI components
-    private TextView tvScore;
     private TextView tvScorePercentage;
     private TextView tvCorrectAnswers;
     private TextView tvResultMessage;
@@ -60,6 +66,9 @@ public class ResultActivity extends AppCompatActivity {
         // Display results
         displayResults();
         
+        // Save progress to database
+        saveUserProgress();
+        
         // Setup buttons
         setupButtons();
     }
@@ -68,7 +77,6 @@ public class ResultActivity extends AppCompatActivity {
      * Khởi tạo tất cả views
      */
     private void initViews() {
-        tvScore = null;
         tvScorePercentage = findViewById(R.id.tvScorePercentage);
         tvCorrectAnswers = findViewById(R.id.tvCorrectAnswers);
         tvResultMessage = findViewById(R.id.tvMessage);
@@ -87,14 +95,163 @@ public class ResultActivity extends AppCompatActivity {
     }
     
     /**
+     * Lưu tiến độ học tập vào database
+     */
+    private void saveUserProgress() {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        android.util.Log.d("ResultActivity", "saveUserProgress - userId: " + userId + ", lessonId: " + lessonId);
+        
+        if (userId == null || lessonId == -1) {
+            android.util.Log.e("ResultActivity", "Cannot save progress - userId is null or lessonId is invalid");
+            return;
+        }
+        
+        long currentTime = System.currentTimeMillis();
+        
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            AppDatabase db = AppDatabase.getDatabase(this);
+            UserProgressDao progressDao = db.userProgressDao();
+            UserStreakDao streakDao = db.userStreakDao();
+            
+            // 1. Cập nhật UserProgress
+            UserProgress existingProgress = progressDao.getProgressByUserAndLessonSync(userId, lessonId);
+            
+            if (existingProgress != null) {
+                // Cập nhật progress hiện có
+                existingProgress.setCorrectAnswers(correctAnswers);
+                existingProgress.setTotalQuestions(totalQuestions);
+                existingProgress.setScore(score);
+                existingProgress.setStatus("COMPLETED");
+                existingProgress.setCompletedAt(currentTime);
+                existingProgress.setAttempts(existingProgress.getAttempts() + 1);
+                existingProgress.updateBestScore();
+                
+                progressDao.updateProgress(existingProgress);
+            } else {
+                // Tạo progress mới
+                UserProgress newProgress = new UserProgress(
+                    userId,
+                    lessonId,
+                    correctAnswers,
+                    totalQuestions,
+                    score,
+                    "COMPLETED",
+                    currentTime
+                );
+                
+                progressDao.insertProgress(newProgress);
+            }
+            
+            // 2. Cập nhật UserStreak
+            UserStreak streak = streakDao.getStreakByUserSync(userId);
+            
+            if (streak == null) {
+                // Tạo streak mới
+                streak = new UserStreak(userId);
+            }
+            
+            // Cập nhật streak (chỉ cập nhật 1 lần mỗi ngày)
+            if (streak.shouldUpdateStreak(currentTime)) {
+                streak.updateStreak(currentTime);
+                
+                if (streak.getId() == 0) {
+                    streakDao.insertStreak(streak);
+                } else {
+                    streakDao.updateStreak(streak);
+                }
+            }
+        });
+        
+        // 3. Cập nhật XP cho User và đồng bộ lên Firebase (chạy trên main thread)
+        updateUserXP(userId, correctAnswers, totalQuestions);
+    }
+    
+    /**
+     * Cập nhật kinh nghiệm (XP) cho user và đồng bộ lên Firebase
+     */
+    private void updateUserXP(String userId, int correctAnswers, int totalQuestions) {
+        // Tính XP dựa trên số câu đúng
+        // 10 XP cho mỗi câu đúng
+        final int earnedXP = correctAnswers * 10 + (correctAnswers == totalQuestions ? 20 : 0);
+        
+        android.util.Log.d("ResultActivity", "updateUserXP - userId: " + userId + ", earnedXP: " + earnedXP);
+        
+        // Lấy thông tin user từ Firebase và cập nhật XP
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    android.util.Log.d("ResultActivity", "Firebase get user - success: " + documentSnapshot.exists());
+                    if (documentSnapshot.exists()) {
+                        // Lấy XP hiện tại
+                        Long currentTotalXP = documentSnapshot.getLong("total_xp");
+                        Long currentLevel = documentSnapshot.getLong("current_level");
+                        Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
+                        Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
+                        
+                        // Khởi tạo giá trị mặc định nếu null
+                        int newTotalXP = (currentTotalXP != null) ? currentTotalXP.intValue() : 0;
+                        int newLevel = (currentLevel != null) ? currentLevel.intValue() : 1;
+                        int newLevelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
+                        int newNextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
+                        
+                        // Cộng XP mới
+                        newTotalXP += earnedXP;
+                        newLevelXP += earnedXP;
+                        
+                        // Kiểm tra level up
+                        boolean leveledUp = false;
+                        while (newLevelXP >= newNextLevelXP) {
+                            leveledUp = true;
+                            newLevelXP -= newNextLevelXP;
+                            newLevel++;
+                            newNextLevelXP = 100 + (newLevel - 1) * 50;
+                        }
+                        
+                        // Cập nhật lên Firebase
+                        final int finalTotalXP = newTotalXP;
+                        final int finalLevel = newLevel;
+                        final int finalLevelXP = newLevelXP;
+                        final int finalNextLevelXP = newNextLevelXP;
+                        final boolean finalLeveledUp = leveledUp;
+                        
+                        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+                        updates.put("total_xp", finalTotalXP);
+                        updates.put("current_level", finalLevel);
+                        updates.put("current_level_xp", finalLevelXP);
+                        updates.put("xp_to_next_level", finalNextLevelXP);
+                        
+                        android.util.Log.d("ResultActivity", "Updating Firebase - totalXP: " + finalTotalXP + ", level: " + finalLevel + ", levelXP: " + finalLevelXP);
+                        
+                        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(userId)
+                                .update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    android.util.Log.d("ResultActivity", "Firebase update SUCCESS");
+                                    String xpMessage = "+" + earnedXP + " XP earned!";
+                                    if (finalLeveledUp) {
+                                        xpMessage += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
+                                    }
+                                    android.widget.Toast.makeText(ResultActivity.this, xpMessage, android.widget.Toast.LENGTH_LONG).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    android.util.Log.e("ResultActivity", "Error updating user XP", e);
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("ResultActivity", "Error fetching user data", e);
+                });
+    }
+    
+    /**
      * Hiển thị kết quả
      */
     private void displayResults() {
         // Score percentage
         tvScorePercentage.setText(String.format("%.0f%%", score));
-        
-        // Score fraction - included in tvCorrectAnswers
-        // tvScore.setText(correctAnswers + "/" + totalQuestions);
         
         // Correct answers
         tvCorrectAnswers.setText("Correct Answers: " + correctAnswers + "/" + totalQuestions);
@@ -186,6 +343,7 @@ public class ResultActivity extends AppCompatActivity {
     
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         // Quay về ListeningListActivity
         Intent intent = new Intent(ResultActivity.this, ListeningListActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

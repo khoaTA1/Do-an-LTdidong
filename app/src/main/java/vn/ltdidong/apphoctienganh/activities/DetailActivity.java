@@ -3,155 +3,248 @@ package vn.ltdidong.apphoctienganh.activities;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentSnapshot;
 
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.models.Definition;
-import vn.ltdidong.apphoctienganh.models.Meaning;
-import vn.ltdidong.apphoctienganh.models.Phonetic;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
+import vn.ltdidong.apphoctienganh.models.User;
 import vn.ltdidong.apphoctienganh.models.WordEntry;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import vn.ltdidong.apphoctienganh.api.DictionaryApi;
 
 public class DetailActivity extends AppCompatActivity {
 
-    // Khai báo MediaPlayer để phát âm thanh
+    private TextView tvWord, tvPhonetic;
+    private LinearLayout layoutMeanings;
+    private ImageButton btnBack;
+    private ImageButton btnAudio, btnFavorite;
+    private WordEntry wordEntry;
     private MediaPlayer mediaPlayer;
+    private FirebaseFirestore db;
+    private String userID;
+    private boolean isFavorite = false;
+    private DictionaryApi dictionaryApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        // 1. Ánh xạ View
-        TextView tvWord = findViewById(R.id.tvDetailWord);
-        TextView tvPhonetic = findViewById(R.id.tvDetailPhonetic);
-        TextView tvContent = findViewById(R.id.tvDetailContent);
-        ImageButton btnBack = findViewById(R.id.btnBack);
-        ImageButton btnPlayAudio = findViewById(R.id.btnPlayAudio);
+        // Ánh xạ View (Bây giờ XML đã có ID này nên sẽ không lỗi nữa)
+        tvWord = findViewById(R.id.tv_detail_word);
+        tvPhonetic = findViewById(R.id.tv_detail_phonetic);
+        layoutMeanings = findViewById(R.id.layout_meanings);
+        btnBack = findViewById(R.id.btn_back_detail);
+        btnAudio = findViewById(R.id.btn_detail_audio);
+        btnFavorite = findViewById(R.id.btn_detail_favorite);
 
-        // Sự kiện nút Back
-        btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
-        // 2. Nhận dữ liệu từ màn hình trước
-        WordEntry wordEntry = (WordEntry) getIntent().getSerializableExtra("WORD_DATA");
+        if (btnAudio != null) {
+            btnAudio.setOnClickListener(v -> {
+                if (wordEntry != null) {
+                    String audioUrl = wordEntry.getAudioUrl();
+                    playAudio(audioUrl);
+                }
+            });
+        }
+
+        if (btnFavorite != null) {
+            btnFavorite.setOnClickListener(v -> {
+                if (userID == null) {
+                    Toast.makeText(this, "Vui lòng đăng nhập để thêm yêu thích", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (wordEntry == null || wordEntry.getWord() == null)
+                    return;
+
+                if (isFavorite) {
+                    db.collection("users").document(userID)
+                            .collection("favorites").document(wordEntry.getWord())
+                            .delete()
+                            .addOnSuccessListener(aVoid -> {
+                                isFavorite = false;
+                                updateFavoriteIcon();
+                                Toast.makeText(this, "Đã bỏ yêu thích", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(
+                                    e -> Toast.makeText(this, "Lỗi khi bỏ yêu thích", Toast.LENGTH_SHORT).show());
+                } else {
+                    db.collection("users").document(userID)
+                            .collection("favorites").document(wordEntry.getWord())
+                            .set(wordEntry)
+                            .addOnSuccessListener(aVoid -> {
+                                isFavorite = true;
+                                updateFavoriteIcon();
+                                Toast.makeText(this, "Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(
+                                    e -> Toast.makeText(this, "Thêm thất bại", Toast.LENGTH_SHORT).show());
+                }
+            });
+        }
+
+        db = FirebaseFirestore.getInstance();
+        User user = SharedPreferencesManager.getInstance(this).getUser();
+        if (user != null)
+            userID = String.valueOf(user.getId());
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.dictionaryapi.dev/api/v2/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        dictionaryApi = retrofit.create(DictionaryApi.class);
+
+        wordEntry = (WordEntry) getIntent().getSerializableExtra("WORD_DATA");
 
         if (wordEntry != null) {
-            // Hiển thị từ vựng
-            tvWord.setText(wordEntry.getWord());
+            if (userID != null)
+                checkFavoriteInitial();
+            ensureFullDataThenDisplay();
+        } else {
+            Toast.makeText(this, "Không có dữ liệu", Toast.LENGTH_SHORT).show();
+        }
+    }
 
-            // --- XỬ LÝ LOGIC LẤY AUDIO VÀ PHIÊN ÂM ---
-            String textPhonetic = "";
-            String audioUrl = "";
-
-            // Duyệt qua danh sách phonetics để tìm dữ liệu tốt nhất
-            if (wordEntry.getPhonetics() != null) {
-                for (Phonetic p : wordEntry.getPhonetics()) {
-                    // Ưu tiên lấy text phiên âm nếu chưa có
-                    if (TextUtils.isEmpty(textPhonetic) && !TextUtils.isEmpty(p.getText())) {
-                        textPhonetic = p.getText();
-                    }
-                    // Ưu tiên lấy link audio nếu chưa có và link không rỗng
-                    if (TextUtils.isEmpty(audioUrl) && !TextUtils.isEmpty(p.getAudio())) {
-                        audioUrl = p.getAudio();
-                    }
+    private void ensureFullDataThenDisplay() {
+        boolean missing = (wordEntry.getMeanings() == null || wordEntry.getMeanings().isEmpty());
+        if (!missing) {
+            displayData();
+            return;
+        }
+        dictionaryApi.getDefinition(wordEntry.getWord()).enqueue(new Callback<List<WordEntry>>() {
+            @Override
+            public void onResponse(Call<List<WordEntry>> call, Response<List<WordEntry>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    wordEntry = response.body().get(0);
+                    displayData();
+                } else {
+                    displayData();
                 }
             }
 
-            // Hiển thị phiên âm
-            tvPhonetic.setText(TextUtils.isEmpty(textPhonetic) ? "" : textPhonetic);
-
-            // Cấu hình nút Play Audio
-            if (!TextUtils.isEmpty(audioUrl)) {
-                btnPlayAudio.setVisibility(View.VISIBLE);
-
-                // Fix lỗi link API thiếu "https:" (thường trả về "//ssl.gstatic...")
-                if (audioUrl.startsWith("//")) {
-                    audioUrl = "https:" + audioUrl;
-                }
-
-                // Gán sự kiện click
-                String finalAudioUrl = audioUrl;
-                btnPlayAudio.setOnClickListener(v -> playAudio(finalAudioUrl));
-            } else {
-                btnPlayAudio.setVisibility(View.GONE);
+            @Override
+            public void onFailure(Call<List<WordEntry>> call, Throwable t) {
+                displayData();
             }
-            // ------------------------------------------
+        });
+    }
 
-            // --- XỬ LÝ HIỂN THỊ NGHĨA ---
-            StringBuilder content = new StringBuilder();
+    private void checkFavoriteInitial() {
+        db.collection("users").document(userID)
+                .collection("favorites").document(wordEntry.getWord())
+                .get()
+                .addOnSuccessListener(doc -> {
+                    isFavorite = doc != null && doc.exists();
+                    updateFavoriteIcon();
+                });
+    }
+
+    private void updateFavoriteIcon() {
+        if (btnFavorite == null)
+            return;
+        if (isFavorite) {
+            btnFavorite.setImageResource(R.drawable.ic_favorite_red);
+        } else {
+            btnFavorite.setImageResource(R.drawable.ic_favorite_border);
+        }
+    }
+
+    private void displayData() {
+        tvWord.setText(wordEntry.getWord());
+
+        // Xử lý Phonetic
+        String phoneticText = "";
+        if (wordEntry.getPhonetics() != null) {
+            for (WordEntry.Phonetic p : wordEntry.getPhonetics()) {
+                if (p.getText() != null && !p.getText().isEmpty()) {
+                    phoneticText = p.getText();
+                    break;
+                }
+            }
+        }
+        if (phoneticText.isEmpty() && wordEntry.getPhonetic() != null) {
+            phoneticText = wordEntry.getPhonetic();
+        }
+        tvPhonetic.setText(phoneticText);
+
+        // Xử lý Meaning
+        if (layoutMeanings != null) {
+            layoutMeanings.removeAllViews();
             if (wordEntry.getMeanings() != null) {
-                for (Meaning meaning : wordEntry.getMeanings()) {
-                    // Loại từ (Noun/Verb)
-                    content.append("★ ").append(meaning.getPartOfSpeech().toUpperCase()).append("\n");
+                for (WordEntry.Meaning m : wordEntry.getMeanings()) {
+                    // Loại từ
+                    TextView tvPart = new TextView(this);
+                    tvPart.setText("- " + m.getPartOfSpeech());
+                    tvPart.setTextSize(18);
+                    tvPart.setTypeface(null, android.graphics.Typeface.BOLD);
+                    tvPart.setPadding(0, 16, 0, 8);
+                    layoutMeanings.addView(tvPart);
 
-                    // Danh sách định nghĩa
-                    if (meaning.getDefinitions() != null) {
-                        int count = 1;
-                        for (Definition def : meaning.getDefinitions()) {
-                            content.append("   ").append(count).append(". ").append(def.getDefinition()).append("\n");
-                            if (!TextUtils.isEmpty(def.getExample())) {
-                                content.append("      Ex: \"").append(def.getExample()).append("\"\n");
-                            }
-                            count++;
+                    // Định nghĩa
+                    if (m.getDefinitions() != null) {
+                        for (WordEntry.Definition d : m.getDefinitions()) {
+                            TextView tvDef = new TextView(this);
+                            tvDef.setText(" • " + d.getDefinition());
+                            tvDef.setTextSize(16);
+                            tvDef.setPadding(16, 0, 0, 8);
+                            layoutMeanings.addView(tvDef);
                         }
                     }
-                    content.append("\n────────────────────\n\n");
                 }
             }
-            tvContent.setText(content.toString());
         }
     }
 
-    // Hàm phát âm thanh từ URL
-    private void playAudio(String url) {
-        // Nếu đang phát cái cũ thì tắt đi
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
+    private void playAudio(String audioUrl) {
+        stopAudio();
+        if (audioUrl == null || audioUrl.isEmpty()) {
+            Toast.makeText(this, "Không có file âm thanh", Toast.LENGTH_SHORT).show();
+            return;
         }
-
         try {
             mediaPlayer = new MediaPlayer();
-            // Cấu hình cho Android stream nhạc
             mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build());
-
-            mediaPlayer.setDataSource(url);
-            mediaPlayer.prepareAsync(); // Chuẩn bị bất đồng bộ (tránh đơ app)
-
-            mediaPlayer.setOnPreparedListener(mp -> {
-                Toast.makeText(DetailActivity.this, "Playing...", Toast.LENGTH_SHORT).show();
-                mp.start();
-            });
-
-            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                Toast.makeText(DetailActivity.this, "Lỗi phát âm thanh!", Toast.LENGTH_SHORT).show();
-                return false;
-            });
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Không thể tải file âm thanh", Toast.LENGTH_SHORT).show();
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .setUsage(AudioAttributes.USAGE_MEDIA).build());
+            mediaPlayer.setDataSource(audioUrl);
+            mediaPlayer.prepareAsync();
+            mediaPlayer.setOnPreparedListener(MediaPlayer::start);
+        } catch (Exception e) {
         }
     }
 
-    // Giải phóng bộ nhớ khi thoát màn hình
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    private void stopAudio() {
         if (mediaPlayer != null) {
-            mediaPlayer.release();
+            try {
+                if (mediaPlayer.isPlaying())
+                    mediaPlayer.stop();
+                mediaPlayer.release();
+            } catch (Exception e) {
+            }
             mediaPlayer = null;
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopAudio();
     }
 }

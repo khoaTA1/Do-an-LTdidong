@@ -1,9 +1,12 @@
 package vn.ltdidong.apphoctienganh.activities;
 
-import android.content.ActivityNotFoundException;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -13,8 +16,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
@@ -34,7 +39,7 @@ import vn.ltdidong.apphoctienganh.models.GeminiResponse;
 
 public class SpeakingActivity extends AppCompatActivity {
 
-    private static final int REQ_CODE_SPEECH_INPUT = 100;
+    private static final int PERMISSION_REQUEST_CODE = 1;
     private TextView tvTargetText;
     private TextView tvResultText;
     private TextView tvScore;
@@ -45,8 +50,12 @@ public class SpeakingActivity extends AppCompatActivity {
     private Button btnNextTopic;
     
     private TextToSpeech textToSpeech;
+    private SpeechRecognizer speechRecognizer;
+    private Intent speechRecognizerIntent;
+    private boolean isListening = false;
+
     private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyAVk3slXlUo6Oix6aCK0ntwT9q6OCAgzms";
+    private static final String API_KEY = "AIzaSyAJv8mCOrdbL68sPHh6OGQE5Lmc-fFEoEk";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +90,75 @@ public class SpeakingActivity extends AppCompatActivity {
             }
         });
 
+        // Initialize SpeechRecognizer
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
+
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
+                tvResultText.setText("Listening...");
+                tvResultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            }
+
+            @Override
+            public void onBeginningOfSpeech() {}
+
+            @Override
+            public void onRmsChanged(float rmsdB) {}
+
+            @Override
+            public void onBufferReceived(byte[] buffer) {}
+
+            @Override
+            public void onEndOfSpeech() {
+                tvResultText.setText("Processing...");
+                ivMic.setImageResource(R.drawable.ic_speaking); // Reset icon
+                isListening = false;
+            }
+
+            @Override
+            public void onError(int error) {
+                String errorMessage = getErrorText(error);
+                tvResultText.setText(errorMessage);
+                ivMic.setImageResource(R.drawable.ic_speaking); // Reset icon
+                isListening = false;
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (matches != null && !matches.isEmpty()) {
+                    String spokenText = matches.get(0);
+                    tvResultText.setText(spokenText);
+                    tvResultText.setTextColor(getResources().getColor(android.R.color.black));
+                    gradeSpeaking(tvTargetText.getText().toString(), spokenText);
+                }
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {}
+
+            @Override
+            public void onEvent(int eventType, Bundle params) {}
+        });
+
         btnListen.setOnClickListener(v -> speakOut());
-        ivMic.setOnClickListener(v -> startVoiceInput());
+        
+        ivMic.setOnClickListener(v -> {
+            if (checkPermission()) {
+                if (!isListening) {
+                    startListening();
+                } else {
+                    stopListening();
+                }
+            } else {
+                requestPermission();
+            }
+        });
+
         btnBack.setOnClickListener(v -> finish());
 
         btnNextTopic.setOnClickListener(v -> {
@@ -93,6 +169,77 @@ public class SpeakingActivity extends AppCompatActivity {
         
         // Load initial topic
         generateSpeakingTopic();
+    }
+
+    private void startListening() {
+        speechRecognizer.startListening(speechRecognizerIntent);
+        isListening = true;
+        ivMic.setImageResource(android.R.drawable.ic_btn_speak_now); // Change icon to indicate active state
+        // Note: You might want to add a custom 'active' mic icon resource if 'ic_btn_speak_now' isn't what you want
+    }
+
+    private void stopListening() {
+        speechRecognizer.stopListening();
+        isListening = false;
+        ivMic.setImageResource(R.drawable.ic_speaking);
+    }
+
+    private boolean checkPermission() {
+        int result = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListening();
+            } else {
+                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private String getErrorText(int errorCode) {
+        String message;
+        switch (errorCode) {
+            case SpeechRecognizer.ERROR_AUDIO:
+                message = "Audio recording error";
+                break;
+            case SpeechRecognizer.ERROR_CLIENT:
+                message = "Client side error";
+                break;
+            case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
+                message = "Insufficient permissions";
+                break;
+            case SpeechRecognizer.ERROR_NETWORK:
+                message = "Network error";
+                break;
+            case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
+                message = "Network timeout";
+                break;
+            case SpeechRecognizer.ERROR_NO_MATCH:
+                message = "No match";
+                break;
+            case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
+                message = "RecognitionService busy";
+                break;
+            case SpeechRecognizer.ERROR_SERVER:
+                message = "error from server";
+                break;
+            case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
+                message = "No speech input";
+                break;
+            default:
+                message = "Didn't understand, please try again.";
+                break;
+        }
+        return message;
     }
 
     private void generateSpeakingTopic() {
@@ -108,7 +255,7 @@ public class SpeakingActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String topic = response.body().getOutputText();
                     tvTargetText.setText(topic.trim());
-                    tvHeader.setText("Speaking Practice");
+                    tvHeader.setText("Practice");
                 } else {
                     Log.e("SpeakingActivity", "Gemini API Error: " + response.code() + " - " + response.message());
                     tvTargetText.setText("Error: " + response.code() + " Check API Key/Model.");
@@ -128,35 +275,6 @@ public class SpeakingActivity extends AppCompatActivity {
     private void speakOut() {
         String text = tvTargetText.getText().toString();
         textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
-    }
-
-    private void startVoiceInput() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say the sentence...");
-
-        try {
-            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
-        } catch (ActivityNotFoundException a) {
-            Toast.makeText(getApplicationContext(), "Speech not supported", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQ_CODE_SPEECH_INPUT) {
-            if (resultCode == RESULT_OK && data != null) {
-                ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                if (result != null && !result.isEmpty()) {
-                    String spokenText = result.get(0);
-                    tvResultText.setText(spokenText);
-                    gradeSpeaking(tvTargetText.getText().toString(), spokenText);
-                }
-            }
-        }
     }
 
     private void gradeSpeaking(String target, String spoken) {
@@ -212,7 +330,7 @@ public class SpeakingActivity extends AppCompatActivity {
 
         btnKeepWriting.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
-            startVoiceInput(); // Retry immediately
+            startListening(); // Retry immediately
         });
 
         btnNewTopicSheet.setOnClickListener(v -> {
@@ -251,6 +369,9 @@ public class SpeakingActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        if (speechRecognizer != null) {
+            speechRecognizer.destroy();
+        }
         if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();

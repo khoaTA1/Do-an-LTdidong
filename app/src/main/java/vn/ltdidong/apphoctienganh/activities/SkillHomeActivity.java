@@ -2,17 +2,27 @@ package vn.ltdidong.apphoctienganh.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
@@ -21,6 +31,9 @@ public class SkillHomeActivity extends AppCompatActivity {
     private TextView loginRedirect;
     private MaterialCardView speakingSkill, writingSkill, listeningSkill, readingSkill;
     private BottomNavigationView bottomNav;
+    private TextView tvUserLevel;
+    private TextView tvUserXP;
+    private ProgressBar learningProgress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +45,10 @@ public class SkillHomeActivity extends AppCompatActivity {
         readingSkill = findViewById(R.id.readingSkillCard);
 
         loginRedirect = findViewById(R.id.login_redirect);
+        
+        tvUserLevel = findViewById(R.id.learning_level);
+        tvUserXP = findViewById(R.id.user_xp);
+        learningProgress = findViewById(R.id.learning_progress);
 
         bottomNav = findViewById(R.id.bottomNavigation);
         bottomNav.setSelectedItemId(R.id.nav_skills);
@@ -108,13 +125,13 @@ public class SkillHomeActivity extends AppCompatActivity {
                 new String[]{"Đọc hiểu", "Điền khuyết"});
 
         setupSkill(listeningSkill.getId(), "Listening", R.drawable.ic_listening,
-                new String[]{"Nghe cơ bản"});
+                new String[]{"Nghe cơ bản", "Điền chỗ trống"});
 
         setupSkill(speakingSkill.getId(), "Speaking", R.drawable.ic_speaking,
-                new String[]{"Luyện nói"});
+                new String[]{"Luyện nói", "Ngữ điệu", "Nói chuyện"});
 
         setupSkill(writingSkill.getId(), "Writing", R.drawable.ic_writing,
-                new String[]{"Viết câu"});
+                new String[]{"Viết câu", "Dịch tương tác"});
     }
 
     private void setupSkill(int skillId, String title, int iconRes, String[] modes) {
@@ -138,7 +155,7 @@ public class SkillHomeActivity extends AppCompatActivity {
 
             // Xử lý click
             modeItem.setOnClickListener(v -> {
-                Toast.makeText(this, "Open mode: " + modeName, Toast.LENGTH_SHORT).show();
+                // Toast.makeText(this, "Open mode: " + modeName, Toast.LENGTH_SHORT).show(); // removed toast
                 handleModeClick(title, modeName);
             });
 
@@ -161,21 +178,97 @@ public class SkillHomeActivity extends AppCompatActivity {
             case "Listening":
                 if (mode.equals("Nghe cơ bản")) {
                     startActivity(new Intent(this, ListeningListActivity.class));
+                } else if (mode.equals("Điền chỗ trống")) {
+                    startActivity(new Intent(this, FillBlankActivity.class));
                 }
                 break;
 
             case "Speaking":
                 if (mode.equals("Luyện nói")) {
                     startActivity(new Intent(this, SpeakingActivity.class));
+                } else if (mode.equals("Nói chuyện")) {
+                    showTopicDialog();
+                } else if (mode.equals("Ngữ điệu")) {
+                    startActivity(new Intent(this, IntonationActivity.class));
                 }
                 break;
 
             case "Writing":
                 if (mode.equals("Viết câu")) {
                     startActivity(new Intent(this, WritingActivity.class));
+                } else if(mode.equals("Dịch tương tác")) {
+                    startActivity(new Intent(this, InteractiveTranslationActivity.class));
                 }
                 break;
         }
+    }
+
+    private void showTopicDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Inflate custom layout
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_choose_topic, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent); // For rounded corners
+
+        ChipGroup chipGroup = dialogView.findViewById(R.id.chipGroupTopics);
+        TextInputLayout inputLayoutTopic = dialogView.findViewById(R.id.inputLayoutTopic);
+        EditText etTopicInput = dialogView.findViewById(R.id.etTopicInput);
+        Button btnCancel = dialogView.findViewById(R.id.btnCancel);
+        Button btnStart = dialogView.findViewById(R.id.btnStart);
+
+        chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId != View.NO_ID) {
+                Chip chip = group.findViewById(checkedId);
+                String selected = chip.getText().toString();
+                if (selected.equals("Other")) {
+                    inputLayoutTopic.setVisibility(View.VISIBLE);
+                    etTopicInput.requestFocus();
+                } else {
+                    inputLayoutTopic.setVisibility(View.GONE);
+                    etTopicInput.setText(""); // Clear manual input
+                }
+            }
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnStart.setOnClickListener(v -> {
+            String topic = "";
+            int checkedId = chipGroup.getCheckedChipId();
+            
+            if (checkedId != View.NO_ID) {
+                Chip chip = chipGroup.findViewById(checkedId);
+                String selected = chip.getText().toString();
+                
+                if (selected.equals("Other")) {
+                    topic = etTopicInput.getText().toString().trim();
+                    if (topic.isEmpty()) {
+                        inputLayoutTopic.setError("Please enter a topic");
+                        return;
+                    }
+                } else {
+                    topic = selected;
+                }
+            } else {
+                // Fallback if nothing selected (or enforce selection)
+                // Here let's check manual input just in case
+                topic = etTopicInput.getText().toString().trim();
+                 if (topic.isEmpty()) {
+                    Toast.makeText(SkillHomeActivity.this, "Please choose a topic", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+
+            Intent intent = new Intent(SkillHomeActivity.this, ConversationActivity.class);
+            intent.putExtra("TOPIC", topic);
+            startActivity(intent);
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
 
@@ -183,5 +276,63 @@ public class SkillHomeActivity extends AppCompatActivity {
     private void setupProgressAndBasicUserInfo() {
         TextView textUserFullname = findViewById(R.id.user_fullname);
         textUserFullname.setText(SharedPreferencesManager.getInstance(this).getUserName());
+        
+        // Load user level and XP from Firebase
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId != null && !userId.isEmpty()) {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users")
+                    .document(userId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            // Get XP data
+                            Long totalXP = documentSnapshot.getLong("total_xp");
+                            Long currentLevel = documentSnapshot.getLong("current_level");
+                            Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
+                            Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
+                            
+                            // Set default values if null
+                            int level = (currentLevel != null) ? currentLevel.intValue() : 1;
+                            int levelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
+                            int nextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
+                            
+                            // Update UI
+                            if (tvUserLevel != null) {
+                                tvUserLevel.setText("Level " + level);
+                            }
+                            if (tvUserXP != null) {
+                                tvUserXP.setText(levelXP + " / " + nextLevelXP + " XP");
+                            }
+                            if (learningProgress != null) {
+                                int progress = (nextLevelXP > 0) ? (levelXP * 100 / nextLevelXP) : 0;
+                                learningProgress.setProgress(progress);
+                            }
+                        } else {
+                            // Set default values if document doesn't exist
+                            setDefaultLevelAndXP();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("SkillHomeActivity", "Error loading user data", e);
+                        // Set default values on error
+                        setDefaultLevelAndXP();
+                    });
+        } else {
+            // Set default values if user not logged in
+            setDefaultLevelAndXP();
+        }
+    }
+    
+    private void setDefaultLevelAndXP() {
+        if (tvUserLevel != null) {
+            tvUserLevel.setText("Level 1");
+        }
+        if (tvUserXP != null) {
+            tvUserXP.setText("0 / 100 XP");
+        }
+        if (learningProgress != null) {
+            learningProgress.setProgress(0);
+        }
     }
 }
