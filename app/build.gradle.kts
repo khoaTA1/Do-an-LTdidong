@@ -75,4 +75,7 @@ dependencies {
     // các gói phụ thuộc cho tính năng story telling road map
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.2.0")
+
+    // các gói phụ thuộc cho tính năng gợi ý từ vựng mới
+    implementation("com.google.code.gson:gson:2.10.1")
 }

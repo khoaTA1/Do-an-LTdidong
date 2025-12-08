@@ -226,6 +226,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onResponse: isSuccessful = " + response.isSuccessful());
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     WordEntry result = response.body().get(0);
+
+                    // lưu lại lịch sử tìm kiếm
+
+
                     Log.d(TAG, "onResponse: Word found: " + result.getWord());
                     showResultDialog(result);
                 } else {
