@@ -441,6 +441,8 @@ public class DBHelper extends SQLiteOpenHelper {
         List<Word> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
+        if
+
         Cursor c = db.rawQuery(
                 "SELECT " + HISTORY_SEARCH_COLUMN_WORD + ", " + HISTORY_SEARCH_COLUM_POS + ", "
                         + HISTORY_SEARCH_COLUM_SYNONYM + " FROM " + HISTORY_SEARCH_TABLE_NAME +
