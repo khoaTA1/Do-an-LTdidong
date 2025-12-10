@@ -3,6 +3,7 @@ package vn.ltdidong.apphoctienganh.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -22,6 +23,7 @@ import vn.ltdidong.apphoctienganh.database.UserStreakDao;
 import vn.ltdidong.apphoctienganh.models.UserStreak;
 import vn.ltdidong.apphoctienganh.dialogs.DailyGoalDialog;
 import vn.ltdidong.apphoctienganh.dialogs.EditNameDialog;
+import vn.ltdidong.apphoctienganh.functions.AchievementManager;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 
 import java.util.concurrent.Executor;
@@ -48,6 +50,10 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView tvStreak;
     private TextView tvLongestStreak;
     
+    // Achievements
+    private TextView tvRecentAchievement;
+    private TextView tvAchievementCount;
+    
     // Goals & Settings
     private LinearLayout layoutDailyGoal;
     private TextView tvDailyGoal;
@@ -57,6 +63,12 @@ public class ProfileActivity extends AppCompatActivity {
     private LinearLayout btnHelp;
     private LinearLayout btnInviteFriends;
     private MaterialButton btnLogout;
+    
+    // Cards that need to be hidden when not logged in
+    private com.google.android.material.card.MaterialCardView cardProgress;
+    private com.google.android.material.card.MaterialCardView cardAchievements;
+    private com.google.android.material.card.MaterialCardView cardGoals;
+    private com.google.android.material.card.MaterialCardView cardSettings;
     
     private BottomNavigationView bottomNav;
     private FirebaseFirestore db;
@@ -101,6 +113,10 @@ public class ProfileActivity extends AppCompatActivity {
         tvStreak = findViewById(R.id.tvStreak);
         tvLongestStreak = findViewById(R.id.tvLongestStreak);
         
+        // Achievements
+        tvRecentAchievement = findViewById(R.id.tvRecentAchievement);
+        tvAchievementCount = findViewById(R.id.tvAchievementCount);
+        
         // Goals & Settings
         layoutDailyGoal = findViewById(R.id.layoutDailyGoal);
         tvDailyGoal = findViewById(R.id.tvDailyGoal);
@@ -111,49 +127,57 @@ public class ProfileActivity extends AppCompatActivity {
         btnInviteFriends = findViewById(R.id.btnInviteFriends);
         btnLogout = findViewById(R.id.logout_id);
         bottomNav = findViewById(R.id.bottomNavigation);
+        
+        // Cards to show/hide
+        cardProgress = findViewById(R.id.cardProgress);
+        cardAchievements = findViewById(R.id.cardAchievements);
+        cardGoals = findViewById(R.id.cardGoals);
+        cardSettings = findViewById(R.id.cardSettings);
     }
     
     private void disableLoginRequiredFeatures() {
-        // Disable all interactive elements
-        btnLogout.setAlpha(0.3f);
-        btnLogout.setEnabled(false);
-        btnWishlist.setAlpha(0.3f);
-        btnWishlist.setEnabled(false);
-        btnSettings.setAlpha(0.3f);
-        btnSettings.setEnabled(false);
-        btnHelp.setAlpha(0.3f);
-        btnHelp.setEnabled(false);
-        btnInviteFriends.setAlpha(0.3f);
-        btnInviteFriends.setEnabled(false);
-        layoutDailyGoal.setAlpha(0.3f);
-        layoutDailyGoal.setEnabled(false);
+        // Hide all profile cards
+        cardProgress.setVisibility(View.GONE);
+        cardAchievements.setVisibility(View.GONE);
+        cardGoals.setVisibility(View.GONE);
+        cardSettings.setVisibility(View.GONE);
+        
+        // Disable edit features
         btnChangeAvatar.setEnabled(false);
+        btnChangeAvatar.setAlpha(0.5f);
         btnEditName.setEnabled(false);
+        btnEditName.setAlpha(0.5f);
         
         // Show default values
         tvUsername.setText("Người dùng");
         tvEmail.setText("Vui lòng đăng nhập");
-        tvLevel.setText("Level 0");
-        tvTotalXP.setText("0 XP");
-        tvStreak.setText("0 ngày");
+        
+        // Change logout button to login button
+        btnLogout.setText("Đăng nhập");
+        btnLogout.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.primary)));
+        btnLogout.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
     
     private void enableLoginRequiredFeatures() {
-        // Enable all features
-        btnLogout.setAlpha(1f);
-        btnLogout.setEnabled(true);
-        btnWishlist.setAlpha(1f);
-        btnWishlist.setEnabled(true);
-        btnSettings.setAlpha(1f);
-        btnSettings.setEnabled(true);
-        btnHelp.setAlpha(1f);
-        btnHelp.setEnabled(true);
-        btnInviteFriends.setAlpha(1f);
-        btnInviteFriends.setEnabled(true);
-        layoutDailyGoal.setAlpha(1f);
-        layoutDailyGoal.setEnabled(true);
+        // Show all profile cards
+        cardProgress.setVisibility(View.VISIBLE);
+        cardAchievements.setVisibility(View.VISIBLE);
+        cardGoals.setVisibility(View.VISIBLE);
+        cardSettings.setVisibility(View.VISIBLE);
         
-        // Setup click listeners
+        // Enable edit features
+        btnChangeAvatar.setEnabled(true);
+        btnChangeAvatar.setAlpha(1f);
+        btnEditName.setEnabled(true);
+        btnEditName.setAlpha(1f);
+        
+        // Setup logout button
+        btnLogout.setText("Đăng xuất");
+        btnLogout.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(android.R.color.holo_red_light)));
         btnLogout.setOnClickListener(v -> {
             SharedPreferencesManager.getInstance(this).clearUserData();
             recreate();
@@ -197,9 +221,20 @@ public class ProfileActivity extends AppCompatActivity {
             dialog.show();
         });
         
-        btnViewAllAchievements.setOnClickListener(v -> 
-            Toast.makeText(this, "Tính năng đang phát triển", Toast.LENGTH_SHORT).show()
-        );
+        btnViewAllAchievements.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, AchievementsActivity.class);
+            startActivityForResult(intent, 100);
+        });
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+            int achievementCount = data.getIntExtra("achievementCount", 0);
+            int totalAchievements = data.getIntExtra("totalAchievements", 14);
+            // TODO: Cập nhật UI với số thành tích thực tế nếu cần
+        }
     }
     
     private void loadUserData() {
@@ -220,14 +255,64 @@ public class ProfileActivity extends AppCompatActivity {
         if (userId != null && !userId.isEmpty()) {
             db.collection("users").document(userId)
                 .get()
-                .addOnSuccessListener(this::displayUserProgress)
+                .addOnSuccessListener(documentSnapshot -> {
+                    displayUserProgress(documentSnapshot);
+                    // Kiểm tra và unlock thành tích
+                    AchievementManager.getInstance(this).checkAllAchievements(userId);
+                })
                 .addOnFailureListener(e -> 
                     Log.e(TAG, "Error loading user data", e)
                 );
             
             // Load streak from Room Database
             loadStreakData(userId);
+            
+            // Load achievements
+            loadAchievements(userId);
         }
+    }
+    
+    private void loadAchievements(String userId) {
+        db.collection("user_achievements").document(userId)
+            .get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    java.util.List<String> unlockedAchievements = 
+                        (java.util.List<String>) documentSnapshot.get("unlocked_achievements");
+                    
+                    if (unlockedAchievements != null && !unlockedAchievements.isEmpty()) {
+                        // Hiển thị thành tích gần nhất
+                        String recentAchievement = unlockedAchievements.get(unlockedAchievements.size() - 1);
+                        String icon = getAchievementIcon(recentAchievement);
+                        tvRecentAchievement.setText(icon + " " + recentAchievement);
+                        tvAchievementCount.setText("Đã đạt được: " + unlockedAchievements.size() + "/14");
+                    } else {
+                        tvRecentAchievement.setText("🏆 Hãy đạt thành tích đầu tiên!");
+                        tvAchievementCount.setText("Đã đạt được: 0/14");
+                    }
+                } else {
+                    tvRecentAchievement.setText("🏆 Hãy đạt thành tích đầu tiên!");
+                    tvAchievementCount.setText("Đã đạt được: 0/14");
+                }
+            });
+    }
+    
+    private String getAchievementIcon(String title) {
+        if (title.contains("Người mới")) return "🌱";
+        if (title.contains("Học viên")) return "🌿";
+        if (title.contains("Chuyên gia") && !title.contains("XP")) return "🌳";
+        if (title.contains("Bậc thầy") && !title.contains("XP")) return "🏆";
+        if (title.contains("Nhất quán")) return "🔥";
+        if (title.contains("Kiên trì")) return "⚡";
+        if (title.contains("Huyền thoại")) return "💎";
+        if (title.contains("Thu thập XP")) return "⭐";
+        if (title.contains("Chuyên gia XP")) return "🌟";
+        if (title.contains("Bậc thầy XP")) return "✨";
+        if (title.contains("đọc")) return "📖";
+        if (title.contains("thính")) return "👂";
+        if (title.contains("văn")) return "✍️";
+        if (title.contains("giả")) return "🗣️";
+        return "🏆";
     }
     
     private void displayUserProgress(DocumentSnapshot document) {

@@ -46,6 +46,9 @@
             android:parentActivityName=".activities.LessonDetailActivity" />
         <activity android:name=".activities.RegisterActivity"/>
         <activity android:name=".activities.LoginActivity"/>
+        <activity 
+            android:name=".activities.ForgotPasswordActivity"
+            android:parentActivityName=".activities.LoginActivity"/>
         <activity android:name=".activities.SkillHomeActivity"/>
         <activity android:name=".activities.RCTransActivity"/>
         <activity android:name=".activities.CTTransActivity"/>
@@ -55,6 +58,9 @@
             android:parentActivityName=".activities.ProfileActivity"/>
         <activity 
             android:name=".activities.HelpActivity"
+            android:parentActivityName=".activities.ProfileActivity"/>
+        <activity 
+            android:name=".activities.AchievementsActivity"
             android:parentActivityName=".activities.ProfileActivity"/>
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
