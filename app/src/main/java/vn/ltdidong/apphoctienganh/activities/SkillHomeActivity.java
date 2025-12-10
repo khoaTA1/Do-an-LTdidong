@@ -21,7 +21,6 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
@@ -78,7 +77,7 @@ public class SkillHomeActivity extends AppCompatActivity {
 
                 return true;
             } else if (id == R.id.nav_advance_mode) {
-                Intent intent = new Intent(SkillHomeActivity.this, AdvanceModeHomeActivity.class);
+                Intent intent = new Intent(SkillHomeActivity.this, AdvanceModeActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {

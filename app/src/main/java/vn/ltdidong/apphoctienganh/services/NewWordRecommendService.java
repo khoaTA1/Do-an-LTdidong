@@ -36,7 +36,7 @@ public class NewWordRecommendService extends Service {
                 .setSmallIcon(R.drawable.ic_notification)
                 .build();
 
-        startForeground(1, notification);
+        //startForeground(1, notification);
 
         // chạy thuật toán trong background thread
         new Thread(() -> {
@@ -50,26 +50,27 @@ public class NewWordRecommendService extends Service {
     private void runSuggestionEngine() {
         sqlite = new DBHelper(this);
 
-        // 1. Lấy 50–100 từ người dùng đã tìm gần đây
+        // Lấy 50–100 từ người dùng đã tìm gần đây
         List<Word> recent = sqlite.getRecentWords(100);
 
         if (recent == null || recent.size() < 5) {
             return;
         }
 
-        // 2. Lấy từ điển đã cache trong SQLite
+        // Lấy từ điển đã cache trong SQLite
+        /*
         List<Word> dictionary = sqlite.getDictionaryWords();
 
         if (dictionary == null || dictionary.isEmpty()) {
             return;
-        }
+        }*/
 
-        // 3. Chạy WordSuggester
+        // Chạy WordSuggester
         WordSuggester suggester = new WordSuggester();
-        List<String> suggestions = suggester.suggest(recent, dictionary, 20);
+        //List<String> suggestions = suggester.suggest(recent, dictionary, 20);
 
-        // 4. Lưu vào SharedPreferences
-        saveSuggestions(suggestions);
+        // Lưu vào SharedPreferences
+        //saveSuggestions(suggestions);
     }
 
     private void saveSuggestions(List<String> list) {

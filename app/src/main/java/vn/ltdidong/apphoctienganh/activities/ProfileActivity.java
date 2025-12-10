@@ -63,7 +63,7 @@ public class ProfileActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_skills) {
-                Intent intent = new Intent(ProfileActivity.this, SkillHomeActivity.class);
+                Intent intent = new Intent(ProfileActivity.this, AdvanceModeActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {

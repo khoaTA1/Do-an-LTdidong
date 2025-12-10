@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -21,10 +22,11 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import vn.ltdidong.apphoctienganh.R;
 
-public class AdvanceModeHomeActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class StorytellingRoadMapActivity extends AppCompatActivity implements OnMapReadyCallback {
     private BottomNavigationView bottomNav;
     private GoogleMap ggMap;
     private FusedLocationProviderClient fusedLocationClient;
+    private TextView back_arrow;
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -39,7 +41,7 @@ public class AdvanceModeHomeActivity extends AppCompatActivity implements OnMapR
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_advance_mode_page);
+        setContentView(R.layout.activity_storytelling_road_map);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -49,23 +51,28 @@ public class AdvanceModeHomeActivity extends AppCompatActivity implements OnMapR
 
         // ánh xạ các thành phần view
         bottomNav = findViewById(R.id.bottomNavigation);
+        back_arrow = findViewById(R.id.back_arrow);
         bottomNav.setSelectedItemId(R.id.nav_advance_mode);
+
+        back_arrow.setOnClickListener(v -> {
+            finish();
+        });
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
             if (id == R.id.nav_home) {
-                Intent intent = new Intent(AdvanceModeHomeActivity.this, MainActivity.class);
+                Intent intent = new Intent(StorytellingRoadMapActivity.this, MainActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_skills) {
-                Intent intent = new Intent(AdvanceModeHomeActivity.this, SkillHomeActivity.class);
+                Intent intent = new Intent(StorytellingRoadMapActivity.this, SkillHomeActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_advance_mode) {
                 return true;
             } else if (id == R.id.nav_profile) {
-                Intent intent = new Intent(AdvanceModeHomeActivity.this, ProfileActivity.class);
+                Intent intent = new Intent(StorytellingRoadMapActivity.this, ProfileActivity.class);
                 startActivity(intent);
                 return true;
             }
