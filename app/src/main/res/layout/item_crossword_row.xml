@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="4dp"
+    android:layout_marginBottom="8dp">
+
+    <TextView
+        android:id="@+id/tvIndex"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:text="1"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="@drawable/bg_crossword_box"
+        android:textColor="#000000"
+        android:layout_marginEnd="12dp"/>
+
+    <HorizontalScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/llCharContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <!-- Boxes will be added here dynamically -->
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</LinearLayout>

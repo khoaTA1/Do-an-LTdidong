@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/layoutLoading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:elevation="10dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminateTint="@android:color/white"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading Level..."
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#F5F5F5">
+
+        <!-- Header -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="#2196F3"
+            android:paddingHorizontal="16dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_back"
+                android:layout_centerVertical="true"
+                app:tint="@android:color/white"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Crossword"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:layout_centerInParent="true"/>
+
+            <Button
+                android:id="@+id/btnNewGame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="New Game"
+                android:textColor="@android:color/white"
+                android:backgroundTint="#FF9800"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"/>
+        </RelativeLayout>
+
+        <!-- Current Clue Display -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CURRENT CLUE"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#757575"/>
+
+                <TextView
+                    android:id="@+id/tvCurrentClue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Tap a row to see the clue..."
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#212121"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Crossword Grid -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCrossword"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:clipToPadding="false"/>
+
+        <!-- Bottom Action -->
+        <LinearLayout
+            android:id="@+id/buttonLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_margin="16dp">
+
+            <Button
+                android:id="@+id/btnRestart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Restart"
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/btnGuessKeyword"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Guess Key"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <!-- Hidden EditText for Keyboard Input -->
+        <EditText
+            android:id="@+id/etHiddenInput"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:background="@null"
+            android:cursorVisible="false"
+            android:inputType="textNoSuggestions|textVisiblePassword"
+            android:maxLength="20"
+            android:textColor="@android:color/transparent"/>
+
+    </LinearLayout>
+
+</FrameLayout>
