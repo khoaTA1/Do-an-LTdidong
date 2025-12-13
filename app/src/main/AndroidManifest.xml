@@ -59,6 +59,7 @@
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
         <activity android:name=".activities.InteractiveTranslationActivity"/>
+        <activity android:name=".activities.CrosswordGameActivity"/>
     </application>
 
 </manifest>
