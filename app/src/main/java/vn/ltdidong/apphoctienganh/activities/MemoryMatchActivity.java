@@ -3,6 +3,7 @@ package vn.ltdidong.apphoctienganh.activities;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +26,13 @@ public class MemoryMatchActivity extends AppCompatActivity {
 
     private TextView tvScore, tvTimer;
     private Button btnRestart;
+    private int diff = 0;
+
+    // two player mode
+    private TextView scorePlr1, scorePlr2;
+    private int[] scrs = {0, 0};
+    private int first;
+    private LinearLayout plr1, plr2;
 
     // Logic
     private MMCard firstCard = null;
@@ -51,13 +59,15 @@ public class MemoryMatchActivity extends AppCompatActivity {
         int mode = getIntent().getIntExtra("mode", 1);
 
         if (mode == 1) {
-            int diff = getIntent().getIntExtra("difficulty", 0);
+            diff = getIntent().getIntExtra("difficulty", 0);
             // 0 = dễ, 1 = vừa, 2 = khó
-        } else {
-            int first = getIntent().getIntExtra("firstPlayer", 1);
-            // xử lý lượt đi đầu tiên
 
             singlePLayerMode();
+        } else {
+            first = getIntent().getIntExtra("firstPlayer", 0);
+            // xử lý lượt đi đầu tiên
+
+            twoPlayerMode();
         }
 
     }
@@ -70,20 +80,48 @@ public class MemoryMatchActivity extends AppCompatActivity {
         tvTimer = findViewById(R.id.tvTimer);
         btnRestart = findViewById(R.id.btnRestart);
 
-        rvCards.setLayoutManager(new GridLayoutManager(this, 4)); // 4 cột
+        int columnDiff = 2;
+        switch (diff) {
+            case 0: columnDiff = 2;
+            case 1: columnDiff = 4;
+            case 2: columnDiff = 8;
+        }
 
-        initGame();
+        rvCards.setLayoutManager(new GridLayoutManager(this, columnDiff)); // 4 cột
+
+        initGame(1);
         startTimer();
 
-        btnRestart.setOnClickListener(v -> restartGame());
+        btnRestart.setOnClickListener(v -> restartGame(1));
     }
 
     private void twoPlayerMode() {
+        setContentView(R.layout.activity_memory_match_2);
 
+        scorePlr1 = findViewById(R.id.tvScore);
+        scorePlr2 = findViewById(R.id.tvScore2);
+        rvCards = findViewById(R.id.rvCards);
+        btnRestart = findViewById(R.id.btnRestart);
+        plr1 = findViewById(R.id.plr1);
+        plr2 = findViewById(R.id.plr2);
+
+        rvCards.setLayoutManager(new GridLayoutManager(this, 4));
+
+        initGame(2);
+
+        btnRestart.setOnClickListener(v -> restartGame(2));
+
+        if (first == 0) {
+            plr1.setBackgroundResource(R.drawable.bg_player_active);
+            plr2.setBackgroundResource(R.drawable.bg_player_inactive);
+        } else {
+            plr1.setBackgroundResource(R.drawable.bg_player_inactive);
+            plr2.setBackgroundResource(R.drawable.bg_player_active);
+        }
     }
 
     // ---------------------- GAME INIT ------------------------------
-    private void initGame() {
+    private void initGame(int mode) {
         cards.clear();
 
         // Danh sách từ vựng mẫu (bạn có thể load từ DB hoặc API)
@@ -107,16 +145,24 @@ public class MemoryMatchActivity extends AppCompatActivity {
         Collections.shuffle(cards);
 
         adapter = new MemoryMatchCardAdapter(cards, (card, position) -> {
-            onCardClicked(card, position);
+            onCardClicked(card, position, mode);
         });
 
         rvCards.setAdapter(adapter);
-        score = 0;
-        tvScore.setText("Điểm: 0");
+
+        if (mode == 1) {
+            score = 0;
+            tvScore.setText("Điểm: 0");
+        } else {
+            scrs[0] = 0;
+            scrs[1] = 0;
+            scorePlr1.setText("+0");
+            scorePlr2.setText("+0");
+        }
     }
 
     // -------------------- HANDLE CARD CLICK ------------------------
-    private void onCardClicked(MMCard card, int position) {
+    private void onCardClicked(MMCard card, int position, int mode) {
         if (isProcessing) return;
 
         card.setFaceUp(true);
@@ -135,12 +181,26 @@ public class MemoryMatchActivity extends AppCompatActivity {
                 card.setMatched(true);
                 firstCard.setMatched(true);
 
-                score++;
-                tvScore.setText("Điểm: " + score);
+                // tính điểm trong chế độ 1 người
+                if (mode == 1) {
+                    score++;
+                    tvScore.setText("Điểm: " + score);
+                } else {
+                    // tính điểm trong chế độ 2 người
+                    scrs[first]++;
+
+                    // render score
+                    if (first == 1) {
+                        scorePlr2.setText("+" + scrs[first]);
+                    } else {
+                        scorePlr1.setText("+" + scrs[first]);
+                    }
+                }
 
                 firstCard = null;
                 isProcessing = false;
 
+                swapTurn();
             } else {
                 // Sai → đợi 800ms rồi úp lại
                 Handler handler = new Handler();
@@ -153,8 +213,23 @@ public class MemoryMatchActivity extends AppCompatActivity {
 
                     firstCard = null;
                     isProcessing = false;
+
+                    swapTurn();
                 }, 800);
             }
+
+        }
+    }
+
+    private void swapTurn() {
+        if (first == 1) {
+            first = 0;
+            plr1.setBackgroundResource(R.drawable.bg_player_active);
+            plr2.setBackgroundResource(R.drawable.bg_player_inactive);
+        } else {
+            first = 1;
+            plr1.setBackgroundResource(R.drawable.bg_player_inactive);
+            plr2.setBackgroundResource(R.drawable.bg_player_active);
         }
     }
 
@@ -194,10 +269,10 @@ public class MemoryMatchActivity extends AppCompatActivity {
     }
 
     // ---------------- RESTART GAME ----------------
-    private void restartGame() {
+    private void restartGame(int mode) {
         timerHandler.removeCallbacks(timerRunnable);
         startTimer();
-        initGame();
+        initGame(mode);
     }
 
     @Override

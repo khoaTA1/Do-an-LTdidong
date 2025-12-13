@@ -371,7 +371,7 @@ public class ProfileActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_skills) {
-                Intent intent = new Intent(ProfileActivity.this, AdvanceModeActivity.class);
+                Intent intent = new Intent(ProfileActivity.this, SkillHomeActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_entertainment) {

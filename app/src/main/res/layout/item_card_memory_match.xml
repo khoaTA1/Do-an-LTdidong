@@ -33,6 +33,18 @@
                 android:visibility="invisible"
                 android:background="#FFFFFF"/>
 
+            <TextView
+                android:id="@+id/tvWordBottom"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="apple"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:textColor="#222"
+                android:padding="8dp"
+                android:visibility="invisible"
+                android:rotation="180"/>
+
             <!-- Back: mặt thẻ úp -->
             <ImageView
                 android:id="@+id/cardBack"

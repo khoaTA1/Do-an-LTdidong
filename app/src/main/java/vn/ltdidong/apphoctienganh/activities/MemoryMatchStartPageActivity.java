@@ -58,7 +58,7 @@ public class MemoryMatchStartPageActivity extends AppCompatActivity {
             // 2 người
             intent.putExtra("mode", 2);
             intent.putExtra("firstPlayer",
-                    modeAdapter.spFirstPlayer.getSelectedItemPosition() == 0 ? 1 : 2);
+                    modeAdapter.spFirstPlayer.getSelectedItemPosition() == 0 ? 0 : 1);
         }
 
         startActivity(intent);

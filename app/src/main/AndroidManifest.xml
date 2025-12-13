@@ -76,8 +76,9 @@
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
         <activity android:name=".activities.InteractiveTranslationActivity"/>
-        <activity android:name=".activities.AdvanceModeActivity"/>
         <activity android:name=".activities.CrosswordGameActivity"/>
+        <activity android:name=".activities.MemoryMatchActivity"/>
+        <activity android:name=".activities.MemoryMatchStartPageActivity"/>
     </application>
 
 </manifest>
