@@ -14,6 +14,11 @@ public interface GeminiApi {
     @POST("v1beta/models/gemini-2.5-flash:generateContent")
     Call<GeminiResponse> generateContent(
             @Query("key") String apiKey,
-            @Body GeminiRequest request
-    );
+            @Body GeminiRequest request);
+
+    @Headers("Content-Type: application/json")
+    @POST("v1beta/models/gemini-2.5-flash:generateContent")
+    Call<GeminiResponse> generateContentFallback(
+            @Query("key") String apiKey,
+            @Body GeminiRequest request);
 }

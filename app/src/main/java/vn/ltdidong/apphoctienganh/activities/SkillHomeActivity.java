@@ -21,6 +21,7 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
@@ -76,8 +77,8 @@ public class SkillHomeActivity extends AppCompatActivity {
             } else if (id == R.id.nav_skills) {
 
                 return true;
-            } else if (id == R.id.nav_advance_mode) {
-                Intent intent = new Intent(SkillHomeActivity.this, AdvanceModeActivity.class);
+            } else if (id == R.id.nav_entertainment) {
+                Intent intent = new Intent(SkillHomeActivity.this, EntertainmentActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {
@@ -170,7 +171,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                     startActivity(new Intent(this, RCTransActivity.class));
                 } else if (mode.equals("Điền khuyết")) {
                     // mở activity Điền khuyết
-                    startActivity(new Intent(this, CTTransActivity.class));
+                    startActivity(new Intent(this, ClozeTestActivity.class));
                 }
                 break;
 

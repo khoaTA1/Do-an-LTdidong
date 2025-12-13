@@ -27,6 +27,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText editTextEmail;
     private TextInputEditText editTextPassword;
     private TextView textRegisterRedirect;
+    private TextView textForgotPassword;
     private Button buttonLogin;
     private FirebaseFirestore firestore;
 
@@ -41,6 +42,7 @@ public class LoginActivity extends AppCompatActivity {
         textInputPassword = findViewById(R.id.text_input_password);
         buttonLogin = findViewById(R.id.button_login);
         textRegisterRedirect = findViewById(R.id.text_register);
+        textForgotPassword = findViewById(R.id.text_forgot_password);
 
         if (textInputEmail.getEditText() != null) {
             editTextEmail = (TextInputEditText) textInputEmail.getEditText();
@@ -85,6 +87,11 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
             startActivity(intent);
             finish();
+        });
+
+        textForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
         });
     }
     private void validateLogin(String email, String password, FirestoreCallBack callback) {

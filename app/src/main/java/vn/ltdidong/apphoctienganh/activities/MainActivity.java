@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -14,6 +15,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.Firebase;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+
+
         // 3. Search Event
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (event != null && event.getAction() != KeyEvent.ACTION_DOWN) {
@@ -130,14 +136,15 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
+
             if (id == R.id.nav_home) {
                 return  true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
                 startActivity(intent);
                 return true;
-            } else if (id == R.id.nav_advance_mode) {
-                Intent intent = new Intent(MainActivity.this, AdvanceModeActivity.class);
+            } else if (id == R.id.nav_entertainment) {
+                Intent intent = new Intent(MainActivity.this, EntertainmentActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {

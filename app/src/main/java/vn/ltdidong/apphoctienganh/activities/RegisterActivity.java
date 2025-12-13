@@ -65,7 +65,9 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
         textLogin.setOnClickListener(v -> {
-            // Quay về màn hình đăng nhập
+            // Chuyển về màn hình đăng nhập
+            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+            startActivity(intent);
             finish();
         });
     }

@@ -39,7 +39,7 @@
         <activity android:name=".activities.ListeningListActivity" />
         <activity android:name=".activities.WishlistActivity" />
         <activity android:name=".activities.FlashcardActivity" />
-        <activity
+        <activity 
             android:name=".activities.LessonDetailActivity"
             android:parentActivityName=".activities.ListeningListActivity" />
         <activity 
@@ -48,11 +48,14 @@
         <activity 
             android:name=".activities.ResultActivity"
             android:parentActivityName=".activities.ListeningListActivity" />
-        <activity
+        <activity 
             android:name=".activities.FillBlankActivity"
             android:parentActivityName=".activities.LessonDetailActivity" />
         <activity android:name=".activities.RegisterActivity"/>
         <activity android:name=".activities.LoginActivity"/>
+        <activity
+            android:name=".activities.ForgotPasswordActivity"
+            android:parentActivityName=".activities.LoginActivity"/>
         <activity android:name=".activities.SkillHomeActivity"/>
         <activity android:name=".activities.RCTransActivity"/>
         <activity android:name=".activities.CTTransActivity"/>
@@ -60,10 +63,21 @@
         <activity android:name=".activities.ReadingSkillResultActivity"/>
         <activity android:name=".activities.ClozeTestActivity"/>
         <activity android:name=".activities.MemoryMatchActivity"/>
+        <activity
+            android:name=".activities.SettingsActivity"
+            android:parentActivityName=".activities.ProfileActivity"/>
+        <activity
+            android:name=".activities.HelpActivity"
+            android:parentActivityName=".activities.ProfileActivity"/>
+        <activity
+            android:name=".activities.AchievementsActivity"
+            android:parentActivityName=".activities.ProfileActivity"/>
+        <activity android:name=".activities.EntertainmentActivity"/>
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
         <activity android:name=".activities.InteractiveTranslationActivity"/>
         <activity android:name=".activities.AdvanceModeActivity"/>
+        <activity android:name=".activities.CrosswordGameActivity"/>
     </application>
 
 </manifest>
