@@ -82,7 +82,7 @@
                 android:id="@+id/recyclerViewAchievements"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="1400dp"
+                android:minHeight="1200dp"
                 android:nestedScrollingEnabled="false"/>
 
         </LinearLayout>
