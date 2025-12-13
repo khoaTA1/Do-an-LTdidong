@@ -59,7 +59,7 @@
         <activity android:name=".activities.ProfileActivity"/>
         <activity android:name=".activities.ReadingSkillResultActivity"/>
         <activity android:name=".activities.ClozeTestActivity"/>
-        <activity android:name=".activities.StorytellingRoadMapActivity"/>
+        <activity android:name=".activities.MemoryMatchActivity"/>
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
         <activity android:name=".activities.InteractiveTranslationActivity"/>

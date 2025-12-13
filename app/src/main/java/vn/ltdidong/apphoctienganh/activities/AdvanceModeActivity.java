@@ -29,7 +29,7 @@ public class AdvanceModeActivity extends AppCompatActivity {
 
         // mode storytelling road map
         firstMode.setOnClickListener(v -> {
-            Intent intent = new Intent(AdvanceModeActivity.this, StorytellingRoadMapActivity.class);
+            Intent intent = new Intent(AdvanceModeActivity.this, MemoryMatchActivity.class);
             startActivity(intent);
 
             // không finish để có gì bấm nút back còn quay lại được trang này
