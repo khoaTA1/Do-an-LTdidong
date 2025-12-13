@@ -111,11 +111,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Crossword Puzzle button click
-        findViewById(R.id.btnCrossword).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, CrosswordGameActivity.class);
-            startActivity(intent);
-        });
+
 
         // 3. Search Event
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -146,6 +142,10 @@ public class MainActivity extends AppCompatActivity {
                 return  true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_entertainment) {
+                Intent intent = new Intent(MainActivity.this, EntertainmentActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {
