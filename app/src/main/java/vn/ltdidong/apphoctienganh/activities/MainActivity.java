@@ -148,6 +148,10 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, EntertainmentActivity.class);
                 startActivity(intent);
                 return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
+                startActivity(intent);
+                return true;
             } else if (id == R.id.nav_profile) {
                 Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
                 startActivity(intent);

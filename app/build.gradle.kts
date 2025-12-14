@@ -14,9 +14,7 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "vn.ltdidong.apphoctienganh"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     buildFeatures {
         buildConfig = true
@@ -87,4 +85,10 @@ dependencies {
     annotationProcessor(libs.room.compiler)
 
     implementation("androidx.gridlayout:gridlayout:1.0.0")
+
+    // CameraX dependencies
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
 }
