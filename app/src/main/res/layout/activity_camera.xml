@@ -62,9 +62,9 @@
     <!-- Loading Indicator -->
     <ProgressBar
         android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:indeterminateTint="@color/primary"
+        android:layout_width="76dp"
+        android:layout_height="76dp"
+        android:indeterminateDrawable="@drawable/style_cute_spinner"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"

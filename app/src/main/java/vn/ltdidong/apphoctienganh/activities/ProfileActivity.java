@@ -378,6 +378,10 @@ public class ProfileActivity extends AppCompatActivity {
                 Intent intent = new Intent(ProfileActivity.this, EntertainmentActivity.class);
                 startActivity(intent);
                 return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(ProfileActivity.this, CameraActivity.class);
+                startActivity(intent);
+                return true;
             } else if (id == R.id.nav_profile) {
                 return true;
             }

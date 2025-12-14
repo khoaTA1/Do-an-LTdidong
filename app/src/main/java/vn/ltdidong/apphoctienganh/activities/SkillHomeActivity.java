@@ -71,13 +71,15 @@ public class SkillHomeActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 Intent intent = new Intent(SkillHomeActivity.this, MainActivity.class);
                 startActivity(intent);
-
                 return  true;
             } else if (id == R.id.nav_skills) {
-
                 return true;
             } else if (id == R.id.nav_entertainment) {
                 Intent intent = new Intent(SkillHomeActivity.this, EntertainmentActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(SkillHomeActivity.this, CameraActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {

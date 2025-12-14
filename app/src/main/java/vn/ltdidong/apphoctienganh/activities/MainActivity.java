@@ -165,6 +165,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Set selected item to Home when resuming main activity
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_home);
+        }
         // Refresh user progress khi quay lại activity
         loadUserProgress();
     }
