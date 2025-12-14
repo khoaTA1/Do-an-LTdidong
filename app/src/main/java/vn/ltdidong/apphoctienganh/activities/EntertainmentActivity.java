@@ -49,6 +49,10 @@ public class EntertainmentActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
                 return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(EntertainmentActivity.this, CameraActivity.class);
+                startActivity(intent);
+                return true;
             } else if (id == R.id.nav_entertainment) {
                 return true;
             } else if (id == R.id.nav_profile) {
