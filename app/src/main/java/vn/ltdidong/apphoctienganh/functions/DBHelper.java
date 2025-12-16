@@ -64,7 +64,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String HISTORY_SEARCH_COLUM_SYNONYM = "synonym";
 
     public DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, 4);
+        super(context, DATABASE_NAME, null, 5);
         this.context = context.getApplicationContext();
     }
     @Override
@@ -114,6 +114,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("drop table if exists " + READINGPASSAGE_TABLE_NAME);
         db.execSQL("drop table if exists " + QA_TABLE_NAME);
         db.execSQL("drop table if exists " + ANSWER_TABLE_NAME);
+        db.execSQL("drop table if exists " + CLOZETEST_QA_TABLE_NAME);
         db.execSQL("drop table if exists " + HISTORY_SEARCH_TABLE_NAME);
         onCreate(db);
     }

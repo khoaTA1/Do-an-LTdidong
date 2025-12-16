@@ -113,6 +113,9 @@ public class ClozeTestActivity extends AppCompatActivity {
     private void scoring() {
         for (int i = 0; i < 4; i++) {
             QAView view = QAlist.get(i);
+
+            if (i >= dataQA.size()) break;
+
             ClozeTestQA data = dataQA.get(i);
 
             // lấy câu trả lời của người dùng với:
@@ -179,8 +182,12 @@ public class ClozeTestActivity extends AppCompatActivity {
 
                 for (int i = 0; i < 4; i++) {
                     QAView view = QAlist.get(i);
-                    view.question.setText(newQA.get(i).getQuestion());
-                    view.answer.setText("");
+                    if (i >= newQA.size()) {
+                        break;
+                    } else {
+                        view.question.setText(newQA.get(i).getQuestion());
+                        view.answer.setText("");
+                    }
                 }
             });
         }).start();

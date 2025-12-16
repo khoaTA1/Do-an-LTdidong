@@ -20,6 +20,13 @@ import com.google.firebase.Firebase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,9 +44,11 @@ import vn.ltdidong.apphoctienganh.api.NewsApi;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.UserStreakDao;
 import vn.ltdidong.apphoctienganh.functions.DBHelper;
+import vn.ltdidong.apphoctienganh.functions.GCallBack;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.Article;
 import vn.ltdidong.apphoctienganh.models.NewsResponse;
+import vn.ltdidong.apphoctienganh.models.Word;
 import vn.ltdidong.apphoctienganh.models.WordEntry;
 
 public class MainActivity extends AppCompatActivity {
@@ -61,6 +70,14 @@ public class MainActivity extends AppCompatActivity {
 
     private DBHelper sqlite;
     private TextView newWordSuggestion;
+
+    private static final String[] INIT_WORDS = {
+            "learn", "study", "practice", "skill", "language",
+            "focus", "habit", "daily", "goal", "challenge",
+            "progress", "result", "effort", "understand",
+            "remember", "example", "meaning", "improve",
+            "knowledge", "success"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,8 +120,10 @@ public class MainActivity extends AppCompatActivity {
         
         // Setup Featured Articles RecyclerView (Keeping it empty/ready for now as requested)
         // You can populate this with a different list or adapter if needed
+        ArticleAdapter emptyAdapter =
+                new ArticleAdapter(this, new ArrayList<>());
         articlesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        // articlesRecyclerView.setAdapter(featuredAdapter); 
+        articlesRecyclerView.setAdapter(emptyAdapter);
 
         // Load News
         loadEnglishNews();
@@ -117,8 +136,6 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
             startActivity(intent);
         });
-
-
 
         // 3. Search Event
         sqlite = new DBHelper(this);
@@ -143,8 +160,16 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        String word = getRandomSuggestion();
-        newWordSuggestion.setText(word);
+        getRandomSuggestion(word -> {
+            if (word != null) newWordSuggestion.setText((String) word);
+        });
+
+        // xử lí khi người duùng bấm vào từ vựng gợi ý
+        newWordSuggestion.setOnClickListener(v -> {
+            String word = newWordSuggestion.getText().toString();
+
+            if (!word.isBlank()) lookupWord(word);
+        });
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -175,6 +200,12 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         // Refresh user progress khi quay lại activity
         loadUserProgress();
+
+        bottomNav.setSelectedItemId(R.id.nav_home);
+
+        getRandomSuggestion(word -> {
+            if (word != null) newWordSuggestion.setText((String) word);
+        });
     }
 
     /**
@@ -211,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadEnglishNews() {
+        Log.d(">>> Main Activity", "Bắt đầu load tin tức");
         // Replace with your actual API Key from NewsAPI.org
         String apiKey = "ce2c44c423d24ce7adf1b1990dc7ea20"; 
         // Changed query to target IELTS / English Learning news, sorted by published date
@@ -243,6 +275,7 @@ public class MainActivity extends AppCompatActivity {
                     WordEntry result = response.body().get(0);
 
                     // lưu lại lịch sử tìm kiếm
+                    Log.d(">>> Main Activity", "Lưu lịch sử tra từ điển: " + result.getWord());
                     sqlite.saveSearchWord(result);
 
                     Log.d(TAG, "onResponse: Word found: " + result.getWord());
@@ -269,25 +302,39 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private String getRandomSuggestion() {
-        List<String> list = loadSuggestions();
+    private void getRandomSuggestion(GCallBack cb) {
+        new Thread(() -> {
+            List<String> list = loadSuggestions();
 
-        if (list.isEmpty()) return null;
+            // nếu chưa có danh sách gợi ý nào thì load ngẫu nhiên từ api
+            if (list.isEmpty()) {
+                fetchRandomWordFromApi();
+                return;
+            }
 
-        Random random = new Random();
-        return list.get(random.nextInt(list.size()));
+            String result = list.get(new Random().nextInt(list.size()));
+
+            runOnUiThread(() -> cb.returnResult(result));
+        }).start();
     }
 
     private List<String> loadSuggestions() {
-        SharedPreferences prefs = getSharedPreferences("suggestions", MODE_PRIVATE);
 
-        String suggestions = prefs.getString("latest", "");
-        if (suggestions == null || suggestions.isEmpty()) {
-            Log.d(">>> Suggestions", "DS hiện tại đang trống");
-            return new ArrayList<>();
+        // lấy danh sách synonym của 3 từ vựng gần nhất mà người dùng tìm kiếm
+        List<Word> wordList = sqlite.getRecentWords(3);
+        List<String> synList = new ArrayList<>();
+
+        for (Word w : wordList) {
+            synList.addAll(w.getSyn());
         }
 
-        Log.d(">>> Suggestions", "DS hiện tại: " + suggestions);
-        return new ArrayList<>(Arrays.asList(suggestions.split(",")));
+        return synList;
+    }
+
+    private void fetchRandomWordFromApi() {
+        Random random = new Random();
+        String word = INIT_WORDS[random.nextInt(INIT_WORDS.length)];
+
+        newWordSuggestion.setText(word);
     }
 }

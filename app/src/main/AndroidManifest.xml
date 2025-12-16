@@ -79,7 +79,6 @@
         <activity android:name=".activities.CrosswordGameActivity"/>
         <activity android:name=".activities.MemoryMatchStartPageActivity"/>
 
-        <service android:name=".services.NewWordRecommendService"/>
     </application>
 
 </manifest>
