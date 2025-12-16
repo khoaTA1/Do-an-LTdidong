@@ -52,8 +52,4 @@
     <string name="menu_advance_mode">Advance</string>
     <string name="storytelling_road_map_ttle">"Storytelling Road Map"</string>
 
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
-    AIzaSyDxwQJUVje_em_4Nkdqp4I48-Jmg5rB4LU
-    </string>
-
 </resources>

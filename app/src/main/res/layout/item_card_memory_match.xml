@@ -20,30 +20,38 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <!-- Front: nội dung từ vựng -->
-            <TextView
-                android:id="@+id/tvWord"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="apple"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:textColor="#222"
-                android:padding="8dp"
-                android:visibility="invisible"
-                android:background="#FFFFFF"/>
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tvWordBottom"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:text="apple"
-                android:textSize="18sp"
-                android:gravity="center"
-                android:textColor="#222"
-                android:padding="8dp"
-                android:visibility="invisible"
-                android:rotation="180"/>
+                <TextView
+                    android:id="@+id/tvWordReverse"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="apple"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:textColor="#222"
+                    android:padding="8dp"
+                    android:visibility="invisible"
+                    android:rotation="180"/>
+
+                <!-- Front: nội dung từ vựng -->
+                <TextView
+                    android:id="@+id/tvWord"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="apple"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:textColor="#222"
+                    android:padding="8dp"
+                    android:visibility="invisible"
+                    android:background="#FFFFFF"/>
+            </LinearLayout>
 
             <!-- Back: mặt thẻ úp -->
             <ImageView

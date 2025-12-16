@@ -19,25 +19,28 @@ public class MemoryMatchCardAdapter extends RecyclerView.Adapter<MemoryMatchCard
 
     private List<MMCard> cards;
     private OnCardClickListener listener;
+    private int mode;
 
     public interface OnCardClickListener {
         void onCardClick(MMCard card, int position);
     }
 
-    public MemoryMatchCardAdapter(List<MMCard> cards, OnCardClickListener listener) {
+    public MemoryMatchCardAdapter(List<MMCard> cards, OnCardClickListener listener, int mode) {
         this.cards = cards;
         this.listener = listener;
+        this.mode = mode;
     }
 
     public static class CardViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
-        TextView tvWord;
+        TextView tvWord, tvWordRevr;
         ImageView cardBack;
 
         public CardViewHolder(@NonNull View itemView) {
             super(itemView);
             cardView = itemView.findViewById(R.id.cardView);
             tvWord = itemView.findViewById(R.id.tvWord);
+            tvWordRevr = itemView.findViewById(R.id.tvWordReverse);
             cardBack = itemView.findViewById(R.id.cardBack);
         }
     }
@@ -56,9 +59,18 @@ public class MemoryMatchCardAdapter extends RecyclerView.Adapter<MemoryMatchCard
 
         holder.tvWord.setText(card.getText());
 
+        if (mode == 2) {
+            holder.tvWordRevr.setText(card.getText());
+        }
+
         if (card.isMatched()) {
             // Thẻ đã ghép đúng
             holder.tvWord.setVisibility(View.VISIBLE);
+
+            if (mode == 2) {
+                holder.tvWordRevr.setVisibility(View.VISIBLE);
+            }
+
             holder.cardBack.setVisibility(View.INVISIBLE);
             holder.cardView.setAlpha(0.6f);
             holder.cardView.setClickable(false);
@@ -68,9 +80,19 @@ public class MemoryMatchCardAdapter extends RecyclerView.Adapter<MemoryMatchCard
             // Trạng thái mặt thẻ
             if (card.isFaceUp()) {
                 holder.tvWord.setVisibility(View.VISIBLE);
+
+                if (mode == 2) {
+                    holder.tvWordRevr.setVisibility(View.VISIBLE);
+                }
+
                 holder.cardBack.setVisibility(View.INVISIBLE);
             } else {
                 holder.tvWord.setVisibility(View.INVISIBLE);
+
+                if (mode == 2) {
+                    holder.tvWordRevr.setVisibility(View.INVISIBLE);
+                }
+
                 holder.cardBack.setVisibility(View.VISIBLE);
             }
 

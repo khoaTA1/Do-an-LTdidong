@@ -82,9 +82,15 @@ public class MemoryMatchActivity extends AppCompatActivity {
 
         int columnDiff = 2;
         switch (diff) {
-            case 0: columnDiff = 2;
-            case 1: columnDiff = 4;
-            case 2: columnDiff = 8;
+            case 0:
+                columnDiff = 2;
+                break;
+            case 1:
+                columnDiff = 4;
+                break;
+            case 2:
+                columnDiff = 8;
+                break;
         }
 
         rvCards.setLayoutManager(new GridLayoutManager(this, columnDiff)); // 4 cột
@@ -146,7 +152,7 @@ public class MemoryMatchActivity extends AppCompatActivity {
 
         adapter = new MemoryMatchCardAdapter(cards, (card, position) -> {
             onCardClicked(card, position, mode);
-        });
+        }, mode);
 
         rvCards.setAdapter(adapter);
 
@@ -214,7 +220,8 @@ public class MemoryMatchActivity extends AppCompatActivity {
                     firstCard = null;
                     isProcessing = false;
 
-                    swapTurn();
+                    // nếu trong chế độ 2 người thì mới có swap turn
+                    if (mode == 2) swapTurn();
                 }, 800);
             }
 
