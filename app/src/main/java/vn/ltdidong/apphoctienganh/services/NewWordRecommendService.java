@@ -9,21 +9,26 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.functions.DBHelper;
+import vn.ltdidong.apphoctienganh.functions.Kmeans;
+import vn.ltdidong.apphoctienganh.models.Vectorizer;
 import vn.ltdidong.apphoctienganh.models.Word;
 import vn.ltdidong.apphoctienganh.models.WordSuggester;
 
 public class NewWordRecommendService extends Service {
 
-    private DBHelper sqlite;
     private static final String CHANNEL_ID = "suggest_service";
+    private DBHelper sqlite;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -32,53 +37,81 @@ public class NewWordRecommendService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Đang phân tích từ vựng")
-                .setContentText("Gợi ý từ mới đang được cập nhật...")
+                .setContentText("Hệ thống đang gợi ý từ mới...")
                 .setSmallIcon(R.drawable.ic_notification)
                 .build();
 
-        //startForeground(1, notification);
+        // Nếu sau này cần foreground thì bật lại
+        // startForeground(1, notification);
 
-        // chạy thuật toán trong background thread
-        new Thread(() -> {
-            runSuggestionEngine();
-            stopSelf(); // chạy xong thì tự tắt
-        }).start();
+        new Thread(this::runSuggestionEngine).start();
 
         return START_NOT_STICKY;
     }
 
     private void runSuggestionEngine() {
+
         sqlite = new DBHelper(this);
 
-        // Lấy 50–100 từ người dùng đã tìm gần đây
-        List<Word> recent = sqlite.getRecentWords(100);
+        // Lấy từ đã search
+        List<Word> recentWords = sqlite.getRecentWords(100);
 
-        if (recent == null || recent.size() < 5) {
+        if (recentWords == null || recentWords.size() < 5) {
+            stopSelf();
             return;
         }
 
-        // Lấy từ điển đã cache trong SQLite
-        /*
-        List<Word> dictionary = sqlite.getDictionaryWords();
+        // Vectorize
+        Vectorizer vectorizer = new Vectorizer();
+        List<double[]> vectors = vectorizer.makeVectors(recentWords);
 
-        if (dictionary == null || dictionary.isEmpty()) {
+        // Chạy KMeans
+        int K = Math.min(3, recentWords.size() / 2);
+        Kmeans kmeans = new Kmeans(K, 50);
+        List<List<double[]>> clusters = kmeans.fit(vectors);
+
+        // Map vector → word index
+        Map<double[], Word> vectorWordMap = new HashMap<>();
+        for (int i = 0; i < vectors.size(); i++) {
+            vectorWordMap.put(vectors.get(i), recentWords.get(i));
+        }
+
+        // Chọn cluster lớn nhất
+        List<Word> mainCluster = new ArrayList<>();
+        int maxSize = 0;
+
+        for (List<double[]> cluster : clusters) {
+            if (cluster.size() > maxSize) {
+                maxSize = cluster.size();
+                mainCluster.clear();
+                for (double[] v : cluster) {
+                    mainCluster.add(vectorWordMap.get(v));
+                }
+            }
+        }
+
+        if (mainCluster.isEmpty()) {
+            stopSelf();
             return;
-        }*/
+        }
 
-        // Chạy WordSuggester
+        // Sinh gợi ý
         WordSuggester suggester = new WordSuggester();
-        //List<String> suggestions = suggester.suggest(recent, dictionary, 20);
+        List<String> suggestions = suggester.suggest(mainCluster, 20);
 
-        // Lưu vào SharedPreferences
-        //saveSuggestions(suggestions);
+        // Lưu kết quả
+        saveSuggestions(suggestions);
+
+        stopSelf();
     }
 
     private void saveSuggestions(List<String> list) {
         SharedPreferences prefs = getSharedPreferences("suggestions", MODE_PRIVATE);
         SharedPreferences.Editor ed = prefs.edit();
 
-        // lưu dưới dạng chuỗi JSON đơn giản
         ed.putString("latest", String.join(",", list));
+        Log.d(">>> Save Suggestions", "List: " + list);
+        ed.putLong("timestamp", System.currentTimeMillis());
         ed.apply();
     }
 
@@ -95,5 +128,7 @@ public class NewWordRecommendService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) { return null; }
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 }

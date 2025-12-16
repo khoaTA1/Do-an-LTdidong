@@ -1,6 +1,7 @@
 package vn.ltdidong.apphoctienganh.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -20,7 +21,9 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -33,6 +36,7 @@ import vn.ltdidong.apphoctienganh.api.DictionaryApi;
 import vn.ltdidong.apphoctienganh.api.NewsApi;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.UserStreakDao;
+import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.Article;
 import vn.ltdidong.apphoctienganh.models.NewsResponse;
@@ -55,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
     BottomNavigationView bottomNav;
 
+    private DBHelper sqlite;
+    private TextView newWordSuggestion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
         tvStreakCount = findViewById(R.id.tvStreakCount);
         tvLongestStreak = findViewById(R.id.tvLongestStreak);
 
+        newWordSuggestion = findViewById(R.id.newWord);
+
         // Setup News RecyclerView
         newsList = new ArrayList<>();
         newsAdapter = new ArticleAdapter(this, newsList);
@@ -113,6 +121,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         // 3. Search Event
+        sqlite = new DBHelper(this);
+
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (event != null && event.getAction() != KeyEvent.ACTION_DOWN) {
                 return false;
@@ -132,6 +142,9 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        String word = getRandomSuggestion();
+        newWordSuggestion.setText(word);
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -230,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
                     WordEntry result = response.body().get(0);
 
                     // lưu lại lịch sử tìm kiếm
-
+                    sqlite.saveSearchWord(result);
 
                     Log.d(TAG, "onResponse: Word found: " + result.getWord());
                     showResultDialog(result);
@@ -254,5 +267,27 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra("WORD_DATA", entry);
         startActivity(intent);
+    }
+
+    private String getRandomSuggestion() {
+        List<String> list = loadSuggestions();
+
+        if (list.isEmpty()) return null;
+
+        Random random = new Random();
+        return list.get(random.nextInt(list.size()));
+    }
+
+    private List<String> loadSuggestions() {
+        SharedPreferences prefs = getSharedPreferences("suggestions", MODE_PRIVATE);
+
+        String suggestions = prefs.getString("latest", "");
+        if (suggestions == null || suggestions.isEmpty()) {
+            Log.d(">>> Suggestions", "DS hiện tại đang trống");
+            return new ArrayList<>();
+        }
+
+        Log.d(">>> Suggestions", "DS hiện tại: " + suggestions);
+        return new ArrayList<>(Arrays.asList(suggestions.split(",")));
     }
 }

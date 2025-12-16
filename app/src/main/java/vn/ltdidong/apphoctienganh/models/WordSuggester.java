@@ -15,63 +15,59 @@ public class WordSuggester {
 
     public WordSuggester() {
         this.vectorizer = new Vectorizer();
-        this.kmeans = new Kmeans(3, 30); // 3 cụm, chạy tối đa 30 iteration
+        this.kmeans = new Kmeans(3, 30);
     }
 
-    /**
-     * Gợi ý từ dựa trên lịch sử tìm kiếm
-     *
-     * @param recent  danh sách Word user đã tìm gần đây (5 - 100 từ)
-     * @param dictionary danh sách từ đầy đủ (hoặc một phần)
-     * @param limit  số lượng từ muốn gợi ý
-     */
-    public List<String> suggest(List<Word> recent, List<Word> dictionary, int limit) {
+    public List<String> suggest(List<Word> recent, int limit) {
 
         if (recent == null || recent.size() < 5) {
             return new ArrayList<>();
         }
 
-        // 1. Vector hóa lịch sử
+        // Vectorize
         List<double[]> vectors = vectorizer.makeVectors(recent);
 
-        // 2. Chạy KMeans
+        // KMeans
         List<List<double[]>> clusters = kmeans.fit(vectors);
 
-        // 3. Tìm cụm lớn nhất (cluster đại diện interest của user)
-        int bestCluster = findLargestCluster(clusters);
-        List<double[]> chosenCluster = clusters.get(bestCluster);
+        // Chọn cluster lớn nhất
+        int idx = findLargestCluster(clusters);
+        List<double[]> mainCluster = clusters.get(idx);
 
-        // 4. Tính centroid của cụm
-        double[] centroid = computeCentroid(chosenCluster);
-
-        // 5. Tìm từ gần centroid nhất (trừ từ đã tìm)
-        List<ScoredWord> scoredList = new ArrayList<>();
-
-        for (Word w : dictionary) {
-
-            if (containsWord(recent, w.getWord())) continue; // bỏ từ user đã tìm
-
-            double[] v = vectorizer.vectorize(w);
-
-            double dist = euclidean(v, centroid);
-
-            scoredList.add(new ScoredWord(w.getWord(), dist));
+        // Lấy Word tương ứng cluster
+        List<Word> clusterWords = new ArrayList<>();
+        for (double[] v : mainCluster) {
+            int i = vectors.indexOf(v);
+            if (i >= 0) clusterWords.add(recent.get(i));
         }
 
-        // 6. Sắp xếp khoảng cách tăng dần → càng gần centroid càng phù hợp
-        Collections.sort(scoredList, Comparator.comparingDouble(a -> a.score));
+        // Gom synonyms + POS mở rộng
+        return generateSuggestions(clusterWords, recent, limit);
+    }
 
-        // 7. Lấy top N
+    // =========================
+
+    private List<String> generateSuggestions(
+            List<Word> cluster,
+            List<Word> recent,
+            int limit) {
+
         List<String> out = new ArrayList<>();
-        for (int i = 0; i < Math.min(limit, scoredList.size()); i++) {
-            out.add(scoredList.get(i).word);
+
+        for (Word w : cluster) {
+            for (String syn : w.getSyn()) {
+
+                if (!containsWord(recent, syn) && !out.contains(syn)) {
+                    out.add(syn);
+                }
+
+                if (out.size() >= limit) break;
+            }
+            if (out.size() >= limit) break;
         }
 
         return out;
     }
-
-
-    // ================= HELPER FUNCTIONS =====================
 
     private boolean containsWord(List<Word> list, String word) {
         for (Word w : list) {
@@ -81,52 +77,13 @@ public class WordSuggester {
     }
 
     private int findLargestCluster(List<List<double[]>> clusters) {
-        int maxSize = 0;
-        int index = 0;
-
+        int max = 0, idx = 0;
         for (int i = 0; i < clusters.size(); i++) {
-            if (clusters.get(i).size() > maxSize) {
-                maxSize = clusters.get(i).size();
-                index = i;
+            if (clusters.get(i).size() > max) {
+                max = clusters.get(i).size();
+                idx = i;
             }
         }
-        return index;
-    }
-
-    private double[] computeCentroid(List<double[]> cluster) {
-        int dim = cluster.get(0).length;
-        double[] c = new double[dim];
-
-        for (double[] v : cluster) {
-            for (int i = 0; i < dim; i++) {
-                c[i] += v[i];
-            }
-        }
-
-        for (int i = 0; i < dim; i++) {
-            c[i] /= cluster.size();
-        }
-
-        return c;
-    }
-
-    private double euclidean(double[] a, double[] b) {
-        double sum = 0;
-        for (int i = 0; i < a.length; i++) {
-            sum += Math.pow(a[i] - b[i], 2);
-        }
-        return Math.sqrt(sum);
-    }
-
-
-    // Struct để lưu thông tin gợi ý
-    private static class ScoredWord {
-        String word;
-        double score;
-
-        ScoredWord(String word, double score) {
-            this.word = word;
-            this.score = score;
-        }
+        return idx;
     }
 }
