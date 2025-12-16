@@ -11,11 +11,17 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        FirebaseApp.initializeApp(this);
+        
+        try {
+            FirebaseApp.initializeApp(this);
+            Log.d("App", "Firebase initialized successfully");
+        } catch (Exception e) {
+            Log.e("App", "Failed to initialize Firebase: " + e.getMessage());
+        }
 
         // Xóa cache SQLite khi app khởi động
-        DBHelper sqlite = new DBHelper(this);
         try {
+            DBHelper sqlite = new DBHelper(this);
             sqlite.clearAllTables();
             Log.d("App", "SQLite cache cleared on app start");
         } catch (Exception e) {

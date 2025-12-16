@@ -8,6 +8,10 @@
         android:id="@+id/nav_skills"
         android:icon="@drawable/ic_reading"
         android:title="@string/skills" />
+    <item
+        android:id="@+id/nav_camera"
+        android:icon="@drawable/ic_camera"
+        android:title="Scan" />
 
     <item
         android:id="@+id/nav_entertainment"
@@ -34,9 +38,6 @@
         android:id="@+id/nav_listening"
         android:icon="@drawable/ic_listening"
         android:title="@string/listening_skill" />
-        android:id="@+id/nav_advance_mode"
-        android:icon="@drawable/ic_advance"
-        android:title="@string/menu_advance_mode" />
 
     <item android:id="@+id/nav_speaking"
         android:icon="@drawable/ic_speaking"

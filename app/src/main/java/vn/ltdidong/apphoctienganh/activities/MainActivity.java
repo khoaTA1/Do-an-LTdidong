@@ -185,6 +185,10 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, EntertainmentActivity.class);
                 startActivity(intent);
                 return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(MainActivity.this, CameraActivity.class);
+                startActivity(intent);
+                return true;
             } else if (id == R.id.nav_profile) {
                 Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
                 startActivity(intent);
@@ -198,6 +202,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Set selected item to Home when resuming main activity
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_home);
+        }
         // Refresh user progress khi quay lại activity
         loadUserProgress();
 
