@@ -14,7 +14,9 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "vn.ltdidong.apphoctienganh"
-    compileSdk = 36
+    compileSdk {
+        version = release(36)
+    }
 
     buildFeatures {
         buildConfig = true
@@ -91,4 +93,7 @@ dependencies {
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
+
+    // các gói phụ thuộc cho tính năng gợi ý từ vựng mới
+    implementation("com.google.code.gson:gson:2.10.1")
 }

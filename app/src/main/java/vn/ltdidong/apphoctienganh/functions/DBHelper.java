@@ -7,16 +7,23 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.checkerframework.checker.units.qual.C;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import vn.ltdidong.apphoctienganh.models.ClozeTestQA;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 import vn.ltdidong.apphoctienganh.models.ReadingPassage;
+import vn.ltdidong.apphoctienganh.models.Word;
+import vn.ltdidong.apphoctienganh.models.WordEntry;
 
 public class DBHelper extends SQLiteOpenHelper {
     private Context context;
@@ -48,8 +55,16 @@ public class DBHelper extends SQLiteOpenHelper {
     private String CLOZETEST_QA_COLUMN_QUESTION = "question";
     private String CLOZETEST_QA_COLUMN_ANSWER = "answer";
 
+    // bảng theo dõi thói quen tìm từ vựng của người dùng
+    public static final String HISTORY_SEARCH_TABLE_NAME = "search_history";
+    public static final String HISTORY_SEARCH_COLUMN_ID = "id";
+    public static final String HISTORY_SEARCH_COLUMN_WORD = "word";
+    public static final String HISTORY_SEARCH_COLUM_TIMESTAMP = "timestamp";
+    public static final String HISTORY_SEARCH_COLUM_POS = "pos";
+    public static final String HISTORY_SEARCH_COLUM_SYNONYM = "synonym";
+
     public DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, 4);
+        super(context, DATABASE_NAME, null, 5);
         this.context = context.getApplicationContext();
     }
     @Override
@@ -79,10 +94,19 @@ public class DBHelper extends SQLiteOpenHelper {
                 + CLOZETEST_QA_COLUMN_ANSWER + " text"
                 + ")";
 
+        String createHSTable = "create table " + HISTORY_SEARCH_TABLE_NAME + " ("
+                + HISTORY_SEARCH_COLUMN_ID + " integer primary key AUTOINCREMENT, "
+                + HISTORY_SEARCH_COLUMN_WORD + " text, "
+                + HISTORY_SEARCH_COLUM_TIMESTAMP + " integer, "
+                + HISTORY_SEARCH_COLUM_POS + " text, "
+                + HISTORY_SEARCH_COLUM_SYNONYM + " text"
+                + ")";
+
         db.execSQL(createRPTable);
         db.execSQL(createQATable);
         db.execSQL(createAnswerTable);
         db.execSQL(createCTQATable);
+        db.execSQL(createHSTable);
     }
 
     @Override
@@ -90,6 +114,8 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("drop table if exists " + READINGPASSAGE_TABLE_NAME);
         db.execSQL("drop table if exists " + QA_TABLE_NAME);
         db.execSQL("drop table if exists " + ANSWER_TABLE_NAME);
+        db.execSQL("drop table if exists " + CLOZETEST_QA_TABLE_NAME);
+        db.execSQL("drop table if exists " + HISTORY_SEARCH_TABLE_NAME);
         onCreate(db);
     }
 
@@ -229,8 +255,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     // hàm lấy danh sách id các đoạn văn trong trường hợp nó không liên tục
-    public List<Integer> getAllPassageIds() {
-        List<Integer> ids = new ArrayList<>();
+    public List<Long> getAllPassageIds() {
+        List<Long> ids = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
 
@@ -241,7 +267,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    int id = cursor.getInt(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID));
+                    long id = cursor.getLong(cursor.getColumnIndex(READINGPASSAGE_COLUMN_ID));
                     Log.d(">>> SQLite", "Thêm id: " + id);
                     ids.add(id);
                 } while (cursor.moveToNext());
@@ -261,6 +287,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DELETE FROM " + READINGPASSAGE_TABLE_NAME + ";");
         db.execSQL("DELETE FROM " + QA_TABLE_NAME + ";");
         db.execSQL("DELETE FROM " + ANSWER_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + CLOZETEST_QA_TABLE_NAME + ";");
 
         db.close();
 
@@ -288,5 +315,158 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         return 1;
+    }
+    public List<Long> getAllCLozeTestQAIds() {
+        List<Long> ids = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(CLOZETEST_QA_TABLE_NAME,
+                    new String[]{CLOZETEST_QA_COLUMN_ID},
+                    null, null, null, null, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    long id = cursor.getLong(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_ID));
+                    Log.d(">>> SQLite", "Thêm id: " + id);
+                    ids.add(id);
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            Log.e("!!! SQLite", "Lỗi khi lấy danh sách id", e);
+        } finally {
+            if (cursor != null) cursor.close();
+            // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
+        }
+
+        return ids;
+    }
+    public ClozeTestQA getCTQAById(long qaid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        ClozeTestQA qa = new ClozeTestQA();
+        Cursor cursor;
+
+        try {
+            cursor = db.query(
+                    CLOZETEST_QA_TABLE_NAME,
+                    null,
+                    CLOZETEST_QA_COLUMN_ID + " = ?",
+                    new String[]{String.valueOf(qaid)},
+                    null,
+                    null,
+                    null
+                    );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                qa.setId(cursor.getLong(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_ID)));
+                qa.setQuestion(cursor.getString(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_QUESTION)));
+                qa.setAnswer(cursor.getString(cursor.getColumnIndex(CLOZETEST_QA_COLUMN_ANSWER)));
+
+                Log.d(">>> SQLite", "Đã tìm được cloze test QA theo id: " + qa.getId());
+            } else {
+                Log.e("!!! SQLite", "KHÔNG tìm được cloze test QA");
+                return null;
+            }
+
+            return qa;
+        } catch (Exception e) {
+            Log.e("!!! SQlite", "Lỗi:",e);
+        }
+
+        return null;
+    }
+
+    // một số phương thức sqlite cho tính năng gợi ý từ mới
+    public void saveSearchWord(WordEntry wordEntry) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // parse String word từ word entry và danh sách part of speech, synonym
+        String word = wordEntry.getWord();
+        List<WordEntry.Meaning> meanings = wordEntry.getMeanings();
+
+        List<String> posList = new ArrayList<>();
+        List<String> synList = new ArrayList<>();
+
+        // Lấy POS
+        for (WordEntry.Meaning m : wordEntry.getMeanings()) {
+            posList.add(m.getPartOfSpeech());
+        }
+
+        // Lấy synonyms
+        for (WordEntry.Meaning m : wordEntry.getMeanings()) {
+            if (m.getSynonyms() != null)
+                synList.addAll(m.getSynonyms());
+
+            if (m.getDefinitions() != null) {
+                for (WordEntry.Definition d : m.getDefinitions()) {
+                    if (d.getSynonyms() != null)
+                        synList.addAll(d.getSynonyms());
+                }
+            }
+        }
+
+        // Loại trùng synonym
+        Set<String> uniqueSyn = new LinkedHashSet<>(synList);
+        List<String> finalSynList = new ArrayList<>(uniqueSyn);
+
+        // chuyển trành chuỗi Json để lưu vào SQLite
+        Gson gson = new Gson();
+
+        String posJson = gson.toJson(posList);
+        String synJson = gson.toJson(finalSynList);
+
+        // insert hoặc update từ vào SQLite
+        // nếu từ đã tồn tại thì cập nhật timestamp
+        Cursor c = db.rawQuery(
+                "SELECT id FROM " + HISTORY_SEARCH_TABLE_NAME +
+                        " WHERE word = ?", new String[]{word});
+
+        ContentValues cv = new ContentValues();
+        cv.put(HISTORY_SEARCH_COLUMN_WORD, word);
+        cv.put(HISTORY_SEARCH_COLUM_TIMESTAMP, System.currentTimeMillis());
+        cv.put(HISTORY_SEARCH_COLUM_POS, posJson);
+        cv.put(HISTORY_SEARCH_COLUM_SYNONYM, synJson);
+
+        if (c.moveToFirst()) {
+            db.update(HISTORY_SEARCH_TABLE_NAME, cv, "word=?", new String[]{word});
+        } else {
+            db.insert(HISTORY_SEARCH_TABLE_NAME, null, cv);
+        }
+
+        c.close();
+        db.close();
+    }
+
+    public List<Word> getRecentWords(int limit) {
+        List<Word> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        //if
+
+        Cursor c = db.rawQuery(
+                "SELECT " + HISTORY_SEARCH_COLUMN_WORD + ", " + HISTORY_SEARCH_COLUM_POS + ", "
+                        + HISTORY_SEARCH_COLUM_SYNONYM + " FROM " + HISTORY_SEARCH_TABLE_NAME +
+                        " ORDER BY " + HISTORY_SEARCH_COLUM_TIMESTAMP + " DESC LIMIT " + limit, null);
+
+        if (c.moveToFirst()) {
+            do {
+                String word = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUMN_WORD));
+                String pos = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUM_POS));
+                String syn = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUM_SYNONYM));
+
+                Gson gson = new Gson();
+                List<String> posList = gson.fromJson(pos, new TypeToken<List<String>>(){}.getType());
+                List<String> synList = gson.fromJson(syn, new TypeToken<List<String>>(){}.getType());
+
+                Word w = new Word(word, posList, synList);
+
+                list.add(w);
+            } while (c.moveToNext());
+        }
+
+        c.close();
+        db.close();
+        return list;
     }
 }

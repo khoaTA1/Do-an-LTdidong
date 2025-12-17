@@ -1,7 +1,7 @@
 package vn.ltdidong.apphoctienganh.activities;
 
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -20,8 +20,17 @@ import com.google.firebase.Firebase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -34,9 +43,12 @@ import vn.ltdidong.apphoctienganh.api.DictionaryApi;
 import vn.ltdidong.apphoctienganh.api.NewsApi;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.UserStreakDao;
+import vn.ltdidong.apphoctienganh.functions.DBHelper;
+import vn.ltdidong.apphoctienganh.functions.GCallBack;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.Article;
 import vn.ltdidong.apphoctienganh.models.NewsResponse;
+import vn.ltdidong.apphoctienganh.models.Word;
 import vn.ltdidong.apphoctienganh.models.WordEntry;
 
 public class MainActivity extends AppCompatActivity {
@@ -56,6 +68,16 @@ public class MainActivity extends AppCompatActivity {
 
     BottomNavigationView bottomNav;
 
+    private DBHelper sqlite;
+    private TextView newWordSuggestion;
+
+    private static final String[] INIT_WORDS = {
+            "learn", "study", "practice", "skill", "language",
+            "focus", "habit", "daily", "goal", "challenge",
+            "progress", "result", "effort", "understand",
+            "remember", "example", "meaning", "improve",
+            "knowledge", "success"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
         tvStreakCount = findViewById(R.id.tvStreakCount);
         tvLongestStreak = findViewById(R.id.tvLongestStreak);
 
+        newWordSuggestion = findViewById(R.id.newWord);
+
         // Setup News RecyclerView
         newsList = new ArrayList<>();
         newsAdapter = new ArticleAdapter(this, newsList);
@@ -96,8 +120,10 @@ public class MainActivity extends AppCompatActivity {
         
         // Setup Featured Articles RecyclerView (Keeping it empty/ready for now as requested)
         // You can populate this with a different list or adapter if needed
+        ArticleAdapter emptyAdapter =
+                new ArticleAdapter(this, new ArrayList<>());
         articlesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        // articlesRecyclerView.setAdapter(featuredAdapter); 
+        articlesRecyclerView.setAdapter(emptyAdapter);
 
         // Load News
         loadEnglishNews();
@@ -111,9 +137,9 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-
-
         // 3. Search Event
+        sqlite = new DBHelper(this);
+
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (event != null && event.getAction() != KeyEvent.ACTION_DOWN) {
                 return false;
@@ -132,6 +158,17 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
             return false;
+        });
+
+        getRandomSuggestion(word -> {
+            if (word != null) newWordSuggestion.setText((String) word);
+        });
+
+        // xử lí khi người duùng bấm vào từ vựng gợi ý
+        newWordSuggestion.setOnClickListener(v -> {
+            String word = newWordSuggestion.getText().toString();
+
+            if (!word.isBlank()) lookupWord(word);
         });
 
         bottomNav.setOnItemSelectedListener(item -> {
@@ -171,6 +208,12 @@ public class MainActivity extends AppCompatActivity {
         }
         // Refresh user progress khi quay lại activity
         loadUserProgress();
+
+        bottomNav.setSelectedItemId(R.id.nav_home);
+
+        getRandomSuggestion(word -> {
+            if (word != null) newWordSuggestion.setText((String) word);
+        });
     }
 
     /**
@@ -207,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadEnglishNews() {
+        Log.d(">>> Main Activity", "Bắt đầu load tin tức");
         // Replace with your actual API Key from NewsAPI.org
         String apiKey = "ce2c44c423d24ce7adf1b1990dc7ea20"; 
         // Changed query to target IELTS / English Learning news, sorted by published date
@@ -237,6 +281,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onResponse: isSuccessful = " + response.isSuccessful());
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     WordEntry result = response.body().get(0);
+
+                    // lưu lại lịch sử tìm kiếm
+                    Log.d(">>> Main Activity", "Lưu lịch sử tra từ điển: " + result.getWord());
+                    sqlite.saveSearchWord(result);
+
                     Log.d(TAG, "onResponse: Word found: " + result.getWord());
                     showResultDialog(result);
                 } else {
@@ -259,5 +308,41 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, DetailActivity.class);
         intent.putExtra("WORD_DATA", entry);
         startActivity(intent);
+    }
+
+    private void getRandomSuggestion(GCallBack cb) {
+        new Thread(() -> {
+            List<String> list = loadSuggestions();
+
+            // nếu chưa có danh sách gợi ý nào thì load ngẫu nhiên từ api
+            if (list.isEmpty()) {
+                fetchRandomWordFromApi();
+                return;
+            }
+
+            String result = list.get(new Random().nextInt(list.size()));
+
+            runOnUiThread(() -> cb.returnResult(result));
+        }).start();
+    }
+
+    private List<String> loadSuggestions() {
+
+        // lấy danh sách synonym của 3 từ vựng gần nhất mà người dùng tìm kiếm
+        List<Word> wordList = sqlite.getRecentWords(3);
+        List<String> synList = new ArrayList<>();
+
+        for (Word w : wordList) {
+            synList.addAll(w.getSyn());
+        }
+
+        return synList;
+    }
+
+    private void fetchRandomWordFromApi() {
+        Random random = new Random();
+        String word = INIT_WORDS[random.nextInt(INIT_WORDS.length)];
+
+        newWordSuggestion.setText(word);
     }
 }

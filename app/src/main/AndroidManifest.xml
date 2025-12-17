@@ -54,7 +54,10 @@
         <activity android:name=".activities.RCTransActivity"/>
         <activity android:name=".activities.CTTransActivity"/>
         <activity android:name=".activities.ProfileActivity"/>
-        <activity 
+        <activity android:name=".activities.ReadingSkillResultActivity"/>
+        <activity android:name=".activities.ClozeTestActivity"/>
+        <activity android:name=".activities.MemoryMatchActivity"/>
+        <activity
             android:name=".activities.SettingsActivity"
             android:parentActivityName=".activities.ProfileActivity"/>
         <activity 
@@ -69,6 +72,8 @@
         <activity android:name=".activities.InteractiveTranslationActivity"/>
         <activity android:name=".activities.CrosswordGameActivity"/>
         <activity android:name=".activities.CameraActivity"/>
+        <activity android:name=".activities.MemoryMatchStartPageActivity"/>
+
     </application>
 
 </manifest>

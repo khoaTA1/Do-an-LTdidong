@@ -10,8 +10,11 @@
     <string name="submit_btn_label">Submit</string>
     <string name="next_btn_label">Next</string>
     <string name="cloze_test_practice_title">"Cloze test - "</string>
-    <string name="total_ten">/10</string>
-    <string name="reading_comprehension_desc">"In this mode, you will practice your reading skills through a set of short passages. Each session contains 5 reading texts, and each text includes multiple-choice questions.\\n\\nFor every question, there is only one correct answer.\n\nTake your time, read carefully, and choose the best answer.\n\nGood luck!"</string>
+    <string name="total">/5</string>
+    <string name="reading_comprehension_desc">"In this mode, you will practice your reading skills through a set of short passages.
+        Each session contains 5 reading texts, and each text includes multiple-choice questions.
+        \\n\\nFor every question, there is only one correct answer.\n\nTake your time, read carefully,
+        and choose the best answer.\n\nGood luck!"</string>
     <string name="reading_comprehencion_title">Reading Comprehension Mode</string>
 
     <string name="cloze_test_desc">"In this mode, you will practice your reading and vocabulary skills by completing sentences or short passages with missing words.\n
@@ -46,6 +49,7 @@
     <string name="speaking_skill_homepage_title">Kỹ năng nghe</string>
     <string name="writing_skill_homepage_title">Kỹ năng viết</string>
     <string name="logout_user">Đăng xuất tài khoản</string>
-
+    <string name="menu_advance_mode">Advance</string>
+    <string name="storytelling_road_map_ttle">"Storytelling Road Map"</string>
 
 </resources>

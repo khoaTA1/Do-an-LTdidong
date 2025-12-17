@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="100dp"
+    android:layout_height="130dp"
+    android:padding="6dp">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:foreground="?selectableItemBackground"
+        app:cardElevation="4dp"
+        app:cardCornerRadius="12dp"
+        android:background="#FFFFFF">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvWordReverse"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="apple"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:textColor="#222"
+                    android:padding="8dp"
+                    android:visibility="invisible"
+                    android:rotation="180"/>
+
+                <!-- Front: nội dung từ vựng -->
+                <TextView
+                    android:id="@+id/tvWord"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="apple"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:textColor="#222"
+                    android:padding="8dp"
+                    android:visibility="invisible"
+                    android:background="#FFFFFF"/>
+            </LinearLayout>
+
+            <!-- Back: mặt thẻ úp -->
+            <ImageView
+                android:id="@+id/cardBack"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/card_back"
+                android:scaleType="centerCrop" />
+
+        </FrameLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>

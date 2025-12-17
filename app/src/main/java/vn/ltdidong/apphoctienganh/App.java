@@ -27,5 +27,7 @@ public class App extends Application {
         } catch (Exception e) {
             Log.e("App", "Failed to clear SQLite cache", e);
         }
+
+        // tạo channel notification, cần thiết cho foreground service
     }
 }

@@ -172,7 +172,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                     startActivity(new Intent(this, RCTransActivity.class));
                 } else if (mode.equals("Điền khuyết")) {
                     // mở activity Điền khuyết
-                    startActivity(new Intent(this, ClozeTestActivity.class));
+                    startActivity(new Intent(this, CTTransActivity.class));
                 }
                 break;
 
