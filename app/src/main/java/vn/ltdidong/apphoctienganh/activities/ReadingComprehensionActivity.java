@@ -1,7 +1,9 @@
 package vn.ltdidong.apphoctienganh.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +25,7 @@ import vn.ltdidong.apphoctienganh.adapters.ReadingQAAdapter;
 import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
 import vn.ltdidong.apphoctienganh.functions.LoadFromJSON;
+import vn.ltdidong.apphoctienganh.models.ClozeTestQA;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 import vn.ltdidong.apphoctienganh.models.ReadingPassage;
 import vn.ltdidong.apphoctienganh.repositories.QuestionAnswerRepo;
@@ -35,6 +38,8 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
     private List<Long> passagePassed = new ArrayList<>();
     private DBHelper sqlite;
     private TextView btnBack;
+    private Button btnSubmit;
+    private int score = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,6 +55,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         // ánh xạ một số thành phần
         passage = findViewById(R.id.ReadingPassage);
         btnBack = findViewById(R.id.back_arrow);
+        btnSubmit = findViewById(R.id.btnSubmit);
 
         btnBack.setOnClickListener(v -> {
             finish();
@@ -63,6 +69,30 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         rvQuestions = findViewById(R.id.Questions);
 
         setupRecyclerView(rvQuestions, chosenPassage.getQAList());
+
+        btnSubmit.setOnClickListener(v -> {
+            scoring(chosenPassage);
+
+            Intent intent = new Intent(ReadingComprehensionActivity.this, ReadingSkillResultActivity.class);
+            intent.putExtra("score", score);
+            intent.putExtra("total", 5);
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    // tính điểm
+    private void scoring(ReadingPassage chosenPassage) {
+        for (QuestionAnswer QA : chosenPassage.getQAList()) {
+            int userAnswer = QA.getUserAnswer();
+            int correctAnswer = QA.getCorrectAnswer();
+
+            // nếu người dùng trả lời đúng => tăng điểm
+            if (userAnswer == correctAnswer) score++;
+        }
+
+        // qua lượt mới, tăng đếm
+        // currentRP++;
     }
 
     // Lấy random 1 passage
