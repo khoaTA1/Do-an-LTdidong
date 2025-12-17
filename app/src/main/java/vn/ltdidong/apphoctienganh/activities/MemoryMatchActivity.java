@@ -3,10 +3,12 @@ package vn.ltdidong.apphoctienganh.activities;
 import android.os.Bundle;
 import android.os.Handler;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.card.MaterialCardView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,7 +34,12 @@ public class MemoryMatchActivity extends AppCompatActivity {
     private TextView scorePlr1, scorePlr2;
     private int[] scrs = {0, 0};
     private int first;
-    private LinearLayout plr1, plr2;
+    private MaterialCardView plr1, plr2;
+
+    // Colors for active/inactive player
+    private static final int COLOR_ACTIVE = 0xFF4CAF50;   // Green
+    private static final int COLOR_PLR1_INACTIVE = 0xFFFFEBEE; // Light pink
+    private static final int COLOR_PLR2_INACTIVE = 0xFFE3F2FD; // Light blue
 
     // Logic
     private MMCard firstCard = null;
@@ -82,23 +89,24 @@ public class MemoryMatchActivity extends AppCompatActivity {
 
         int columnDiff = 2;
         switch (diff) {
-            case 0:
+            case 0: // Dễ: 2x4 = 8 thẻ (4 cặp)
                 columnDiff = 2;
                 break;
-            case 1:
-                columnDiff = 4;
+            case 1: // Vừa: 3x4 = 12 thẻ (6 cặp)
+                columnDiff = 3;
                 break;
-            case 2:
-                columnDiff = 8;
+            case 2: // Khó: 4x4 = 16 thẻ (8 cặp)
+                columnDiff = 4;
                 break;
         }
 
-        rvCards.setLayoutManager(new GridLayoutManager(this, columnDiff)); // 4 cột
+        rvCards.setLayoutManager(new GridLayoutManager(this, columnDiff));
 
         initGame(1);
         startTimer();
 
         btnRestart.setOnClickListener(v -> restartGame(1));
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
     }
 
     private void twoPlayerMode() {
@@ -116,13 +124,14 @@ public class MemoryMatchActivity extends AppCompatActivity {
         initGame(2);
 
         btnRestart.setOnClickListener(v -> restartGame(2));
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         if (first == 0) {
-            plr1.setBackgroundResource(R.drawable.bg_player_active);
-            plr2.setBackgroundResource(R.drawable.bg_player_inactive);
+            plr1.setCardBackgroundColor(COLOR_ACTIVE);
+            plr2.setCardBackgroundColor(COLOR_PLR2_INACTIVE);
         } else {
-            plr1.setBackgroundResource(R.drawable.bg_player_inactive);
-            plr2.setBackgroundResource(R.drawable.bg_player_active);
+            plr1.setCardBackgroundColor(COLOR_PLR1_INACTIVE);
+            plr2.setCardBackgroundColor(COLOR_ACTIVE);
         }
     }
 
@@ -131,14 +140,31 @@ public class MemoryMatchActivity extends AppCompatActivity {
         cards.clear();
 
         // Danh sách từ vựng mẫu (bạn có thể load từ DB hoặc API)
-        List<String[]> vocab = Arrays.asList(
+        List<String[]> allVocab = Arrays.asList(
                 new String[]{"apple", "quả táo"},
                 new String[]{"dog", "con chó"},
                 new String[]{"book", "quyển sách"},
                 new String[]{"car", "xe hơi"},
-                new String[]{"house", "ngôi nhà"}
+                new String[]{"house", "ngôi nhà"},
+                new String[]{"cat", "con mèo"},
+                new String[]{"water", "nước"},
+                new String[]{"tree", "cây"}
         );
 
+        // Số cặp theo độ khó
+        int pairCount = 4; // Mặc định dễ
+        if (mode == 2) {
+            pairCount = 8; // 2 người chơi: 16 thẻ
+        } else {
+            switch (diff) {
+                case 0: pairCount = 4; break;  // Dễ: 8 thẻ
+                case 1: pairCount = 6; break;  // Vừa: 12 thẻ
+                case 2: pairCount = 8; break;  // Khó: 16 thẻ
+            }
+        }
+
+        List<String[]> vocab = allVocab.subList(0, pairCount);
+        
         int idCounter = 0;
 
         // Tạo card EN - VI
@@ -206,6 +232,12 @@ public class MemoryMatchActivity extends AppCompatActivity {
                 firstCard = null;
                 isProcessing = false;
 
+                // Check if game is over
+                if (isGameOver()) {
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> showGameOverDialog(mode), 500);
+                }
+
                 swapTurn();
             } else {
                 // Sai → đợi 800ms rồi úp lại
@@ -229,14 +261,16 @@ public class MemoryMatchActivity extends AppCompatActivity {
     }
 
     private void swapTurn() {
+        if (plr1 == null || plr2 == null) return; // Safety check for single player mode
+        
         if (first == 1) {
             first = 0;
-            plr1.setBackgroundResource(R.drawable.bg_player_active);
-            plr2.setBackgroundResource(R.drawable.bg_player_inactive);
+            plr1.setCardBackgroundColor(COLOR_ACTIVE);
+            plr2.setCardBackgroundColor(COLOR_PLR2_INACTIVE);
         } else {
             first = 1;
-            plr1.setBackgroundResource(R.drawable.bg_player_inactive);
-            plr2.setBackgroundResource(R.drawable.bg_player_active);
+            plr1.setCardBackgroundColor(COLOR_PLR1_INACTIVE);
+            plr2.setCardBackgroundColor(COLOR_ACTIVE);
         }
     }
 
@@ -275,10 +309,58 @@ public class MemoryMatchActivity extends AppCompatActivity {
         return String.format("%02d:%02d", min, s);
     }
 
+    // ---------------- CHECK GAME OVER ----------------
+    private boolean isGameOver() {
+        for (MMCard card : cards) {
+            if (!card.isMatched()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void showGameOverDialog(int mode) {
+        timerHandler.removeCallbacks(timerRunnable);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🎉 Hoàn thành!");
+
+        String message;
+        if (mode == 1) {
+            message = "Bạn đã hoàn thành trò chơi!\n\n" +
+                    "⏱️ Thời gian: " + formatTime(seconds) + "\n" +
+                    "🏆 Điểm số: " + score + " cặp";
+        } else {
+            String winner;
+            if (scrs[0] > scrs[1]) {
+                winner = "Player 1 thắng! 🥇";
+            } else if (scrs[1] > scrs[0]) {
+                winner = "Player 2 thắng! 🥇";
+            } else {
+                winner = "Hòa! 🤝";
+            }
+            message = winner + "\n\n" +
+                    "👤 Player 1: " + scrs[0] + " cặp\n" +
+                    "👤 Player 2: " + scrs[1] + " cặp";
+        }
+
+        builder.setMessage(message);
+        builder.setPositiveButton("Chơi lại", (dialog, which) -> {
+            restartGame(mode);
+        });
+        builder.setNegativeButton("Thoát", (dialog, which) -> {
+            finish();
+        });
+        builder.setCancelable(false);
+        builder.show();
+    }
+
     // ---------------- RESTART GAME ----------------
     private void restartGame(int mode) {
         timerHandler.removeCallbacks(timerRunnable);
-        startTimer();
+        if (mode == 1) {
+            startTimer();
+        }
         initGame(mode);
     }
 

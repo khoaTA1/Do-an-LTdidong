@@ -134,13 +134,6 @@ public class DailyChallengeActivity extends BaseActivity {
         // Update challenge list
         challengeItems.clear();
         challengeItems.add(new ChallengeItem(
-            "Complete Reading Exercise",
-            "Practice your reading skills",
-            10,
-            "reading",
-            todayChallenge.isReadingCompleted()
-        ));
-        challengeItems.add(new ChallengeItem(
             "Complete Writing Exercise",
             "Practice your writing skills",
             10,

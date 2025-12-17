@@ -37,14 +37,15 @@
         <!-- Header -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:background="#2196F3"
-            android:paddingHorizontal="16dp">
+            android:layout_height="70dp"
+            android:background="@drawable/gradient_game"
+            android:paddingHorizontal="20dp"
+            android:elevation="8dp">
 
             <ImageButton
                 android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_back"
                 android:layout_centerVertical="true"
@@ -54,8 +55,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Crossword"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
                 android:textColor="@android:color/white"
                 android:layout_centerInParent="true"/>
 
@@ -63,46 +65,53 @@
                 android:id="@+id/btnNewGame"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New Game"
+                android:text="NEW GAME"
                 android:textColor="@android:color/white"
-                android:backgroundTint="#FF9800"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:backgroundTint="#FF6F00"
+                app:cornerRadius="20dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"/>
         </RelativeLayout>
 
         <!-- Current Clue Display -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            android:layout_margin="20dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="@color/white">
             
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="CURRENT CLUE"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold"
-                    android:textColor="#757575"/>
+                    android:textColor="@color/text_hint"
+                    android:letterSpacing="0.05"/>
 
                 <TextView
                     android:id="@+id/tvCurrentClue"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Tap a row to see the clue..."
-                    android:textSize="18sp"
+                    android:text="Tap a row to continue."
+                    android:textSize="19sp"
                     android:textStyle="bold"
-                    android:textColor="#212121"
-                    android:layout_marginTop="4dp"/>
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/text_primary"
+                    android:lineSpacingExtra="2dp"
+                    android:layout_marginTop="8dp"/>
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Crossword Grid -->
         <androidx.recyclerview.widget.RecyclerView
@@ -120,21 +129,30 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_margin="16dp">
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="16dp">
 
             <Button
                 android:id="@+id/btnRestart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Restart"
-                android:layout_marginEnd="8dp"/>
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="RESTART"
+                android:textStyle="bold"
+                android:backgroundTint="#E53935"
+                app:cornerRadius="16dp"
+                android:layout_marginEnd="10dp"/>
 
             <Button
                 android:id="@+id/btnGuessKeyword"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Guess Key"
-                android:layout_marginStart="8dp"/>
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="GUESS KEY"
+                android:textStyle="bold"
+                android:backgroundTint="@color/primary"
+                app:cornerRadius="16dp"
+                android:layout_marginStart="10dp"/>
         </LinearLayout>
 
         <!-- Hidden EditText for Keyboard Input -->
