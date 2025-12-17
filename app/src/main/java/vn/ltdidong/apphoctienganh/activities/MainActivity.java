@@ -137,6 +137,12 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // Daily Challenge card click
+        findViewById(R.id.cardDailyChallenge).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, DailyChallengeActivity.class);
+            startActivity(intent);
+        });
+
         // 3. Search Event
         sqlite = new DBHelper(this);
 

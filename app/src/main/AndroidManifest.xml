@@ -79,6 +79,9 @@
         <activity android:name=".activities.CrosswordGameActivity"/>
         <activity android:name=".activities.CameraActivity"/>
         <activity android:name=".activities.MemoryMatchStartPageActivity"/>
+        <activity 
+            android:name=".activities.DailyChallengeActivity"
+            android:parentActivityName=".activities.MainActivity"/>
 
     </application>
 
