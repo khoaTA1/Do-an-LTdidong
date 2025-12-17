@@ -1,7 +1,7 @@
 package vn.ltdidong.apphoctienganh.activities;
 
 import android.Manifest;
-import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -31,10 +31,16 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,8 +52,10 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.api.GeminiApi;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.GeminiRequest;
 import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.models.WordEntry;
 import vn.ltdidong.apphoctienganh.views.DrawingOverlayView;
 
 public class CameraActivity extends AppCompatActivity {
@@ -64,6 +72,7 @@ public class CameraActivity extends AppCompatActivity {
     private CardView cardResult;
     private TextView tvEnglish;
     private TextView tvVietnamese;
+    private ImageView btnFavorite;
 
     private Button btnCapture;
     private Button btnRetake;
@@ -76,11 +85,15 @@ public class CameraActivity extends AppCompatActivity {
     private static final String API_KEY = "AIzaSyDO4ulGUaInSIWAeHIyPmNA_zSZcoByuck";
 
     private Bitmap currentBitmap;
+    private FirebaseFirestore db;
+    private boolean isFavorite = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        db = FirebaseFirestore.getInstance();
 
         viewFinder = findViewById(R.id.viewFinder);
         ivPreview = findViewById(R.id.ivPreview);
@@ -91,6 +104,7 @@ public class CameraActivity extends AppCompatActivity {
         cardResult = findViewById(R.id.cardResult);
         tvEnglish = findViewById(R.id.tvEnglish);
         tvVietnamese = findViewById(R.id.tvVietnamese);
+        btnFavorite = findViewById(R.id.btnFavorite);
 
         btnCapture = findViewById(R.id.btnCapture);
         btnRetake = findViewById(R.id.btnRetake);
@@ -113,6 +127,8 @@ public class CameraActivity extends AppCompatActivity {
         btnCapture.setOnClickListener(v -> takePhoto());
         btnRetake.setOnClickListener(v -> resetCamera());
         btnBack.setOnClickListener(v -> finish());
+        
+        btnFavorite.setOnClickListener(v -> toggleFavorite());
 
         drawingView.setOnDrawListener(this::cropAndAnalyze);
 
@@ -193,6 +209,8 @@ public class CameraActivity extends AppCompatActivity {
         
         btnBack.bringToFront();
         currentBitmap = null;
+        isFavorite = false;
+        updateFavoriteIcon();
     }
 
     private Bitmap imageProxyToBitmap(ImageProxy image) {
@@ -312,7 +330,6 @@ public class CameraActivity extends AppCompatActivity {
         String english = "Unknown";
         String vietnamese = "Không rõ";
 
-        // Simple parsing logic
         String[] lines = text.split("\n");
         for (String line : lines) {
             if (line.toLowerCase().startsWith("english:")) {
@@ -324,12 +341,98 @@ public class CameraActivity extends AppCompatActivity {
             }
         }
 
-        // Update UI
         tvEnglish.setText(english);
         tvVietnamese.setText(vietnamese);
         
+        // Check if word is already favorited
+        checkIfFavorite(english);
+        
         tvStatus.setVisibility(View.GONE); 
-        cardResult.setVisibility(View.VISIBLE); // Show result card (which contains Retake button)
+        cardResult.setVisibility(View.VISIBLE);
+    }
+    
+    private void toggleFavorite() {
+        String englishWord = tvEnglish.getText().toString();
+        String vietnameseWord = tvVietnamese.getText().toString();
+        
+        if (englishWord.equals("Loading...") || englishWord.equals("Unknown")) return;
+        
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) {
+            Toast.makeText(this, "Vui lòng đăng nhập để lưu từ vựng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        isFavorite = !isFavorite;
+        updateFavoriteIcon();
+        
+        if (isFavorite) {
+            saveToFavorites(userId, englishWord, vietnameseWord);
+        } else {
+            removeFromFavorites(userId, englishWord);
+        }
+    }
+    
+    private void updateFavoriteIcon() {
+        if (isFavorite) {
+            btnFavorite.setImageResource(R.drawable.ic_heart_filled);
+            btnFavorite.setColorFilter(ContextCompat.getColor(this, R.color.error)); // Red color
+        } else {
+            btnFavorite.setImageResource(R.drawable.ic_heart_outline);
+            btnFavorite.setColorFilter(ContextCompat.getColor(this, R.color.primary));
+        }
+    }
+    
+    private void checkIfFavorite(String word) {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) return;
+        
+        db.collection("users")
+                .document(userId)
+                .collection("favorites")
+                .document(word)  // Check by ID (word itself) instead of field query
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    isFavorite = documentSnapshot.exists();
+                    updateFavoriteIcon();
+                });
+    }
+    
+    private void saveToFavorites(String userId, String word, String meaning) {
+        // Tạo WordEntry để lưu cấu trúc giống như WishlistActivity đọc được
+        WordEntry wordEntry = new WordEntry();
+        wordEntry.setWord(word);
+        
+        // Tạo cấu trúc Meaning đơn giản để chứa nghĩa tiếng Việt
+        WordEntry.Meaning meaningObj = new WordEntry.Meaning();
+        meaningObj.setPartOfSpeech("noun"); // Giả định là noun
+        
+        WordEntry.Definition def = new WordEntry.Definition();
+        def.setDefinition(meaning);
+        
+        meaningObj.setDefinitions(Collections.singletonList(def));
+        wordEntry.setMeanings(Collections.singletonList(meaningObj));
+        
+        // Lưu vào Firestore với ID là từ tiếng Anh (để dễ quản lý và trùng khớp với WishlistActivity)
+        db.collection("users")
+                .document(userId)
+                .collection("favorites")
+                .document(word) // Dùng từ làm Document ID
+                .set(wordEntry) // Dùng set thay vì add để override nếu tồn tại
+                .addOnSuccessListener(aVoid -> 
+                    Toast.makeText(CameraActivity.this, "Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> 
+                    Toast.makeText(CameraActivity.this, "Lỗi khi lưu", Toast.LENGTH_SHORT).show());
+    }
+    
+    private void removeFromFavorites(String userId, String word) {
+        db.collection("users")
+                .document(userId)
+                .collection("favorites")
+                .document(word)
+                .delete()
+                .addOnSuccessListener(aVoid -> 
+                    Toast.makeText(CameraActivity.this, "Đã xóa khỏi yêu thích", Toast.LENGTH_SHORT).show());
     }
     
     @Override
