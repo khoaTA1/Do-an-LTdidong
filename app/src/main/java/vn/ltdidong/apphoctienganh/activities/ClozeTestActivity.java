@@ -135,35 +135,7 @@ public class ClozeTestActivity extends AppCompatActivity {
         // qua lượt mới, tăng đếm
         currentQA++;
     }
-    /*
-    private void setupQA() {
-        if (dataQA == null) dataQA = new ArrayList<>();
-        else dataQA.clear();
 
-        // thêm vào danh sách dữ liệu QA
-        for (int i = 0; i < 4; i++) {
-            ClozeTestQA qa = randomQA();
-            if (qa != null) {
-                dataQA.add(qa);
-
-                QAView view = QAlist.get(i);
-                view.question.setText(qa.getQuestion());
-                view.answer.setText("");
-            } else {
-                // nếu hàm random trả về null
-                // tạo đối tượng cloze test QA mang tính hình thức để hiển thị ra ngoài view
-                qa = new ClozeTestQA();
-                String err = "xxxxxxERRORxxxxxx";
-                qa.setQuestion(err);
-
-                dataQA.add(qa);
-
-                QAView view = QAlist.get(i);
-                view.question.setText(err);
-                view.answer.setText(err);
-            }
-        }
-    }*/
     private void loadNextQA() {
         if (dataQA == null) dataQA = new ArrayList<>();
         else dataQA.clear();
