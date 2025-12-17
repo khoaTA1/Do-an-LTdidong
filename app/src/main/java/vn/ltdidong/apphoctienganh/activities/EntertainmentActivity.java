@@ -64,7 +64,8 @@ public class EntertainmentActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         cardStoryAdventure.setOnClickListener(v -> {
-            Toast.makeText(this, "Story Adventure coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(EntertainmentActivity.this, StoryAdventureActivity.class);
+            startActivity(intent);
         });
 
         cardCrossword.setOnClickListener(v -> {

@@ -63,6 +63,12 @@
             android:name=".activities.AchievementsActivity"
             android:parentActivityName=".activities.ProfileActivity"/>
         <activity android:name=".activities.EntertainmentActivity"/>
+        <activity 
+            android:name=".activities.StoryAdventureActivity"
+            android:parentActivityName=".activities.EntertainmentActivity"/>
+        <activity 
+            android:name=".activities.StoryDetailActivity"
+            android:parentActivityName=".activities.StoryAdventureActivity"/>
         <activity android:name=".activities.ReadingArticleActivity"/>
         <activity android:name=".activities.IntonationActivity"/>
         <activity android:name=".activities.InteractiveTranslationActivity"/>
