@@ -87,4 +87,13 @@ dependencies {
     annotationProcessor(libs.room.compiler)
 
     implementation("androidx.gridlayout:gridlayout:1.0.0")
+
+    // CameraX dependencies
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+
+    // các gói phụ thuộc cho tính năng gợi ý từ vựng mới
+    implementation("com.google.code.gson:gson:2.10.1")
 }

@@ -70,10 +70,10 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         if (sqlite == null) sqlite = new DBHelper(this);
 
         // random bằng danh sách id có thể không liên tục
-        List<Integer> ids = sqlite.getAllPassageIds();
+        List<Long> ids = sqlite.getAllPassageIds();
         Log.d(">>> RC Activity", "Số lượng passage hiện tại: " + ids.size());
 
-        int randomId = ids.get(new Random().nextInt(ids.size()));
+        long randomId = ids.get(new Random().nextInt(ids.size()));
         Log.d(">>> RC Activity", "id được sinh nghẫu nhiên: " + randomId);
 
         ReadingPassage randomPassage = sqlite.getReadingPassageById(randomId);

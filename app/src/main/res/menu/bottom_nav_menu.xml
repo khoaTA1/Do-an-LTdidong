@@ -9,6 +9,11 @@
         android:icon="@drawable/ic_reading"
         android:title="@string/skills" />
     <item
+        android:id="@+id/nav_camera"
+        android:icon="@drawable/ic_camera"
+        android:title="Scan" />
+
+    <item
         android:id="@+id/nav_entertainment"
         android:icon="@drawable/ic_entertainment"
         android:title="Entertainment" />

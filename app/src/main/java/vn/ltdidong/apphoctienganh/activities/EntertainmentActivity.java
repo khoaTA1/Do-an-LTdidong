@@ -16,6 +16,7 @@ public class EntertainmentActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
     private MaterialCardView cardStoryAdventure;
     private MaterialCardView cardCrossword;
+    private MaterialCardView cardMemoryMatch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +32,7 @@ public class EntertainmentActivity extends AppCompatActivity {
         bottomNav = findViewById(R.id.bottomNavigation);
         cardStoryAdventure = findViewById(R.id.cardStoryAdventure);
         cardCrossword = findViewById(R.id.cardCrossword);
+        cardMemoryMatch = findViewById(R.id.cardMemoryMatch);
     }
 
     private void setupBottomNavigation() {
@@ -48,6 +50,10 @@ public class EntertainmentActivity extends AppCompatActivity {
                 Intent intent = new Intent(EntertainmentActivity.this, SkillHomeActivity.class);
                 startActivity(intent);
                 finish();
+                return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(EntertainmentActivity.this, CameraActivity.class);
+                startActivity(intent);
                 return true;
             } else if (id == R.id.nav_entertainment) {
                 return true;
@@ -70,6 +76,11 @@ public class EntertainmentActivity extends AppCompatActivity {
 
         cardCrossword.setOnClickListener(v -> {
             Intent intent = new Intent(EntertainmentActivity.this, CrosswordGameActivity.class);
+            startActivity(intent);
+        });
+
+        cardMemoryMatch.setOnClickListener(v -> {
+            Intent intent = new Intent(EntertainmentActivity.this, MemoryMatchStartPageActivity.class);
             startActivity(intent);
         });
     }

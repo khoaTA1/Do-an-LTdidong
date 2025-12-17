@@ -21,7 +21,6 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
@@ -72,13 +71,15 @@ public class SkillHomeActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 Intent intent = new Intent(SkillHomeActivity.this, MainActivity.class);
                 startActivity(intent);
-
                 return  true;
             } else if (id == R.id.nav_skills) {
-
                 return true;
             } else if (id == R.id.nav_entertainment) {
                 Intent intent = new Intent(SkillHomeActivity.this, EntertainmentActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (id == R.id.nav_camera) {
+                Intent intent = new Intent(SkillHomeActivity.this, CameraActivity.class);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_profile) {
@@ -128,7 +129,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                 new String[]{"Nghe cơ bản", "Điền chỗ trống"});
 
         setupSkill(speakingSkill.getId(), "Speaking", R.drawable.ic_speaking,
-                new String[]{"Luyện nói", "Ngữ điệu", "Nói chuyện"});
+                new String[]{"Luyện nói", "Nói chuyện"});
 
         setupSkill(writingSkill.getId(), "Writing", R.drawable.ic_writing,
                 new String[]{"Viết câu", "Dịch tương tác"});
@@ -171,7 +172,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                     startActivity(new Intent(this, RCTransActivity.class));
                 } else if (mode.equals("Điền khuyết")) {
                     // mở activity Điền khuyết
-                    startActivity(new Intent(this, ClozeTestActivity.class));
+                    startActivity(new Intent(this, CTTransActivity.class));
                 }
                 break;
 
@@ -188,8 +189,6 @@ public class SkillHomeActivity extends AppCompatActivity {
                     startActivity(new Intent(this, SpeakingActivity.class));
                 } else if (mode.equals("Nói chuyện")) {
                     showTopicDialog();
-                } else if (mode.equals("Ngữ điệu")) {
-                    startActivity(new Intent(this, IntonationActivity.class));
                 }
                 break;
 
