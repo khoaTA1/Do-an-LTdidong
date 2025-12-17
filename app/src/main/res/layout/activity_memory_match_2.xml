@@ -8,17 +8,41 @@
     android:background="#F5F6FA">
 
     <!-- player 1 -->
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/plr1"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="10dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#FFEBEE"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:background="@drawable/bg_player_inactive">
+        app:layout_constraintEnd_toEndOf="parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:rotation="180"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:orientation="horizontal"
+            android:gravity="center">
 
         <TextView
             android:id="@+id/tvScore"
@@ -38,7 +62,9 @@
             android:textSize="18sp"
             android:textColor="#222"
             android:rotation="180"/>
-    </LinearLayout>
+        </LinearLayout>
+    </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Game Board -->
     <androidx.recyclerview.widget.RecyclerView
@@ -52,17 +78,25 @@
         android:padding="12dp" />
 
     <!-- player 2 -->
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/plr2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#E3F2FD"
+        app:layout_constraintBottom_toTopOf="@id/btnRestart"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:padding="10dp"
-        app:layout_constraintBottom_toTopOf="@id/btnRestart"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:background="@drawable/bg_player_inactive">
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/tvPlr2"
@@ -81,20 +115,22 @@
             android:textSize="18sp"
             android:textColor="#222" />
     </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <!-- Restart Button -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRestart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Chơi lại"
-        android:textSize="18sp"
-        android:background="@drawable/bg_button"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="10dp"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="24dp"
+        android:text="CHƠI LẠI"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#8E24AA"
+        app:cornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="20dp"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,6 +2,8 @@ package vn.ltdidong.apphoctienganh.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +19,22 @@ public class EntertainmentActivity extends AppCompatActivity {
     private MaterialCardView cardStoryAdventure;
     private MaterialCardView cardCrossword;
     private MaterialCardView cardMemoryMatch;
+    private MaterialCardView funFactCard;
+    private TextView tvFunFactContent;
+
+    private String[] funFacts = {
+            "Did you know? The word 'alphabet' comes from the first two letters of the Greek alphabet: alpha and beta!",
+            "The longest word in English has 189,819 letters! It's the chemical name for the protein titin.",
+            "Shakespeare invented over 1,700 words that we still use today, including 'eyeball' and 'bedroom'!",
+            "The sentence 'The quick brown fox jumps over the lazy dog' uses every letter of the alphabet!",
+            "English is the official language of the sky! All pilots must speak English on international flights.",
+            "The word 'set' has more definitions than any other word in English - over 430!",
+            "A new word is added to the English dictionary every 2 hours!",
+            "The dot over the letter 'i' is called a 'tittle'.",
+            "The shortest complete sentence in English is 'I am.' or 'I do.'",
+            "More English words begin with the letter 'S' than any other letter!"
+    };
+    private int currentFactIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +44,7 @@ public class EntertainmentActivity extends AppCompatActivity {
         initializeViews();
         setupBottomNavigation();
         setupClickListeners();
+        setupFunFacts();
     }
 
     private void initializeViews() {
@@ -33,6 +52,8 @@ public class EntertainmentActivity extends AppCompatActivity {
         cardStoryAdventure = findViewById(R.id.cardStoryAdventure);
         cardCrossword = findViewById(R.id.cardCrossword);
         cardMemoryMatch = findViewById(R.id.cardMemoryMatch);
+        funFactCard = findViewById(R.id.funFactCard);
+        tvFunFactContent = findViewById(R.id.tvFunFactContent);
     }
 
     private void setupBottomNavigation() {
@@ -70,7 +91,8 @@ public class EntertainmentActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         cardStoryAdventure.setOnClickListener(v -> {
-            Toast.makeText(this, "Story Adventure coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(EntertainmentActivity.this, StoryAdventureActivity.class);
+            startActivity(intent);
         });
 
         cardCrossword.setOnClickListener(v -> {
@@ -81,6 +103,25 @@ public class EntertainmentActivity extends AppCompatActivity {
         cardMemoryMatch.setOnClickListener(v -> {
             Intent intent = new Intent(EntertainmentActivity.this, MemoryMatchStartPageActivity.class);
             startActivity(intent);
+        });
+    }
+
+    private void setupFunFacts() {
+        // Shuffle and show random fact on start
+        currentFactIndex = (int) (Math.random() * funFacts.length);
+        tvFunFactContent.setText(funFacts[currentFactIndex]);
+
+        // Click to show next fact
+        funFactCard.setOnClickListener(v -> {
+            currentFactIndex = (currentFactIndex + 1) % funFacts.length;
+            tvFunFactContent.setText(funFacts[currentFactIndex]);
+            
+            // Add a little animation
+            tvFunFactContent.setAlpha(0f);
+            tvFunFactContent.animate()
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start();
         });
     }
 }

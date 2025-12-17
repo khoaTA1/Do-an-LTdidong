@@ -4,195 +4,372 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="#F8F9FA"
     tools:context=".activities.EntertainmentActivity">
 
-    <!-- Bottom Navigation -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="56dp">
+        android:layout_marginBottom="56dp"
+        android:fillViewport="true">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:layout_height="wrap_content">
 
             <!-- Header Section -->
-
             <LinearLayout
+                android:id="@+id/headerSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
                 android:background="@drawable/gradient_background"
                 android:elevation="4dp"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:paddingHorizontal="24dp"
+                android:paddingTop="48dp"
+                android:paddingBottom="40dp"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="📚 Entertainment"
+                    android:text="🎮 Entertainment"
                     android:textColor="@android:color/white"
-                    android:textSize="32sp"
-                    android:textStyle="bold" />
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:alpha="0.9"
-                    android:text="Learn English through exciting stories!"
+                    android:layout_marginTop="8dp"
+                    android:alpha="0.95"
+                    android:text="Learn English through fun games and stories"
                     android:textColor="@android:color/white"
-                    android:textSize="16sp" />
+                    android:textSize="15sp" />
             </LinearLayout>
 
-            <!-- Story Adventure Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardStoryAdventure"
+            <!-- Popular Games Section -->
+            <TextView
+                android:id="@+id/tvPopularGames"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="24dp"
+                android:text="🎯 Popular Games"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/headerSection" />
+
+            <!-- Games Grid -->
+            <LinearLayout
+                android:id="@+id/gamesGrid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/tvPopularGames">
+
+                <!-- First Row: Story Adventure & Crossword -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Story Adventure -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardStoryAdventure"
+                        android:layout_width="0dp"
+                        android:layout_height="220dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="6dp"
+                        app:cardBackgroundColor="@color/primary">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="20dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="📖"
+                                android:textSize="56sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:text="Story Adventure"
+                                android:textAlignment="center"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Read interactive stories"
+                                android:textAlignment="center"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp"
+                                android:alpha="0.9" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Crossword Puzzle -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardCrossword"
+                        android:layout_width="0dp"
+                        android:layout_height="220dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="6dp"
+                        app:cardBackgroundColor="#FF6F00">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="20dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🧩"
+                                android:textSize="56sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:text="Crossword Puzzle"
+                                android:textAlignment="center"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Solve word puzzles"
+                                android:textAlignment="center"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp"
+                                android:alpha="0.9" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+
+                <!-- Second Row: Memory Match (Centered) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Memory Match -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cardMemoryMatch"
+                        android:layout_width="0dp"
+                        android:layout_height="220dp"
+                        android:layout_weight="1"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="6dp"
+                        app:cardBackgroundColor="#8E24AA">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="20dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🎴"
+                                android:textSize="56sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="16dp"
+                                android:text="Memory Match"
+                                android:textAlignment="center"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="Match pairs of words"
+                                android:textAlignment="center"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp"
+                                android:alpha="0.9" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Learning Videos Section -->
+            <TextView
+                android:id="@+id/tvLearningVideos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="24dp"
+                android:text="📺 Learning Videos"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/gamesGrid" />
+
+            <!-- Videos Section Placeholder -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/videosSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="6dp"
-                app:strokeWidth="0dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/white"
+                app:layout_constraintTop_toBottomOf="@id/tvLearningVideos">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/gradient_story"
-                    android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="28dp">
+                    android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:text="📖"
-                        android:textSize="56sp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:text="Story Adventure"
-                        android:textColor="@android:color/white"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎬"
+                            android:textSize="40sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Educational Videos"
+                                android:textColor="@color/text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Watch and learn English through engaging videos"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnWatchVideos"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Interactive stories to improve your English"
-                        android:textAlignment="center"
-                        android:textColor="@android:color/white"
-                        android:textSize="15sp"
-                        android:shadowColor="#80000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4" />
+                        android:layout_marginTop="16dp"
+                        android:text="Coming Soon"
+                        android:textColor="@color/white"
+                        android:enabled="false"
+                        app:cornerRadius="12dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Crossword Puzzle Card -->
+            <!-- Fun Facts Section -->
+            <TextView
+                android:id="@+id/tvFunFacts"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="24dp"
+                android:text="💡 Daily Fun Fact"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/videosSection" />
+
+            <!-- Fun Fact Card -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardCrossword"
+                android:id="@+id/funFactCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="6dp"
-                app:strokeWidth="0dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFF9C4"
+                app:layout_constraintTop_toBottomOf="@id/tvFunFacts">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="@drawable/gradient_game"
-                    android:padding="28dp"
-                    android:gravity="center">
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvFunFactContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Did you know? The word 'alphabet' comes from the first two letters of the Greek alphabet: alpha and beta!"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="4dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🧩"
-                        android:textSize="56sp"
-                        android:layout_marginBottom="16dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Crossword Puzzle"
-                        android:textColor="@android:color/white"
-                        android:textSize="26sp"
+                        android:layout_marginTop="12dp"
+                        android:text="🔄 Tap to see another"
+                        android:textColor="@color/primary"
+                        android:textSize="13sp"
                         android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Challenge yourself with word puzzles"
-                        android:textColor="@android:color/white"
-                        android:textSize="15sp"
-                        android:textAlignment="center"
-                        android:shadowColor="#80000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4" />
+                        android:clickable="true"
+                        android:focusable="true" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Memory Match Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardMemoryMatch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="6dp"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/gradient_story"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="28dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:text="📖"
-                        android:textSize="56sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:text="Memory Match"
-                        android:textColor="@android:color/white"
-                        android:textSize="26sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Flip the cards and learn more words"
-                        android:textAlignment="center"
-                        android:textColor="@android:color/white"
-                        android:textSize="15sp"
-                        android:shadowColor="#80000000"
-                        android:shadowDx="0"
-                        android:shadowDy="2"
-                        android:shadowRadius="4" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView

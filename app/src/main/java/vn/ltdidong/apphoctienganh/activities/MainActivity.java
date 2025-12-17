@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
     private NewsApi newsApi;
 
     private RecyclerView newsRecyclerView;
-    private RecyclerView articlesRecyclerView;
     private ArticleAdapter newsAdapter;
     private List<Article> newsList;
 
@@ -104,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setSelectedItemId(R.id.nav_home);
 
         newsRecyclerView = findViewById(R.id.newsRecyclerView);
-        articlesRecyclerView = findViewById(R.id.articlesRecyclerView);
 
         // Initialize streak TextViews
         tvStreakCount = findViewById(R.id.tvStreakCount);
@@ -117,13 +115,6 @@ public class MainActivity extends AppCompatActivity {
         newsAdapter = new ArticleAdapter(this, newsList);
         newsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         newsRecyclerView.setAdapter(newsAdapter);
-        
-        // Setup Featured Articles RecyclerView (Keeping it empty/ready for now as requested)
-        // You can populate this with a different list or adapter if needed
-        ArticleAdapter emptyAdapter =
-                new ArticleAdapter(this, new ArrayList<>());
-        articlesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        articlesRecyclerView.setAdapter(emptyAdapter);
 
         // Load News
         loadEnglishNews();
@@ -134,6 +125,12 @@ public class MainActivity extends AppCompatActivity {
         // Practice Now button click
         findViewById(R.id.btnPracticeNow).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
+            startActivity(intent);
+        });
+
+        // Daily Challenge card click
+        findViewById(R.id.cardDailyChallenge).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, DailyChallengeActivity.class);
             startActivity(intent);
         });
 
