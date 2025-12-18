@@ -4,7 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.google.android.material.textfield.TextInputEditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,8 +21,9 @@ import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.models.ClozeTestQA;
 
 public class ClozeTestActivity extends AppCompatActivity {
-    private TextView question1, question2, question3, question4, btnBack, process;
-    private EditText answer1, answer2, answer3, answer4;
+    private TextView question1, question2, question3, question4, process;
+    private ImageButton btnBack;
+    private TextInputEditText answer1, answer2, answer3, answer4;
     private Button btnNext, btnSubmit;
 
     private static class QAView {

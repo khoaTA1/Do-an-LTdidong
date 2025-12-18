@@ -70,12 +70,14 @@ public class SkillHomeActivity extends AppCompatActivity {
 
             if (id == R.id.nav_home) {
                 Intent intent = new Intent(SkillHomeActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return  true;
             } else if (id == R.id.nav_skills) {
                 return true;
             } else if (id == R.id.nav_entertainment) {
                 Intent intent = new Intent(SkillHomeActivity.this, EntertainmentActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_camera) {
@@ -84,12 +86,22 @@ public class SkillHomeActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_profile) {
                 Intent intent = new Intent(SkillHomeActivity.this, ProfileActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             }
 
             return false;
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Đồng bộ selected item khi activity được reuse
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_skills);
+        }
     }
 
     private void setVisibility(boolean isLogged) {
@@ -140,10 +152,29 @@ public class SkillHomeActivity extends AppCompatActivity {
 
         ImageView icon = skillCard.findViewById(R.id.skill_icon);
         TextView titleView = skillCard.findViewById(R.id.skill_title);
+        TextView subtitleView = skillCard.findViewById(R.id.skill_subtitle);
         LinearLayout modeContainer = skillCard.findViewById(R.id.mode_container);
 
         icon.setImageResource(iconRes);
         titleView.setText(title);
+        
+        // Set subtitle based on skill type
+        String subtitle = "";
+        switch (title) {
+            case "Reading":
+                subtitle = "Improve comprehension";
+                break;
+            case "Writing":
+                subtitle = "Practice writing skills";
+                break;
+            case "Listening":
+                subtitle = "Train your ears";
+                break;
+            case "Speaking":
+                subtitle = "Speak with confidence";
+                break;
+        }
+        subtitleView.setText(subtitle);
 
         modeContainer.removeAllViews();
 
@@ -152,16 +183,52 @@ public class SkillHomeActivity extends AppCompatActivity {
         for (String modeName : modes) {
             View modeItem = inflater.inflate(R.layout.item_mode_card, modeContainer, false);
             TextView modeText = modeItem.findViewById(R.id.mode_name);
+            TextView modeDesc = modeItem.findViewById(R.id.mode_description);
+            
             modeText.setText(modeName);
+            modeDesc.setText(getModeDescription(title, modeName));
 
             // Xử lý click
             modeItem.setOnClickListener(v -> {
-                // Toast.makeText(this, "Open mode: " + modeName, Toast.LENGTH_SHORT).show(); // removed toast
                 handleModeClick(title, modeName);
             });
 
             modeContainer.addView(modeItem);
         }
+    }
+
+    private String getModeDescription(String skill, String mode) {
+        switch (skill) {
+            case "Reading":
+                if (mode.equals("Đọc hiểu")) {
+                    return "Practice reading passages";
+                } else if (mode.equals("Điền khuyết")) {
+                    return "Fill in the blanks";
+                }
+                break;
+            case "Listening":
+                if (mode.equals("Nghe cơ bản")) {
+                    return "Basic listening practice";
+                } else if (mode.equals("Điền chỗ trống")) {
+                    return "Listen and fill blanks";
+                }
+                break;
+            case "Speaking":
+                if (mode.equals("Luyện nói")) {
+                    return "Pronunciation practice";
+                } else if (mode.equals("Nói chuyện")) {
+                    return "Conversation with AI";
+                }
+                break;
+            case "Writing":
+                if (mode.equals("Viết câu")) {
+                    return "Sentence writing";
+                } else if (mode.equals("Dịch tương tác")) {
+                    return "Interactive translation";
+                }
+                break;
+        }
+        return "Practice this skill";
     }
 
     private void handleModeClick(String skill, String mode) {

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -29,7 +30,8 @@ public class RCTransActivity extends AppCompatActivity {
     private int LIMIT_LOAD = 50;
     private DBHelper sqlite;
     private ProgressBar progressBar;
-    private MaterialButton btnBack, btnStart;
+    private ImageButton btnBack;
+    private MaterialButton btnStart;
     private TextView textLoading, textTitle, textExplain;
 
     @Override

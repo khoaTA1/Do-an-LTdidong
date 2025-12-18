@@ -10,9 +10,7 @@
     android:focusable="true"
     android:foreground="?attr/selectableItemBackground"
     app:cardCornerRadius="16dp"
-    app:cardElevation="0dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="#E0E0E0"
+    app:cardElevation="2dp"
     app:cardBackgroundColor="@android:color/white">
 
     <LinearLayout
@@ -20,27 +18,26 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="16dp">
+        android:padding="18dp"
+        android:background="@drawable/gradient_cloze_test">
 
         <!-- Icon -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/mode_icon_background"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="#F3F4F6">
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/white">
 
             <ImageView
-                android:id="@+id/mode_icon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_book"
-                app:tint="@color/primary"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_edit"
+                app:tint="#F57C00"
                 android:layout_gravity="center"/>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Mode Name and Description -->
+        <!-- Content -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -52,29 +49,29 @@
                 android:id="@+id/mode_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đọc hiểu"
-                android:textSize="17sp"
+                android:text="Điền khuyết"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@color/title_1"/>
+                android:textColor="@android:color/white"/>
 
             <TextView
                 android:id="@+id/mode_description"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Practice reading passages"
+                android:text="Fill in the blanks"
                 android:textSize="13sp"
-                android:textColor="@color/text_1"
-                android:alpha="0.7"
-                android:layout_marginTop="2dp"/>
+                android:textColor="@android:color/white"
+                android:alpha="0.9"
+                android:layout_marginTop="4dp"/>
         </LinearLayout>
 
         <!-- Arrow Icon -->
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_arrow_forward"
-            app:tint="@color/text_1"
-            android:alpha="0.4"/>
+            app:tint="@android:color/white"
+            android:alpha="0.8"/>
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>
