@@ -51,4 +51,15 @@
     <!-- Fill-in-the-blank Colors -->
     <color name="hint_background">#FFF9C4</color>
     <color name="text_secondary">#757575</color>
+    
+    <!-- Story Level Colors -->
+    <color name="level_beginner">#C8E6C9</color>
+    <color name="level_intermediate">#FFECB3</color>
+    <color name="level_advanced">#FFCCBC</color>
+    
+    <!-- Skill Colors -->
+    <color name="skill_reading">#8E24AA</color>
+    <color name="skill_writing">#1976D2</color>
+    <color name="skill_listening">#00897B</color>
+    <color name="skill_speaking">#E53935</color>
 </resources>

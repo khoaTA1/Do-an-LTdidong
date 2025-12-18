@@ -54,12 +54,22 @@
             </LinearLayout>
 
             <!-- Back: mặt thẻ úp -->
-            <ImageView
+            <LinearLayout
                 android:id="@+id/cardBack"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:src="@drawable/card_back"
-                android:scaleType="centerCrop" />
+                android:background="@drawable/gradient_story"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="?"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
 
         </FrameLayout>
 

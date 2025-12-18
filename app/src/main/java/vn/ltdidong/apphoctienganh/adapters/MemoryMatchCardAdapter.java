@@ -3,7 +3,7 @@ package vn.ltdidong.apphoctienganh.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -34,7 +34,7 @@ public class MemoryMatchCardAdapter extends RecyclerView.Adapter<MemoryMatchCard
     public static class CardViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
         TextView tvWord, tvWordRevr;
-        ImageView cardBack;
+        LinearLayout cardBack;
 
         public CardViewHolder(@NonNull View itemView) {
             super(itemView);
