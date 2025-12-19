@@ -5,49 +5,93 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="12dp"
-    android:padding="16dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="6dp">
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="4dp"
+    android:layout_marginEnd="4dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardBackgroundColor="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="18dp">
 
-        <!-- HEADER SKILL -->
+        <!-- Skill Header -->
         <LinearLayout
             android:id="@+id/skillHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingBottom="4dp">
 
-            <ImageView
-                android:id="@+id/skill_icon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_book"
-                app:tint="@color/primary"
-                android:layout_marginEnd="12dp"/>
+            <!-- Icon with Background -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                app:cardCornerRadius="32dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#E3F2FD">
 
-            <TextView
-                android:id="@+id/skill_title"
-                android:layout_width="wrap_content"
+                <ImageView
+                    android:id="@+id/skill_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_book"
+                    app:tint="@color/primary"
+                    android:layout_gravity="center"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Title and Subtitle -->
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Reading"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/title_1"/>
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="16dp">
+
+                <TextView
+                    android:id="@+id/skill_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reading"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/title_1"/>
+
+                <TextView
+                    android:id="@+id/skill_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Improve comprehension"
+                    android:textSize="13sp"
+                    android:textColor="@color/text_1"
+                    android:alpha="0.7"
+                    android:layout_marginTop="2dp"/>
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- MODES -->
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/divider"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:alpha="0.3"/>
+
+        <!-- Modes Container -->
         <LinearLayout
             android:id="@+id/mode_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="12dp">
+            android:orientation="vertical">
         </LinearLayout>
 
     </LinearLayout>

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -22,7 +23,8 @@ import vn.ltdidong.apphoctienganh.repositories.ClozeTestQARepo;
 
 public class CTTransActivity extends AppCompatActivity {
     private ProgressBar progressBar;
-    private MaterialButton btnBack, btnStart;
+    private ImageButton btnBack;
+    private MaterialButton btnStart;
     private TextView textTitle, textExplain, textLoading;
     private ClozeTestQARepo ctqarepo;
     private DBHelper sqlite;

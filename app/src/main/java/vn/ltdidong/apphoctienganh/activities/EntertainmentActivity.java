@@ -64,11 +64,13 @@ public class EntertainmentActivity extends AppCompatActivity {
             
             if (id == R.id.nav_home) {
                 Intent intent = new Intent(EntertainmentActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 finish();
                 return true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(EntertainmentActivity.this, SkillHomeActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 finish();
                 return true;
@@ -80,6 +82,7 @@ public class EntertainmentActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_profile) {
                 Intent intent = new Intent(EntertainmentActivity.this, ProfileActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 finish();
                 return true;
@@ -87,6 +90,15 @@ public class EntertainmentActivity extends AppCompatActivity {
             
             return false;
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Đồng bộ selected item khi activity được reuse
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_entertainment);
+        }
     }
 
     private void setupClickListeners() {
