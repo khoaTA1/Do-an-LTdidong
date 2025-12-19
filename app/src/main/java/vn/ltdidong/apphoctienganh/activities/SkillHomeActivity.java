@@ -339,6 +339,6 @@ public class SkillHomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        bottomNav.setSelectedItemId(R.id.nav_home);
+        bottomNav.setSelectedItemId(R.id.nav_skills);
     }
 }

@@ -2,9 +2,12 @@ package vn.ltdidong.apphoctienganh.activities;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,17 +17,36 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.adapters.MemoryMatchCardAdapter;
+import vn.ltdidong.apphoctienganh.api.TranslateAPI;
+import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.models.MMCard;
+import vn.ltdidong.apphoctienganh.models.TranslateRequest;
+import vn.ltdidong.apphoctienganh.models.TranslateResponse;
+import vn.ltdidong.apphoctienganh.models.Word;
 
 public class MemoryMatchActivity extends AppCompatActivity {
     private RecyclerView rvCards;
     private MemoryMatchCardAdapter adapter;
     private List<MMCard> cards = new ArrayList<>();
+    private DBHelper sqlite;
+    private TranslateAPI translateApi;
+    private ArrayList<String> enData;
+    private ArrayList<String> viData;
 
     private TextView tvScore, tvTimer;
     private Button btnRestart;
@@ -62,8 +84,22 @@ public class MemoryMatchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sqlite = new DBHelper(this);
+
+        // API translate bằng retrofit
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:5000/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        translateApi = retrofit.create(TranslateAPI.class);
 
         int mode = getIntent().getIntExtra("mode", 1);
+        enData = getIntent().getStringArrayListExtra("enData");
+        viData = getIntent().getStringArrayListExtra("viData");
+
+        Log.d(">>> Memory Match", "En: " + enData);
+        Log.d(">>> Memory Match", "Vi: " + viData);
 
         if (mode == 1) {
             diff = getIntent().getIntExtra("difficulty", 0);
@@ -124,7 +160,7 @@ public class MemoryMatchActivity extends AppCompatActivity {
         initGame(2);
 
         btnRestart.setOnClickListener(v -> restartGame(2));
-        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        //findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         if (first == 0) {
             plr1.setCardBackgroundColor(COLOR_ACTIVE);
@@ -139,6 +175,7 @@ public class MemoryMatchActivity extends AppCompatActivity {
     private void initGame(int mode) {
         cards.clear();
 
+        /*
         // Danh sách từ vựng mẫu (bạn có thể load từ DB hoặc API)
         List<String[]> allVocab = Arrays.asList(
                 new String[]{"apple", "quả táo"},
@@ -150,6 +187,16 @@ public class MemoryMatchActivity extends AppCompatActivity {
                 new String[]{"water", "nước"},
                 new String[]{"tree", "cây"}
         );
+         */
+
+        List<String[]> allVocab = new ArrayList<>();
+
+        // tạo cặp từ vựng Anh - Việt
+        for (int i = 0; i < enData.size(); i++) {
+            Log.d(">>> TRANSLATE", enData.get(i) + " -> " + viData.get(i));
+
+            allVocab.add(new String[]{enData.get((i)), viData.get(i)});
+        }
 
         // Số cặp theo độ khó
         int pairCount = 4; // Mặc định dễ
@@ -164,13 +211,15 @@ public class MemoryMatchActivity extends AppCompatActivity {
         }
 
         List<String[]> vocab = allVocab.subList(0, pairCount);
-        
+
         int idCounter = 0;
+        int pairId = 0;
 
         // Tạo card EN - VI
         for (String[] pair : vocab) {
-            cards.add(new MMCard(idCounter++, pair[0], true));  // english
-            cards.add(new MMCard(idCounter++, pair[1], false)); // vietnamese
+            cards.add(new MMCard(idCounter++, pairId, pair[0], true));  // english
+            cards.add(new MMCard(idCounter++, pairId, pair[1], false)); // vietnamese
+            pairId++;
         }
 
         // Shuffle
@@ -278,23 +327,8 @@ public class MemoryMatchActivity extends AppCompatActivity {
     private boolean isMatch(MMCard c1, MMCard c2) {
         if (c1.isEnglish() == c2.isEnglish()) return false;
 
-        // Ghép EN - VI
-        return c1.getText().equalsIgnoreCase(c2.getText()) ||
-                isEnglishVietnamPair(c1.getText(), c2.getText());
-    }
-
-    // So sánh EN-VI theo dữ liệu mẫu của bạn
-    private boolean isEnglishVietnamPair(String a, String b) {
-        return (a.equals("apple") && b.equals("quả táo")) ||
-                (a.equals("quả táo") && b.equals("apple")) ||
-                (a.equals("dog") && b.equals("con chó")) ||
-                (a.equals("con chó") && b.equals("dog")) ||
-                (a.equals("book") && b.equals("quyển sách")) ||
-                (a.equals("quyển sách") && b.equals("book")) ||
-                (a.equals("car") && b.equals("xe hơi")) ||
-                (a.equals("xe hơi") && b.equals("car")) ||
-                (a.equals("house") && b.equals("ngôi nhà")) ||
-                (a.equals("ngôi nhà") && b.equals("house"));
+        // kiểm tra EN - VI
+        return c1.getPairId() == c2.getPairId();
     }
 
     // ---------------- TIMER ----------------

@@ -15,7 +15,8 @@
         android:label="@string/DoAn_LT_DD"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DoAn_LT_DD">
+        android:theme="@style/Theme.DoAn_LT_DD"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".activities.MainActivity"
             android:exported="true">

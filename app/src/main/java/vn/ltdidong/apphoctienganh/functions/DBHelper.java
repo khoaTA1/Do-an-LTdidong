@@ -469,4 +469,19 @@ public class DBHelper extends SQLiteOpenHelper {
         db.close();
         return list;
     }
+
+    public Long getCountWord() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + HISTORY_SEARCH_TABLE_NAME, null);
+
+        long count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+
+        cursor.close();
+
+        return count;
+    }
 }
