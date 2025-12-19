@@ -96,6 +96,15 @@ public class ProfileActivity extends AppCompatActivity {
             loadUserData();
         }
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Đồng bộ selected item khi activity được reuse
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.nav_profile);
+        }
+    }
     
     private void initializeViews() {
         // Basic Info
@@ -368,14 +377,17 @@ public class ProfileActivity extends AppCompatActivity {
 
             if (id == R.id.nav_home) {
                 Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(ProfileActivity.this, SkillHomeActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_entertainment) {
                 Intent intent = new Intent(ProfileActivity.this, EntertainmentActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_camera) {

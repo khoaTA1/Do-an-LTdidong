@@ -171,15 +171,16 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
-
             if (id == R.id.nav_home) {
                 return  true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_entertainment) {
                 Intent intent = new Intent(MainActivity.this, EntertainmentActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             } else if (id == R.id.nav_camera) {
@@ -188,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             } else if (id == R.id.nav_profile) {
                 Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
                 return true;
             }
@@ -205,12 +207,6 @@ public class MainActivity extends AppCompatActivity {
         }
         // Refresh user progress khi quay lại activity
         loadUserProgress();
-
-        bottomNav.setSelectedItemId(R.id.nav_home);
-
-        getRandomSuggestion(word -> {
-            if (word != null) newWordSuggestion.setText((String) word);
-        });
     }
 
     /**

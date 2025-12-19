@@ -289,7 +289,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DELETE FROM " + ANSWER_TABLE_NAME + ";");
         db.execSQL("DELETE FROM " + CLOZETEST_QA_TABLE_NAME + ";");
 
-        db.close();
+        // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
 
         Log.d(">>> SQLite", "Xóa cache SQLite");
     }
@@ -418,55 +418,60 @@ public class DBHelper extends SQLiteOpenHelper {
 
         // insert hoặc update từ vào SQLite
         // nếu từ đã tồn tại thì cập nhật timestamp
-        Cursor c = db.rawQuery(
-                "SELECT id FROM " + HISTORY_SEARCH_TABLE_NAME +
-                        " WHERE word = ?", new String[]{word});
+        Cursor c = null;
+        try {
+            c = db.rawQuery(
+                    "SELECT id FROM " + HISTORY_SEARCH_TABLE_NAME +
+                            " WHERE word = ?", new String[]{word});
 
-        ContentValues cv = new ContentValues();
-        cv.put(HISTORY_SEARCH_COLUMN_WORD, word);
-        cv.put(HISTORY_SEARCH_COLUM_TIMESTAMP, System.currentTimeMillis());
-        cv.put(HISTORY_SEARCH_COLUM_POS, posJson);
-        cv.put(HISTORY_SEARCH_COLUM_SYNONYM, synJson);
+            ContentValues cv = new ContentValues();
+            cv.put(HISTORY_SEARCH_COLUMN_WORD, word);
+            cv.put(HISTORY_SEARCH_COLUM_TIMESTAMP, System.currentTimeMillis());
+            cv.put(HISTORY_SEARCH_COLUM_POS, posJson);
+            cv.put(HISTORY_SEARCH_COLUM_SYNONYM, synJson);
 
-        if (c.moveToFirst()) {
-            db.update(HISTORY_SEARCH_TABLE_NAME, cv, "word=?", new String[]{word});
-        } else {
-            db.insert(HISTORY_SEARCH_TABLE_NAME, null, cv);
+            if (c.moveToFirst()) {
+                db.update(HISTORY_SEARCH_TABLE_NAME, cv, "word=?", new String[]{word});
+            } else {
+                db.insert(HISTORY_SEARCH_TABLE_NAME, null, cv);
+            }
+        } finally {
+            if (c != null) c.close();
+            // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
         }
-
-        c.close();
-        db.close();
     }
 
     public List<Word> getRecentWords(int limit) {
         List<Word> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = null;
 
-        //if
+        try {
+            c = db.rawQuery(
+                    "SELECT " + HISTORY_SEARCH_COLUMN_WORD + ", " + HISTORY_SEARCH_COLUM_POS + ", "
+                            + HISTORY_SEARCH_COLUM_SYNONYM + " FROM " + HISTORY_SEARCH_TABLE_NAME +
+                            " ORDER BY " + HISTORY_SEARCH_COLUM_TIMESTAMP + " DESC LIMIT " + limit, null);
 
-        Cursor c = db.rawQuery(
-                "SELECT " + HISTORY_SEARCH_COLUMN_WORD + ", " + HISTORY_SEARCH_COLUM_POS + ", "
-                        + HISTORY_SEARCH_COLUM_SYNONYM + " FROM " + HISTORY_SEARCH_TABLE_NAME +
-                        " ORDER BY " + HISTORY_SEARCH_COLUM_TIMESTAMP + " DESC LIMIT " + limit, null);
+            if (c.moveToFirst()) {
+                do {
+                    String word = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUMN_WORD));
+                    String pos = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUM_POS));
+                    String syn = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUM_SYNONYM));
 
-        if (c.moveToFirst()) {
-            do {
-                String word = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUMN_WORD));
-                String pos = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUM_POS));
-                String syn = c.getString(c.getColumnIndex(HISTORY_SEARCH_COLUM_SYNONYM));
+                    Gson gson = new Gson();
+                    List<String> posList = gson.fromJson(pos, new TypeToken<List<String>>(){}.getType());
+                    List<String> synList = gson.fromJson(syn, new TypeToken<List<String>>(){}.getType());
 
-                Gson gson = new Gson();
-                List<String> posList = gson.fromJson(pos, new TypeToken<List<String>>(){}.getType());
-                List<String> synList = gson.fromJson(syn, new TypeToken<List<String>>(){}.getType());
+                    Word w = new Word(word, posList, synList);
 
-                Word w = new Word(word, posList, synList);
-
-                list.add(w);
-            } while (c.moveToNext());
+                    list.add(w);
+                } while (c.moveToNext());
+            }
+        } finally {
+            if (c != null) c.close();
+            // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
         }
 
-        c.close();
-        db.close();
         return list;
     }
 

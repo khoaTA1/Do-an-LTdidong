@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,7 +38,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
     private List<ReadingPassage> readingPassageQAlist;
     private List<Long> passagePassed = new ArrayList<>();
     private DBHelper sqlite;
-    private TextView btnBack;
+    private ImageButton btnBack;
     private Button btnSubmit;
     private int score = 0;
 
