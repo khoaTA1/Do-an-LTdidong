@@ -39,7 +39,7 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
 
     private GeminiApi geminiApi;
     // Corrected API Key
-    private static final String API_KEY = "AIzaSyA3D1pQIeGGpam1dcXWg6PfDaXW_e6rPwE";
+    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
 
     private List<String> sentences;
     private int currentSentenceIndex = 0;

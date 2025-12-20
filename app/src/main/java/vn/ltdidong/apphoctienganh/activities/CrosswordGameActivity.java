@@ -48,7 +48,7 @@ public class CrosswordGameActivity extends AppCompatActivity {
 
     private GeminiApi geminiApi;
     // Using API Key from local.properties via BuildConfig
-    private static final String API_KEY = BuildConfig.GEMINI_API_KEY;
+    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
 
     private TextView tvCurrentClue;
     private Button btnGuessKeyword;

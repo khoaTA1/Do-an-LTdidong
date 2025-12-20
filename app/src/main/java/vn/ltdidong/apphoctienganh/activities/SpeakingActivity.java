@@ -55,7 +55,7 @@ public class SpeakingActivity extends AppCompatActivity {
     private boolean isListening = false;
 
     private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyAJv8mCOrdbL68sPHh6OGQE5Lmc-fFEoEk";
+    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

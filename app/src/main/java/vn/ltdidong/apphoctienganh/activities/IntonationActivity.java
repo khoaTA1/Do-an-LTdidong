@@ -54,7 +54,7 @@ public class IntonationActivity extends AppCompatActivity {
 
     private GeminiApi geminiApi;
     // API Key (Checked and updated)
-    private static final String API_KEY = "AIzaSyAJv8mCOrdbL68sPHh6OGQE5Lmc-fFEoEk";
+    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
