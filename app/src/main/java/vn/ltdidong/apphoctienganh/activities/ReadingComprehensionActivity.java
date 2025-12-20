@@ -41,6 +41,8 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private Button btnSubmit;
     private int score = 0;
+    private int totalScore = 0;
+    private int currentRP = 1;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -76,7 +78,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
 
             Intent intent = new Intent(ReadingComprehensionActivity.this, ReadingSkillResultActivity.class);
             intent.putExtra("score", score);
-            intent.putExtra("total", 5);
+            intent.putExtra("total", totalScore);
             startActivity(intent);
             finish();
         });
@@ -90,10 +92,11 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
 
             // nếu người dùng trả lời đúng => tăng điểm
             if (userAnswer == correctAnswer) score++;
+            totalScore++;
         }
 
         // qua lượt mới, tăng đếm
-        // currentRP++;
+        currentRP++;
     }
 
     // Lấy random 1 passage

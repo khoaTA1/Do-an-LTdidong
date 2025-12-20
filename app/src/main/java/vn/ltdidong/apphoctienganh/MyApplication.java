@@ -9,8 +9,11 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import com.google.firebase.FirebaseApp;
+
 import java.util.concurrent.TimeUnit;
 
+import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.workers.DailyAnalysisWorker;
 
 public class MyApplication extends Application {
@@ -22,6 +25,22 @@ public class MyApplication extends Application {
         super.onCreate();
         
         Log.d(TAG, "Application started");
+
+        try {
+            FirebaseApp.initializeApp(this);
+            Log.d("App", "Firebase initialized successfully");
+        } catch (Exception e) {
+            Log.e("App", "Failed to initialize Firebase: " + e.getMessage());
+        }
+
+        // Xóa cache SQLite khi app khởi động
+        try {
+            DBHelper sqlite = new DBHelper(this);
+            sqlite.clearAllTables();
+            Log.d("App", "SQLite cache cleared on app start");
+        } catch (Exception e) {
+            Log.e("App", "Failed to clear SQLite cache", e);
+        }
         
         // Schedule daily background work
         scheduleDailyWork();
