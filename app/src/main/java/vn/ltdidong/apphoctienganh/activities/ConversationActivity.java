@@ -55,7 +55,7 @@ public class ConversationActivity extends AppCompatActivity {
 
     private GeminiApi geminiApi;
     // Fixed API Key
-    private static final String API_KEY = "AIzaSyAJv8mCOrdbL68sPHh6OGQE5Lmc-fFEoEk";
+    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
     private String currentTopic = "General Conversation";
 
     @Override

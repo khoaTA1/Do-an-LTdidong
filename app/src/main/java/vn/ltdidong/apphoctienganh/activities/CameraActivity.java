@@ -82,7 +82,7 @@ public class CameraActivity extends AppCompatActivity {
     private ExecutorService cameraExecutor;
 
     private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyDO4ulGUaInSIWAeHIyPmNA_zSZcoByuck";
+    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
 
     private Bitmap currentBitmap;
     private FirebaseFirestore db;

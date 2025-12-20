@@ -9,6 +9,10 @@ import androidx.room.RoomDatabase;
 import vn.ltdidong.apphoctienganh.models.UserProgress;
 import vn.ltdidong.apphoctienganh.models.UserStreak;
 import vn.ltdidong.apphoctienganh.models.DailyChallenge;
+import vn.ltdidong.apphoctienganh.models.LearningSession;
+import vn.ltdidong.apphoctienganh.models.SkillProgress;
+import vn.ltdidong.apphoctienganh.models.StudyHabit;
+import vn.ltdidong.apphoctienganh.models.StudySchedule;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,11 +21,20 @@ import java.util.concurrent.Executors;
  * Room Database chính cho ứng dụng
  * Chỉ lưu UserProgress (tiến độ người dùng) và UserStreak (chuỗi ngày) - local database
  * Lessons và Questions load từ Firebase Firestore
- * Version 7: Thêm DailyChallenge để theo dõi thử thách hàng ngày
+ * Version 8: Thêm LearningSession, SkillProgress, StudyHabit, StudySchedule 
+ *            để hỗ trợ phân tích học tập và lập lịch tự động
  */
 @Database(
-    entities = {UserProgress.class, UserStreak.class, DailyChallenge.class},
-    version = 7,
+    entities = {
+        UserProgress.class, 
+        UserStreak.class, 
+        DailyChallenge.class,
+        LearningSession.class,
+        SkillProgress.class,
+        StudyHabit.class,
+        StudySchedule.class
+    },
+    version = 8,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -30,6 +43,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract UserProgressDao userProgressDao();
     public abstract UserStreakDao userStreakDao();
     public abstract DailyChallengeDao dailyChallengeDao();
+    public abstract LearningSessionDao learningSessionDao();
+    public abstract SkillProgressDao skillProgressDao();
+    public abstract StudyHabitDao studyHabitDao();
+    public abstract StudyScheduleDao studyScheduleDao();
     
     // Singleton instance
     private static volatile AppDatabase INSTANCE;
