@@ -133,6 +133,12 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, DailyChallengeActivity.class);
             startActivity(intent);
         });
+        
+        // Dashboard button click
+        findViewById(R.id.btnDashboard).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, LearningDashboardActivity.class);
+            startActivity(intent);
+        });
 
         // 3. Search Event
         sqlite = new DBHelper(this);

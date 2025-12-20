@@ -5,9 +5,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <application
-        android:name=".App"
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -83,6 +85,18 @@
         <activity 
             android:name=".activities.DailyChallengeActivity"
             android:parentActivityName=".activities.MainActivity"/>
+        <activity 
+            android:name=".activities.LearningDashboardActivity"
+            android:exported="false"
+            android:label="Dashboard Học tập"
+            android:theme="@style/Theme.DoAn_LT_DD"
+            android:parentActivityName=".activities.MainActivity"/>
+        
+        <!-- Reminder Receiver for notifications -->
+        <receiver
+            android:name=".services.ReminderReceiver"
+            android:enabled="true"
+            android:exported="false"/>
 
     </application>
 

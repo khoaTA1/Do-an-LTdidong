@@ -96,4 +96,13 @@ dependencies {
 
     // các gói phụ thuộc cho tính năng gợi ý từ vựng mới
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // WorkManager for background tasks
+    implementation("androidx.work:work-runtime:2.9.0")
+    
+    // RecyclerView (nếu chưa có)
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    
+    // CardView (nếu chưa có)
+    implementation("androidx.cardview:cardview:1.0.0")
 }
