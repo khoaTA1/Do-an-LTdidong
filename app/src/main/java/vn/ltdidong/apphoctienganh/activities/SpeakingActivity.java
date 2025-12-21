@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -36,6 +37,7 @@ import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.api.GeminiApi;
 import vn.ltdidong.apphoctienganh.models.GeminiRequest;
 import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 
 public class SpeakingActivity extends AppCompatActivity {
 
@@ -298,6 +300,8 @@ public class SpeakingActivity extends AppCompatActivity {
                     String result = response.body().getOutputText();
                     tvScore.setText(""); // Clear temporary status
                     showResultBottomSheet(result);
+                    // Update XP when speaking is graded
+                    updateUserXPForSpeaking(target, spoken);
                 } else {
                     Log.e("SpeakingActivity", "Grade Error: " + response.code());
                     evaluateSpeechLocal(target, spoken);
@@ -367,6 +371,102 @@ public class SpeakingActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Cập nhật kinh nghiệm (XP) cho user khi hoàn thành speaking
+     */
+    private void updateUserXPForSpeaking(String target, String spoken) {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) return;
+        
+        // Tính XP dựa trên độ chính xác
+        String normalizedTarget = normalizeText(target);
+        String normalizedSpoken = normalizeText(spoken);
+        
+        int earnedXP = 0;
+        if (normalizedSpoken.equalsIgnoreCase(normalizedTarget)) {
+            earnedXP = 50; // Perfect match
+        } else if (normalizedSpoken.toLowerCase().contains(normalizedTarget.toLowerCase())) {
+            earnedXP = 30; // Partial match
+        } else {
+            // Calculate similarity (simple word matching)
+            String[] targetWords = normalizedTarget.toLowerCase().split("\\s+");
+            String[] spokenWords = normalizedSpoken.toLowerCase().split("\\s+");
+            int matchCount = 0;
+            for (String targetWord : targetWords) {
+                for (String spokenWord : spokenWords) {
+                    if (targetWord.equals(spokenWord)) {
+                        matchCount++;
+                        break;
+                    }
+                }
+            }
+            earnedXP = (int) ((matchCount * 1.0 / targetWords.length) * 20); // Up to 20 XP
+        }
+        
+        final int finalEarnedXP = earnedXP;
+        
+        // Lấy thông tin user từ Firebase và cập nhật XP
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Lấy XP hiện tại
+                        Long currentTotalXP = documentSnapshot.getLong("total_xp");
+                        Long currentLevel = documentSnapshot.getLong("current_level");
+                        Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
+                        Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
+                        
+                        // Khởi tạo giá trị mặc định nếu null
+                        int newTotalXP = (currentTotalXP != null) ? currentTotalXP.intValue() : 0;
+                        int newLevel = (currentLevel != null) ? currentLevel.intValue() : 1;
+                        int newLevelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
+                        int newNextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
+                        
+                        // Cộng XP mới
+                        newTotalXP += finalEarnedXP;
+                        newLevelXP += finalEarnedXP;
+                        
+                        // Kiểm tra level up
+                        boolean leveledUp = false;
+                        while (newLevelXP >= newNextLevelXP) {
+                            leveledUp = true;
+                            newLevelXP -= newNextLevelXP;
+                            newLevel++;
+                            newNextLevelXP = 100 + (newLevel - 1) * 50;
+                        }
+                        
+                        // Cập nhật lên Firebase
+                        final int finalTotalXP = newTotalXP;
+                        final int finalLevel = newLevel;
+                        final int finalLevelXP = newLevelXP;
+                        final int finalNextLevelXP = newNextLevelXP;
+                        final boolean finalLeveledUp = leveledUp;
+                        
+                        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+                        updates.put("total_xp", finalTotalXP);
+                        updates.put("current_level", finalLevel);
+                        updates.put("current_level_xp", finalLevelXP);
+                        updates.put("xp_to_next_level", finalNextLevelXP);
+                        
+                        FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(userId)
+                                .update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    if (finalEarnedXP > 0) {
+                                        String xpMessage = "+" + finalEarnedXP + " XP earned!";
+                                        if (finalLeveledUp) {
+                                            xpMessage += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
+                                        }
+                                        Toast.makeText(SpeakingActivity.this, xpMessage, Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                    }
+                });
+    }
+    
     @Override
     protected void onDestroy() {
         if (speechRecognizer != null) {

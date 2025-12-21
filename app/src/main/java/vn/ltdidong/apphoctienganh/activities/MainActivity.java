@@ -139,6 +139,24 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, LearningDashboardActivity.class);
             startActivity(intent);
         });
+        
+        // AI Tutor button click
+        findViewById(R.id.cardAITutor).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, AITutorActivity.class);
+            startActivity(intent);
+        });
+        
+        // Learning Path button click
+        findViewById(R.id.cardLearningPath).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, PersonalizedLearningPathActivity.class);
+            startActivity(intent);
+        });
+        
+        // Social Hub button click
+        findViewById(R.id.cardSocialHub).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SocialHubActivity.class);
+            startActivity(intent);
+        });
 
         // 3. Search Event
         sqlite = new DBHelper(this);
