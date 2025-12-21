@@ -17,12 +17,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.api.AiService;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.firestore.FirebaseFirestore;
 import io.noties.markwon.Markwon;
@@ -35,20 +32,14 @@ public class WritingActivity extends AppCompatActivity {
     private Button btnNewTopic, btnSubmit;
     private ImageButton btnBack;
 
-    private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_writing);
 
-        // 1. Cấu hình Retrofit cho Gemini
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
+        aiService = AiService.getInstance();
 
         // 2. Ánh xạ View
         tvTopic = findViewById(R.id.tvTopic);
@@ -97,9 +88,9 @@ public class WritingActivity extends AppCompatActivity {
         String prompt = "Give me 1 interesting English writing topic for intermediate learners. " +
                 "Short, clear, no extra text. Just the topic.";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String topic = response.body().getOutputText();
                     tvTopic.setText(topic.trim());
@@ -109,7 +100,7 @@ public class WritingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 tvTopic.setText("Error loading topic. Describe your family.");
             }
         });
@@ -132,9 +123,9 @@ public class WritingActivity extends AppCompatActivity {
                 "3. Short feedback.\n" +
                 "Format clearly.";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 progressDialog.dismiss();
                 if (response.isSuccessful() && response.body() != null) {
                     String result = response.body().getOutputText();
@@ -147,7 +138,7 @@ public class WritingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 progressDialog.dismiss();
                 Toast.makeText(WritingActivity.this, "Connection failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -193,76 +184,5 @@ public class WritingActivity extends AppCompatActivity {
         }
         String[] words = text.trim().split("\\s+");
         tvWordCount.setText(words.length + " words");
-    }
-    
-    /**
-     * Cập nhật kinh nghiệm (XP) cho user khi hoàn thành bài viết
-     */
-    private void updateUserXPForWriting(int wordCount) {
-        String userId = SharedPreferencesManager.getInstance(this).getUserId();
-        if (userId == null) return;
-        
-        // Tính XP dựa trên số từ đã viết
-        // 1 XP cho mỗi từ, tối đa 100 XP, bonus 20 XP nếu viết đủ 50 từ
-        final int earnedXP = Math.min(wordCount, 100) + (wordCount >= 50 ? 20 : 0);
-        
-        // Lấy thông tin user từ Firebase và cập nhật XP
-        FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(userId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        // Lấy XP hiện tại
-                        Long currentTotalXP = documentSnapshot.getLong("total_xp");
-                        Long currentLevel = documentSnapshot.getLong("current_level");
-                        Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
-                        Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
-                        
-                        // Khởi tạo giá trị mặc định nếu null
-                        int newTotalXP = (currentTotalXP != null) ? currentTotalXP.intValue() : 0;
-                        int newLevel = (currentLevel != null) ? currentLevel.intValue() : 1;
-                        int newLevelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
-                        int newNextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
-                        
-                        // Cộng XP mới
-                        newTotalXP += earnedXP;
-                        newLevelXP += earnedXP;
-                        
-                        // Kiểm tra level up
-                        boolean leveledUp = false;
-                        while (newLevelXP >= newNextLevelXP) {
-                            leveledUp = true;
-                            newLevelXP -= newNextLevelXP;
-                            newLevel++;
-                            newNextLevelXP = 100 + (newLevel - 1) * 50;
-                        }
-                        
-                        // Cập nhật lên Firebase
-                        final int finalTotalXP = newTotalXP;
-                        final int finalLevel = newLevel;
-                        final int finalLevelXP = newLevelXP;
-                        final int finalNextLevelXP = newNextLevelXP;
-                        final boolean finalLeveledUp = leveledUp;
-                        
-                        java.util.Map<String, Object> updates = new java.util.HashMap<>();
-                        updates.put("total_xp", finalTotalXP);
-                        updates.put("current_level", finalLevel);
-                        updates.put("current_level_xp", finalLevelXP);
-                        updates.put("xp_to_next_level", finalNextLevelXP);
-                        
-                        FirebaseFirestore.getInstance()
-                                .collection("users")
-                                .document(userId)
-                                .update(updates)
-                                .addOnSuccessListener(aVoid -> {
-                                    String xpMessage = "+" + earnedXP + " XP earned!";
-                                    if (finalLeveledUp) {
-                                        xpMessage += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
-                                    }
-                                    Toast.makeText(WritingActivity.this, xpMessage, Toast.LENGTH_LONG).show();
-                                });
-                    }
-                });
     }
 }

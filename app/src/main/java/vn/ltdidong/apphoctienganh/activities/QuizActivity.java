@@ -11,6 +11,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -65,6 +66,21 @@ public class QuizActivity extends AppCompatActivity {
         setupOptionClick();
         setupButtonEvents();
         loadData();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                new AlertDialog.Builder(QuizActivity.this)
+                        .setTitle("Exit Quiz")
+                        .setMessage("Are you sure you want to exit? Your progress will not be saved.")
+                        .setPositiveButton("Exit", (d, w) -> {
+                            setEnabled(false);
+                            getOnBackPressedDispatcher().onBackPressed();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
+        });
     }
 
     @SuppressLint("WrongViewCast")
@@ -167,10 +183,18 @@ public class QuizActivity extends AppCompatActivity {
         // Load đáp án đã chọn (dùng index thay vì q.getId())
         if (userAnswers.containsKey(index)) {
             switch (userAnswers.get(index)) {
-                case "A": rbA.setChecked(true); break;
-                case "B": rbB.setChecked(true); break;
-                case "C": rbC.setChecked(true); break;
-                case "D": rbD.setChecked(true); break;
+                case "A":
+                    rbA.setChecked(true);
+                    break;
+                case "B":
+                    rbB.setChecked(true);
+                    break;
+                case "C":
+                    rbC.setChecked(true);
+                    break;
+                case "D":
+                    rbD.setChecked(true);
+                    break;
             }
         }
 
@@ -183,10 +207,14 @@ public class QuizActivity extends AppCompatActivity {
 
     private void saveAnswer() {
         String ans = "";
-        if (rbA.isChecked()) ans = "A";
-        else if (rbB.isChecked()) ans = "B";
-        else if (rbC.isChecked()) ans = "C";
-        else if (rbD.isChecked()) ans = "D";
+        if (rbA.isChecked())
+            ans = "A";
+        else if (rbB.isChecked())
+            ans = "B";
+        else if (rbC.isChecked())
+            ans = "C";
+        else if (rbD.isChecked())
+            ans = "D";
 
         if (!ans.isEmpty()) {
             // Dùng currentIndex thay vì q.getId() vì Firebase questions không có id
@@ -208,16 +236,26 @@ public class QuizActivity extends AppCompatActivity {
         highlightCard(correct, green);
 
         // sai
-        if (!correct.equals(user)) highlightCard(user, red);
+        if (!correct.equals(user))
+            highlightCard(user, red);
     }
 
     private void highlightCard(String option, int color) {
-        if (option == null) return;
+        if (option == null)
+            return;
         switch (option) {
-            case "A": cardA.setCardBackgroundColor(color); break;
-            case "B": cardB.setCardBackgroundColor(color); break;
-            case "C": cardC.setCardBackgroundColor(color); break;
-            case "D": cardD.setCardBackgroundColor(color); break;
+            case "A":
+                cardA.setCardBackgroundColor(color);
+                break;
+            case "B":
+                cardB.setCardBackgroundColor(color);
+                break;
+            case "C":
+                cardC.setCardBackgroundColor(color);
+                break;
+            case "D":
+                cardD.setCardBackgroundColor(color);
+                break;
         }
     }
 
@@ -242,7 +280,8 @@ public class QuizActivity extends AppCompatActivity {
         for (int i = 0; i < questions.size(); i++) {
             Question q = questions.get(i);
             String user = userAnswers.get(i);
-            if (user != null && user.equals(q.getCorrectAnswer())) correctCount++;
+            if (user != null && user.equals(q.getCorrectAnswer()))
+                correctCount++;
         }
 
         float score = (correctCount * 100f) / questions.size();
@@ -264,15 +303,5 @@ public class QuizActivity extends AppCompatActivity {
         i.putExtra("score", score);
         startActivity(i);
         finish();
-    }
-
-    @Override
-    public void onBackPressed() {
-        new AlertDialog.Builder(this)
-                .setTitle("Exit Quiz")
-                .setMessage("Are you sure you want to exit? Your progress will not be saved.")
-                .setPositiveButton("Exit", (d, w) -> super.onBackPressed())
-                .setNegativeButton("Cancel", null)
-                .show();
     }
 }

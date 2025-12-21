@@ -31,12 +31,9 @@ import io.noties.markwon.Markwon;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.api.AiService;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 
 public class IntonationActivity extends AppCompatActivity {
 
@@ -52,9 +49,7 @@ public class IntonationActivity extends AppCompatActivity {
     private CardView resultCard;
     private boolean isListening = false;
 
-    private GeminiApi geminiApi;
-    // API Key (Checked and updated)
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,12 +66,7 @@ public class IntonationActivity extends AppCompatActivity {
         // Initialize Analyze Button
         btnAnalyze = findViewById(R.id.btnAnalyze);
 
-        // Initialize Gemini API
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
+        aiService = AiService.getInstance();
 
         // Initialize TTS
         textToSpeech = new TextToSpeech(this, status -> {
@@ -186,9 +176,9 @@ public class IntonationActivity extends AppCompatActivity {
                 "3. Rate complexity (Easy/Medium/Hard)\n" +
                 "Keep it concise.";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 pd.dismiss();
                 if (response.isSuccessful() && response.body() != null) {
                     String result = response.body().getOutputText();
@@ -200,7 +190,7 @@ public class IntonationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 pd.dismiss();
                 Log.e("Analyze", "Error", t);
                 Toast.makeText(IntonationActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();

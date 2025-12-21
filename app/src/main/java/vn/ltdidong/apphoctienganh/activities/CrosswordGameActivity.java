@@ -26,15 +26,11 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.BuildConfig;
 import vn.ltdidong.apphoctienganh.adapters.CrosswordAdapter;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
+import vn.ltdidong.apphoctienganh.api.AiService;
 import vn.ltdidong.apphoctienganh.models.CrosswordRow;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 
 public class CrosswordGameActivity extends AppCompatActivity {
 
@@ -46,9 +42,7 @@ public class CrosswordGameActivity extends AppCompatActivity {
     private CrosswordAdapter adapter;
     private List<CrosswordRow> gameRows;
 
-    private GeminiApi geminiApi;
-    // Using API Key from local.properties via BuildConfig
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
 
     private TextView tvCurrentClue;
     private Button btnGuessKeyword;
@@ -77,7 +71,7 @@ public class CrosswordGameActivity extends AppCompatActivity {
         rvCrossword.setLayoutManager(new LinearLayoutManager(this));
         rvCrossword.setAdapter(adapter);
 
-        setupGemini();
+        aiService = AiService.getInstance();
         setupInputLogic();
 
         btnNewGame.setOnClickListener(v -> generatePuzzle());
@@ -139,15 +133,6 @@ public class CrosswordGameActivity extends AppCompatActivity {
         });
     }
 
-    private void setupGemini() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        geminiApi = retrofit.create(GeminiApi.class);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -172,57 +157,25 @@ public class CrosswordGameActivity extends AppCompatActivity {
                 "4. Output STRICTLY valid JSON object ONLY. Format:\n" +
                 "{ \"main_keyword\": \"SCHOOL\", \"rows\": [ {\"word\": \"BUS\", \"clue\": \"Vehicle\", \"key_index\": 2}, {\"word\": \"CAT\", \"clue\": \"Animal\", \"key_index\": 0} ] }";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String jsonOutput = response.body().getOutputText();
-                    Log.d("Crossword", "Gemini Response: " + jsonOutput);
-                    parseAndLoadGame(jsonOutput);
-                } else {
-                    // If 2.5 fails (e.g. 503 Overloaded), try fallback to 1.5
-                    Log.w("Crossword", "Gemini 2.5 failed with code " + response.code() + ". Trying fallback...");
-                    generatePuzzleFallback(prompt);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
-                setLoading(false);
-                Log.e("Crossword", "Network Failure", t);
-                Toast.makeText(CrosswordGameActivity.this, "Network error. Please check your connection.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void generatePuzzleFallback(String prompt) {
-        geminiApi.generateContentFallback(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
-            @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String jsonOutput = response.body().getOutputText();
-                    Log.d("Crossword", "Gemini 1.5 Response: " + jsonOutput);
+                    Log.d("Crossword", "AI Response: " + jsonOutput);
                     parseAndLoadGame(jsonOutput);
                 } else {
                     setLoading(false);
-                    try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string()
-                                : "Unknown error";
-                        Log.e("Crossword", "Fallback API Error: " + response.code() + " - " + errorBody);
-                    } catch (Exception e) {
-                        Log.e("Crossword", "Error reading error body", e);
-                    }
                     Toast.makeText(CrosswordGameActivity.this, "Failed to load level. Please try again later.",
                             Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 setLoading(false);
-                Log.e("Crossword", "Fallback Network Failure", t);
-                Toast.makeText(CrosswordGameActivity.this, "Network error.",
+                Log.e("Crossword", "Network Failure", t);
+                Toast.makeText(CrosswordGameActivity.this, "Network error. Please check your connection.",
                         Toast.LENGTH_SHORT).show();
             }
         });

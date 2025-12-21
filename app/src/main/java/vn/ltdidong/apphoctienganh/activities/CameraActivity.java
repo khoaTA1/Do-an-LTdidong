@@ -48,13 +48,11 @@ import java.util.concurrent.Executors;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
+import vn.ltdidong.apphoctienganh.api.AiService;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
 import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 import vn.ltdidong.apphoctienganh.models.WordEntry;
 import vn.ltdidong.apphoctienganh.views.DrawingOverlayView;
 
@@ -67,7 +65,7 @@ public class CameraActivity extends AppCompatActivity {
     private DrawingOverlayView drawingView;
     private TextView tvStatus;
     private ProgressBar progressBar;
-    
+
     // UI for Result Card
     private CardView cardResult;
     private TextView tvEnglish;
@@ -81,8 +79,7 @@ public class CameraActivity extends AppCompatActivity {
     private ImageCapture imageCapture;
     private ExecutorService cameraExecutor;
 
-    private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
 
     private Bitmap currentBitmap;
     private FirebaseFirestore db;
@@ -100,7 +97,7 @@ public class CameraActivity extends AppCompatActivity {
         drawingView = findViewById(R.id.drawingView);
         tvStatus = findViewById(R.id.tvStatus);
         progressBar = findViewById(R.id.progressBar);
-        
+
         cardResult = findViewById(R.id.cardResult);
         tvEnglish = findViewById(R.id.tvEnglish);
         tvVietnamese = findViewById(R.id.tvVietnamese);
@@ -110,24 +107,21 @@ public class CameraActivity extends AppCompatActivity {
         btnRetake = findViewById(R.id.btnRetake);
         btnBack = findViewById(R.id.btnBack);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
+        aiService = AiService.getInstance();
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
         if (allPermissionsGranted()) {
             startCamera();
         } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, PERMISSION_CAMERA_CODE);
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA },
+                    PERMISSION_CAMERA_CODE);
         }
 
         btnCapture.setOnClickListener(v -> takePhoto());
         btnRetake.setOnClickListener(v -> resetCamera());
         btnBack.setOnClickListener(v -> finish());
-        
+
         btnFavorite.setOnClickListener(v -> toggleFavorite());
 
         drawingView.setOnDrawListener(this::cropAndAnalyze);
@@ -167,7 +161,8 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void takePhoto() {
-        if (imageCapture == null) return;
+        if (imageCapture == null)
+            return;
 
         imageCapture.takePicture(ContextCompat.getMainExecutor(this), new ImageCapture.OnImageCapturedCallback() {
             @Override
@@ -179,14 +174,14 @@ public class CameraActivity extends AppCompatActivity {
                     viewFinder.setVisibility(View.GONE);
                     ivPreview.setVisibility(View.VISIBLE);
                     ivPreview.setImageBitmap(currentBitmap);
-                    
+
                     drawingView.setVisibility(View.VISIBLE);
                     drawingView.clear();
-                    
+
                     btnCapture.setVisibility(View.GONE);
-                    tvStatus.setVisibility(View.GONE); 
+                    tvStatus.setVisibility(View.GONE);
                     cardResult.setVisibility(View.GONE);
-                    
+
                     btnBack.bringToFront();
                 });
             }
@@ -197,7 +192,7 @@ public class CameraActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     private void resetCamera() {
         viewFinder.setVisibility(View.VISIBLE);
         ivPreview.setVisibility(View.GONE);
@@ -206,7 +201,7 @@ public class CameraActivity extends AppCompatActivity {
         cardResult.setVisibility(View.GONE);
         tvStatus.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
-        
+
         btnBack.bringToFront();
         currentBitmap = null;
         isFavorite = false;
@@ -218,7 +213,7 @@ public class CameraActivity extends AppCompatActivity {
         byte[] bytes = new byte[buffer.remaining()];
         buffer.get(bytes);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        
+
         android.graphics.Matrix matrix = new android.graphics.Matrix();
         matrix.postRotate(image.getImageInfo().getRotationDegrees());
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
@@ -229,7 +224,8 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_CAMERA_CODE) {
             if (allPermissionsGranted()) {
@@ -242,7 +238,8 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void cropAndAnalyze(RectF bounds) {
-        if (currentBitmap == null) return;
+        if (currentBitmap == null)
+            return;
 
         int viewWidth = ivPreview.getWidth();
         int viewHeight = ivPreview.getHeight();
@@ -300,21 +297,23 @@ public class CameraActivity extends AppCompatActivity {
                 "English: [Name]\n" +
                 "Vietnamese: [Name]\n" +
                 "Ensure only the names are returned.";
-        
+
         tvStatus.setVisibility(View.GONE);
         cardResult.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE); // Show loading spinner
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt, base64Image))
+        aiService.generateGeminiVision(prompt, base64Image)
                 .enqueue(new Callback<GeminiResponse>() {
                     @Override
-                    public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+                    public void onResponse(Call<GeminiResponse> call,
+                            Response<GeminiResponse> response) {
                         progressBar.setVisibility(View.GONE); // Hide loading spinner
                         if (response.isSuccessful() && response.body() != null) {
                             String result = response.body().getOutputText();
                             parseAndDisplayResult(result);
                         } else {
-                             // Handle error optionally
+                            Log.e("CameraActivity", "Gemini API Error: " + response.code());
+                            Toast.makeText(CameraActivity.this, "Lỗi từ Gemini API", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -322,6 +321,7 @@ public class CameraActivity extends AppCompatActivity {
                     public void onFailure(Call<GeminiResponse> call, Throwable t) {
                         progressBar.setVisibility(View.GONE); // Hide loading spinner
                         Log.e("CameraActivity", "Network Failure", t);
+                        Toast.makeText(CameraActivity.this, "Lỗi kết nối mạng", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -343,36 +343,37 @@ public class CameraActivity extends AppCompatActivity {
 
         tvEnglish.setText(english);
         tvVietnamese.setText(vietnamese);
-        
+
         // Check if word is already favorited
         checkIfFavorite(english);
-        
-        tvStatus.setVisibility(View.GONE); 
+
+        tvStatus.setVisibility(View.GONE);
         cardResult.setVisibility(View.VISIBLE);
     }
-    
+
     private void toggleFavorite() {
         String englishWord = tvEnglish.getText().toString();
         String vietnameseWord = tvVietnamese.getText().toString();
-        
-        if (englishWord.equals("Loading...") || englishWord.equals("Unknown")) return;
-        
+
+        if (englishWord.equals("Loading...") || englishWord.equals("Unknown"))
+            return;
+
         String userId = SharedPreferencesManager.getInstance(this).getUserId();
         if (userId == null) {
             Toast.makeText(this, "Vui lòng đăng nhập để lưu từ vựng", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         isFavorite = !isFavorite;
         updateFavoriteIcon();
-        
+
         if (isFavorite) {
             saveToFavorites(userId, englishWord, vietnameseWord);
         } else {
             removeFromFavorites(userId, englishWord);
         }
     }
-    
+
     private void updateFavoriteIcon() {
         if (isFavorite) {
             btnFavorite.setImageResource(R.drawable.ic_heart_filled);
@@ -382,59 +383,61 @@ public class CameraActivity extends AppCompatActivity {
             btnFavorite.setColorFilter(ContextCompat.getColor(this, R.color.primary));
         }
     }
-    
+
     private void checkIfFavorite(String word) {
         String userId = SharedPreferencesManager.getInstance(this).getUserId();
-        if (userId == null) return;
-        
+        if (userId == null)
+            return;
+
         db.collection("users")
                 .document(userId)
                 .collection("favorites")
-                .document(word)  // Check by ID (word itself) instead of field query
+                .document(word) // Check by ID (word itself) instead of field query
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     isFavorite = documentSnapshot.exists();
                     updateFavoriteIcon();
                 });
     }
-    
+
     private void saveToFavorites(String userId, String word, String meaning) {
         // Tạo WordEntry để lưu cấu trúc giống như WishlistActivity đọc được
         WordEntry wordEntry = new WordEntry();
         wordEntry.setWord(word);
-        
+
         // Tạo cấu trúc Meaning đơn giản để chứa nghĩa tiếng Việt
         WordEntry.Meaning meaningObj = new WordEntry.Meaning();
         meaningObj.setPartOfSpeech("noun"); // Giả định là noun
-        
+
         WordEntry.Definition def = new WordEntry.Definition();
         def.setDefinition(meaning);
-        
+
         meaningObj.setDefinitions(Collections.singletonList(def));
         wordEntry.setMeanings(Collections.singletonList(meaningObj));
-        
-        // Lưu vào Firestore với ID là từ tiếng Anh (để dễ quản lý và trùng khớp với WishlistActivity)
+
+        // Lưu vào Firestore với ID là từ tiếng Anh (để dễ quản lý và trùng khớp với
+        // WishlistActivity)
         db.collection("users")
                 .document(userId)
                 .collection("favorites")
                 .document(word) // Dùng từ làm Document ID
                 .set(wordEntry) // Dùng set thay vì add để override nếu tồn tại
-                .addOnSuccessListener(aVoid -> 
-                    Toast.makeText(CameraActivity.this, "Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show())
-                .addOnFailureListener(e -> 
-                    Toast.makeText(CameraActivity.this, "Lỗi khi lưu", Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(aVoid -> Toast
+                        .makeText(CameraActivity.this, "Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(
+                        e -> Toast.makeText(CameraActivity.this, "Lỗi khi lưu", Toast.LENGTH_SHORT).show());
     }
-    
+
     private void removeFromFavorites(String userId, String word) {
         db.collection("users")
                 .document(userId)
                 .collection("favorites")
                 .document(word)
                 .delete()
-                .addOnSuccessListener(aVoid -> 
-                    Toast.makeText(CameraActivity.this, "Đã xóa khỏi yêu thích", Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(aVoid -> Toast
+                        .makeText(CameraActivity.this, "Đã xóa khỏi yêu thích", Toast.LENGTH_SHORT).show());
     }
-    
+
     @Override
     protected void onDestroy() {
         super.onDestroy();

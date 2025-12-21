@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.Window;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -47,6 +48,16 @@ public class ResultActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                Intent intent = new Intent(ResultActivity.this, ListeningListActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
         
         // Khởi tạo ViewModel
         viewModel = new ViewModelProvider(this).get(ListeningViewModel.class);
@@ -341,13 +352,4 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
     
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        // Quay về ListeningListActivity
-        Intent intent = new Intent(ResultActivity.this, ListeningListActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
-        finish();
-    }
 }

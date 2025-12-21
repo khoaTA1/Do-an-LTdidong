@@ -20,7 +20,7 @@
             android:layout_width="@dimen/icon_size_medium"
             android:layout_height="@dimen/icon_size_medium"
             android:src="@drawable/ic_challenge"
-            android:tint="@color/primary" />
+            app:tint="@color/primary" />
 
         <!-- Content -->
         <LinearLayout
@@ -67,7 +67,7 @@
             android:layout_width="@dimen/icon_size_small"
             android:layout_height="@dimen/icon_size_small"
             android:src="@drawable/ic_check_circle"
-            android:tint="@color/success"
+            app:tint="@color/success"
             android:visibility="gone" />
 
     </LinearLayout>
