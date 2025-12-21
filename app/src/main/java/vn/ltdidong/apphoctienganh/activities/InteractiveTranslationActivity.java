@@ -22,12 +22,9 @@ import io.noties.markwon.Markwon;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.api.AiService;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 
 public class InteractiveTranslationActivity extends AppCompatActivity {
 
@@ -37,9 +34,7 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private ProgressBar progressBarInfo;
 
-    private GeminiApi geminiApi;
-    // Corrected API Key
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
 
     private List<String> sentences;
     private int currentSentenceIndex = 0;
@@ -58,11 +53,7 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
         tvProgress = findViewById(R.id.tvProgress);
         progressBarInfo = findViewById(R.id.progressBarInfo);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
+        aiService = AiService.getInstance();
 
         btnBack.setOnClickListener(v -> finish());
         btnCheck.setOnClickListener(v -> checkTranslation());
@@ -79,9 +70,9 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
         etUserTranslation.setEnabled(false);
 
         String prompt = "Give me a short Vietnamese paragraph (3-4 sentences) for English translation practice. Separate sentences with a period. No extra text.";
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 // Re-enable UI
                 btnCheck.setEnabled(true);
                 etUserTranslation.setEnabled(true);
@@ -105,7 +96,7 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 // Re-enable UI
                 btnCheck.setEnabled(true);
                 etUserTranslation.setEnabled(true);
@@ -173,9 +164,9 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
                 "First, in one single word, is the student's translation 'Correct', 'Partially', or 'Incorrect'?'" +
                 "Then, provide a better/alternative translation and a very short, simple explanation of any errors.";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 // Restore button state
                 btnCheck.setEnabled(true);
                 btnCheck.setText("Check Answer");
@@ -195,7 +186,7 @@ public class InteractiveTranslationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 // Restore button state
                 btnCheck.setEnabled(true);
                 btnCheck.setText("Check Answer");

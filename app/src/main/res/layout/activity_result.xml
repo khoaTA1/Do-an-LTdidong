@@ -105,8 +105,8 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- View Transcript Button -->
-        <Button
+GROQ_API_KEY=your_groq_api_key_here        <!-- View Transcript Button -->
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewTranscript"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
@@ -120,7 +120,7 @@
             app:layout_constraintTop_toBottomOf="@id/cardScore" />
 
         <!-- Try Again Button -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnTryAgain"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -132,7 +132,7 @@
             app:layout_constraintTop_toBottomOf="@id/btnViewTranscript" />
 
         <!-- Back to Lessons Button -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBackToLessons"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="match_parent"

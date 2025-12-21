@@ -17,12 +17,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.api.AiService;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import io.noties.markwon.Markwon;
 
@@ -33,20 +30,14 @@ public class WritingActivity extends AppCompatActivity {
     private Button btnNewTopic, btnSubmit;
     private ImageButton btnBack;
 
-    private GeminiApi geminiApi;
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_writing);
 
-        // 1. Cấu hình Retrofit cho Gemini
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
+        aiService = AiService.getInstance();
 
         // 2. Ánh xạ View
         tvTopic = findViewById(R.id.tvTopic);
@@ -95,9 +86,9 @@ public class WritingActivity extends AppCompatActivity {
         String prompt = "Give me 1 interesting English writing topic for intermediate learners. " +
                 "Short, clear, no extra text. Just the topic.";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String topic = response.body().getOutputText();
                     tvTopic.setText(topic.trim());
@@ -107,7 +98,7 @@ public class WritingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 tvTopic.setText("Error loading topic. Describe your family.");
             }
         });
@@ -130,9 +121,9 @@ public class WritingActivity extends AppCompatActivity {
                 "3. Short feedback.\n" +
                 "Format clearly.";
 
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 progressDialog.dismiss();
                 if (response.isSuccessful() && response.body() != null) {
                     String result = response.body().getOutputText();
@@ -143,7 +134,7 @@ public class WritingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 progressDialog.dismiss();
                 Toast.makeText(WritingActivity.this, "Connection failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
