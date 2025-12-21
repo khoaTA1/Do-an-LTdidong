@@ -30,14 +30,11 @@ import java.util.Locale;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.adapters.ChatAdapter;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
+import vn.ltdidong.apphoctienganh.api.AiService;
 import vn.ltdidong.apphoctienganh.models.ChatMessage;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 
 public class ConversationActivity extends AppCompatActivity {
 
@@ -53,9 +50,7 @@ public class ConversationActivity extends AppCompatActivity {
     private Intent speechRecognizerIntent;
     private boolean isListening = false;
 
-    private GeminiApi geminiApi;
-    // Fixed API Key
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
+    private AiService aiService;
     private String currentTopic = "General Conversation";
 
     @Override
@@ -70,7 +65,7 @@ public class ConversationActivity extends AppCompatActivity {
 
         initViews();
         setupRecyclerView();
-        setupGemini();
+        aiService = AiService.getInstance();
         setupTTS();
         setupSpeechRecognizer();
 
@@ -106,14 +101,6 @@ public class ConversationActivity extends AppCompatActivity {
         chatAdapter = new ChatAdapter(this, messageList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(chatAdapter);
-    }
-
-    private void setupGemini() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
     }
 
     private void setupTTS() {
@@ -226,9 +213,9 @@ public class ConversationActivity extends AppCompatActivity {
     }
 
     private void callGemini(String prompt, boolean speakResponse) {
-        geminiApi.generateContent(API_KEY, new GeminiRequest(prompt)).enqueue(new Callback<GeminiResponse>() {
+        aiService.generateText(prompt).enqueue(new Callback<GroqChatCompletionResponse>() {
             @Override
-            public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+            public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String reply = response.body().getOutputText().trim();
                     addMessage(reply, false);
@@ -241,7 +228,7 @@ public class ConversationActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<GeminiResponse> call, Throwable t) {
+            public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                 addMessage("Network Error.", false);
             }
         });
