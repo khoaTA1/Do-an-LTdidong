@@ -1,6 +1,7 @@
 package vn.ltdidong.apphoctienganh;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.work.Constraints;
@@ -19,6 +20,9 @@ import vn.ltdidong.apphoctienganh.workers.DailyAnalysisWorker;
 public class MyApplication extends Application {
     
     private static final String TAG = "MyApplication";
+    private SharedPreferences sharedPreferences;
+    private long totalRP = 0;
+    private String[] passedIdRP;
     
     @Override
     public void onCreate() {
@@ -41,7 +45,11 @@ public class MyApplication extends Application {
         } catch (Exception e) {
             Log.e("App", "Failed to clear SQLite cache", e);
         }
-        
+
+        sharedPreferences = getSharedPreferences("Reading_Skill_Param", MODE_PRIVATE);
+        sharedPreferences.edit().putString("passedIdRP", "");
+        sharedPreferences.edit().putLong("totalPassedRP", 0);
+
         // Schedule daily background work
         scheduleDailyWork();
     }

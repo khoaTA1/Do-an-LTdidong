@@ -401,11 +401,4 @@ public class SkillHomeActivity extends AppCompatActivity {
             learningProgress.setProgress(0);
         }
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        bottomNav.setSelectedItemId(R.id.nav_skills);
-    }
 }

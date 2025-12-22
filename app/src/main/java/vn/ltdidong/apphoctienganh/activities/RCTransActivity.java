@@ -1,6 +1,7 @@
 package vn.ltdidong.apphoctienganh.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,10 +35,17 @@ public class RCTransActivity extends AppCompatActivity {
     private MaterialButton btnStart;
     private TextView textLoading, textTitle, textExplain;
 
+    private SharedPreferences sharedPreferences;
+    private long totalRP = 0;
+    private String[] passedIdRP;
+
     @Override
     protected void onCreate(Bundle savedins) {
         super.onCreate(savedins);
         setContentView(R.layout.reading_mode_trans);
+
+        sharedPreferences = getSharedPreferences("Reading_Skill_Param", MODE_PRIVATE);
+        totalRP = sharedPreferences.getLong("totalPassedRP", 0);
 
         // khởi tạo các repo và sqlite helper
         rprepo = new ReadingPassageRepo();
@@ -86,7 +94,67 @@ public class RCTransActivity extends AppCompatActivity {
 
     // hàm lấy dữ liệu từ firestore và lưu vào sqlite làm cache
     private void loadFromFirestore(FirestoreCallBack callback) {
+        // kiểm tra xem cache RP đã dùng hết chưa
+        long totalRPDB = sqlite.getCountPassage();
+
+        Log.d("DEBUG", "total - totalDB : " + totalRP + " - " + totalRPDB);
+        if (totalRPDB >= 2 && totalRP <= totalRPDB - 2) {
+            Log.d(">>> DEBUG", "Load từ DB");
+            callback.returnResult("ok");
+        } else {
+            Log.d(">>> DEBUG", "Load từ Firestore");
+            rprepo.getRandomPassage(list -> {
+                if (list != null) {
+                    int totalPassages = ((List<ReadingPassage>) list).size();
+                    List<ReadingPassage> RPlist = (List<ReadingPassage>) list;
+
+                    // CountDownLatch đếm số passage
+                    CountDownLatch latch = new CountDownLatch(totalPassages);
+
+                    for (ReadingPassage rp : RPlist) {
+
+                        // lấy các câu hỏi thuộc đoạn văn này bằng passage id
+                        qarepo.getQuestionAnswerByPassageId(rp.getId(), qa_list -> {
+                            if (qa_list != null) {
+                                List<QuestionAnswer> QAlist = (List<QuestionAnswer>) qa_list;
+
+                                // set danh sách câu hỏi - câu trả lời cho đoạn văn hiện tại
+                                rp.setQAList(QAlist);
+                            } else rp.setQAList(new ArrayList<>());
+
+                            latch.countDown();
+                        });
+                    }
+
+                    // kiểm tra xem danh sách đoạn văn và các câu hỏi cùng câu trả lời đã load đầy đủ chưa
+                    new Thread(() -> {
+                        try {
+                            // chờ hết countDown
+                            latch.await();
+                            runOnUiThread(() -> {
+                                if (sqlite == null) sqlite = new DBHelper(this);
+                                if (sqlite.insertRPList(RPlist) == 1) {
+                                    Log.d(">>> SQLite", "Thêm danh sách vào cache thành công");
+                                } else {
+                                    Log.e("!!! SQLite", "Thêm danh sách vào cache KHÔNG thành công");
+                                }
+
+                                callback.returnResult("ok");
+                            });
+                        } catch (InterruptedException e) {
+                            Log.e("!!! CountDown", "Lỗi: ", e);
+                            callback.returnResult("err");
+                        }
+                    }).start();
+                } else {
+                    Log.e("!!! Firestore", "Danh sách đoạn văn bị null");
+                    callback.returnResult("err");
+                }
+            });
+        }
+
         // lấy một số lượng đoạn văn từ firestore
+        /*
         rprepo.getReadingPassagePagination(LIMIT_LOAD, list -> {
             if (list != null) {
                 int totalPassages = ((List<ReadingPassage>) list).size();
@@ -132,6 +200,6 @@ public class RCTransActivity extends AppCompatActivity {
             } else {
                 Log.e("!!! Firestore", "Danh sách đoạn văn bị null");
             }
-        });
+        });*/
     }
 }
