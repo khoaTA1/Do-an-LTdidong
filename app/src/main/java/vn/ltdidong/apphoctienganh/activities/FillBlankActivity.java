@@ -15,6 +15,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -50,10 +51,10 @@ public class FillBlankActivity extends AppCompatActivity {
     private List<FillBlankQuestion> questions;
     private int currentIndex = 0;
     private FillBlankQuestion currentQuestion;
-    
+
     // User answers
     private Map<Integer, List<String>> userAnswers = new HashMap<>();
-    
+
     // Media Player
     private MediaPlayer mediaPlayer;
     private Handler handler = new Handler();
@@ -68,6 +69,21 @@ public class FillBlankActivity extends AppCompatActivity {
         loadData();
         setupMediaPlayer();
         displayQuestion();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                new AlertDialog.Builder(FillBlankActivity.this)
+                        .setTitle("Thoát bài tập?")
+                        .setMessage("Tiến độ của bạn sẽ không được lưu.")
+                        .setPositiveButton("Thoát", (dialog, which) -> {
+                            setEnabled(false);
+                            getOnBackPressedDispatcher().onBackPressed();
+                        })
+                        .setNegativeButton("Hủy", null)
+                        .show();
+            }
+        });
     }
 
     private void initViews() {
@@ -76,13 +92,13 @@ public class FillBlankActivity extends AppCompatActivity {
         tvSentence = findViewById(R.id.tvSentence);
         tvHint = findViewById(R.id.tvHint);
         llInputFields = findViewById(R.id.llInputFields);
-        
+
         btnCheck = findViewById(R.id.btnCheck);
         btnNext = findViewById(R.id.btnNext);
         btnSubmit = findViewById(R.id.btnSubmit);
         btnPlay = findViewById(R.id.btnPlay);
         btnReplay = findViewById(R.id.btnReplay);
-        
+
         seekBarAudio = findViewById(R.id.seekBarAudio);
         progressBar = findViewById(R.id.progressBar);
         cardHint = findViewById(R.id.cardHint);
@@ -93,18 +109,18 @@ public class FillBlankActivity extends AppCompatActivity {
         btnCheck.setOnClickListener(v -> checkAnswer());
         btnNext.setOnClickListener(v -> nextQuestion());
         btnSubmit.setOnClickListener(v -> showSubmitDialog());
-        
-        findViewById(R.id.btnBack).setOnClickListener(v -> onBackPressed());
+
+        findViewById(R.id.btnBack).setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
     }
 
     private void loadData() {
         // Get lesson from Intent
         lesson = (ListeningLesson) getIntent().getSerializableExtra("lesson");
-        
+
         // TODO: Load fill-blank questions from Firebase
         // Tạm thời dùng dữ liệu mẫu
         questions = createSampleQuestions();
-        
+
         if (lesson != null) {
             tvLessonTitle.setText(lesson.getTitle());
         } else {
@@ -115,10 +131,10 @@ public class FillBlankActivity extends AppCompatActivity {
 
     private List<FillBlankQuestion> createSampleQuestions() {
         List<FillBlankQuestion> list = new ArrayList<>();
-        
+
         // Use lesson ID if available, otherwise use default ID (0)
         int lessonId = (lesson != null) ? lesson.getId() : 0;
-        
+
         FillBlankQuestion q1 = new FillBlankQuestion();
         q1.setLessonId(lessonId);
         q1.setSentenceWithBlanks("I wake up at {blank} every day.");
@@ -126,7 +142,7 @@ public class FillBlankActivity extends AppCompatActivity {
         q1.setHint("What time? (Format: number + AM/PM)");
         q1.setOrderIndex(1);
         q1.setAudioTimestamp(0);
-        
+
         FillBlankQuestion q2 = new FillBlankQuestion();
         q2.setLessonId(lessonId);
         q2.setSentenceWithBlanks("First, I {blank} and take a shower.");
@@ -134,7 +150,7 @@ public class FillBlankActivity extends AppCompatActivity {
         q2.setHint("What do you do first in the morning?");
         q2.setOrderIndex(2);
         q2.setAudioTimestamp(5);
-        
+
         FillBlankQuestion q3 = new FillBlankQuestion();
         q3.setLessonId(lessonId);
         q3.setSentenceWithBlanks("Then I have {blank} with my family.");
@@ -142,11 +158,11 @@ public class FillBlankActivity extends AppCompatActivity {
         q3.setHint("What meal do you eat in the morning?");
         q3.setOrderIndex(3);
         q3.setAudioTimestamp(10);
-        
+
         list.add(q1);
         list.add(q2);
         list.add(q3);
-        
+
         return list;
     }
 
@@ -159,10 +175,10 @@ public class FillBlankActivity extends AppCompatActivity {
             seekBarAudio.setEnabled(false);
             return;
         }
-        
+
         try {
             mediaPlayer = new MediaPlayer();
-            
+
             // Handle different audio URL formats
             String audioUrl = lesson.getAudioUrl();
             if (audioUrl.startsWith("raw://")) {
@@ -170,25 +186,26 @@ public class FillBlankActivity extends AppCompatActivity {
                 String resourceName = audioUrl.substring(6);
                 int resId = getResources().getIdentifier(resourceName, "raw", getPackageName());
                 if (resId != 0) {
-                    mediaPlayer.setDataSource(this, android.net.Uri.parse("android.resource://" + getPackageName() + "/" + resId));
+                    mediaPlayer.setDataSource(this,
+                            android.net.Uri.parse("android.resource://" + getPackageName() + "/" + resId));
                 }
             } else {
                 // URL from Firebase or web
                 mediaPlayer.setDataSource(audioUrl);
             }
-            
+
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(mp -> {
                 progressBar.setVisibility(View.GONE);
                 seekBarAudio.setMax(mediaPlayer.getDuration());
                 updateSeekBar();
             });
-            
+
             mediaPlayer.setOnCompletionListener(mp -> {
                 isPlaying = false;
                 btnPlay.setImageResource(R.drawable.ic_play);
             });
-            
+
             seekBarAudio.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -196,12 +213,16 @@ public class FillBlankActivity extends AppCompatActivity {
                         mediaPlayer.seekTo(progress);
                     }
                 }
+
                 @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {}
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
+
                 @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {}
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
             });
-            
+
         } catch (IOException e) {
             Toast.makeText(this, "Không thể tải audio: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -215,8 +236,9 @@ public class FillBlankActivity extends AppCompatActivity {
     }
 
     private void togglePlayPause() {
-        if (mediaPlayer == null) return;
-        
+        if (mediaPlayer == null)
+            return;
+
         if (isPlaying) {
             mediaPlayer.pause();
             btnPlay.setImageResource(R.drawable.ic_play);
@@ -244,14 +266,14 @@ public class FillBlankActivity extends AppCompatActivity {
         }
 
         currentQuestion = questions.get(currentIndex);
-        
+
         // Update UI
         tvQuestionNumber.setText("Câu " + (currentIndex + 1) + "/" + questions.size());
-        
+
         // Display sentence with blanks replaced by underscores
         String displayText = currentQuestion.getSentenceWithBlanks().replace("{blank}", "______");
         tvSentence.setText(displayText);
-        
+
         // Show/hide hint
         if (currentQuestion.getHint() != null && !currentQuestion.getHint().isEmpty()) {
             tvHint.setText("💡 Gợi ý: " + currentQuestion.getHint());
@@ -259,10 +281,10 @@ public class FillBlankActivity extends AppCompatActivity {
         } else {
             cardHint.setVisibility(View.GONE);
         }
-        
+
         // Create input fields
         createInputFields();
-        
+
         // Restore previous answers if any
         if (userAnswers.containsKey(currentIndex)) {
             List<String> savedAnswers = userAnswers.get(currentIndex);
@@ -271,19 +293,19 @@ public class FillBlankActivity extends AppCompatActivity {
                 et.setText(savedAnswers.get(i));
             }
         }
-        
+
         // Update button visibility
         btnCheck.setVisibility(View.VISIBLE);
         btnNext.setVisibility(View.GONE);
         btnSubmit.setVisibility(currentIndex == questions.size() - 1 ? View.VISIBLE : View.GONE);
-        
+
         // Replay audio for this question
         replayQuestion();
     }
 
     private void createInputFields() {
         llInputFields.removeAllViews();
-        
+
         int blankCount = currentQuestion.getBlankCount();
         for (int i = 0; i < blankCount; i++) {
             EditText editText = new EditText(this);
@@ -291,14 +313,13 @@ public class FillBlankActivity extends AppCompatActivity {
             editText.setBackgroundResource(R.drawable.bg_edit_text);
             editText.setPadding(32, 24, 32, 24);
             editText.setTextSize(16);
-            
+
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            );
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(0, 0, 0, 24);
             editText.setLayoutParams(params);
-            
+
             llInputFields.addView(editText);
         }
     }
@@ -309,24 +330,24 @@ public class FillBlankActivity extends AppCompatActivity {
         for (int i = 0; i < llInputFields.getChildCount(); i++) {
             EditText et = (EditText) llInputFields.getChildAt(i);
             String answer = et.getText().toString().trim();
-            
+
             if (TextUtils.isEmpty(answer)) {
                 Toast.makeText(this, "Vui lòng điền tất cả các ô trống!", Toast.LENGTH_SHORT).show();
                 return;
             }
             answers.add(answer);
         }
-        
+
         // Save answers
         userAnswers.put(currentIndex, answers);
-        
+
         // Check correctness
         int correctCount = currentQuestion.checkAnswers(answers);
         int totalBlanks = currentQuestion.getBlankCount();
-        
+
         // Show feedback
         showFeedback(correctCount, totalBlanks);
-        
+
         // Update UI
         btnCheck.setVisibility(View.GONE);
         if (currentIndex < questions.size() - 1) {
@@ -337,18 +358,18 @@ public class FillBlankActivity extends AppCompatActivity {
     private void showFeedback(int correct, int total) {
         String message;
         String correctSentence = currentQuestion.getCorrectSentence();
-        
+
         if (correct == total) {
             message = "✅ Chính xác! Tuyệt vời!\n\nĐáp án: " + correctSentence;
         } else {
             message = "❌ Sai rồi! Bạn đúng " + correct + "/" + total + " chỗ trống.\n\nĐáp án đúng: " + correctSentence;
         }
-        
+
         new AlertDialog.Builder(this)
-            .setTitle(correct == total ? "Đúng rồi!" : "Chưa đúng")
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show();
+                .setTitle(correct == total ? "Đúng rồi!" : "Chưa đúng")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void nextQuestion() {
@@ -363,35 +384,35 @@ public class FillBlankActivity extends AppCompatActivity {
 
     private void showSubmitDialog() {
         new AlertDialog.Builder(this)
-            .setTitle("Nộp bài")
-            .setMessage("Bạn có chắc chắn muốn nộp bài không?")
-            .setPositiveButton("Nộp bài", (dialog, which) -> showResults())
-            .setNegativeButton("Hủy", null)
-            .show();
+                .setTitle("Nộp bài")
+                .setMessage("Bạn có chắc chắn muốn nộp bài không?")
+                .setPositiveButton("Nộp bài", (dialog, which) -> showResults())
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 
     private void showResults() {
         // Calculate total score
         int totalCorrect = 0;
         int totalBlanks = 0;
-        
+
         for (int i = 0; i < questions.size(); i++) {
             FillBlankQuestion q = questions.get(i);
             totalBlanks += q.getBlankCount();
-            
+
             if (userAnswers.containsKey(i)) {
                 totalCorrect += q.checkAnswers(userAnswers.get(i));
             }
         }
-        
+
         float score = totalBlanks > 0 ? (totalCorrect * 100f / totalBlanks) : 0;
-        
+
         // Navigate to result screen
         Intent intent = new Intent(this, ResultActivity.class);
         // Use lesson ID if available, otherwise use default 0
         int lessonId = (lesson != null) ? lesson.getId() : 0;
         String lessonTitle = (lesson != null) ? lesson.getTitle() : "Fill in the Blanks";
-        
+
         intent.putExtra("lesson_id", lessonId);
         intent.putExtra("lesson_title", lessonTitle);
         intent.putExtra("correct_answers", totalCorrect);
@@ -410,15 +431,5 @@ public class FillBlankActivity extends AppCompatActivity {
             mediaPlayer = null;
         }
         handler.removeCallbacksAndMessages(null);
-    }
-
-    @Override
-    public void onBackPressed() {
-        new AlertDialog.Builder(this)
-            .setTitle("Thoát bài tập?")
-            .setMessage("Tiến độ của bạn sẽ không được lưu.")
-            .setPositiveButton("Thoát", (dialog, which) -> super.onBackPressed())
-            .setNegativeButton("Hủy", null)
-            .show();
     }
 }
