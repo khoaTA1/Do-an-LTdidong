@@ -3,7 +3,7 @@ package vn.ltdidong.apphoctienganh.api;
 import vn.ltdidong.apphoctienganh.BuildConfig;
 
 public final class AiConfig {
-    private static finqqal String DEFAULT_CHAT_MODEL = "llama-3.3-70b-versatile";
+    private static final String DEFAULT_CHAT_MODEL = "llama-3.3-70b-versatile";
     private static final String DEFAULT_VISION_MODEL = "llama-3.2-11b-vision-preview";
 
     private AiConfig() {
