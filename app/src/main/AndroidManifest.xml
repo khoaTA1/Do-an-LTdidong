@@ -93,6 +93,29 @@
             android:theme="@style/Theme.DoAn_LT_DD"
             android:parentActivityName=".activities.MainActivity"/>
         
+        <!-- AI Tutor Companion Feature -->
+        <activity 
+            android:name=".activities.AITutorActivity"
+            android:exported="false"
+            android:label="AI Tutor"
+            android:theme="@style/Theme.DoAn_LT_DD"
+            android:parentActivityName=".activities.MainActivity"/>
+        
+        <!-- Social Features -->
+        <activity 
+            android:name=".activities.SocialHubActivity"
+            android:exported="false"
+            android:label="Social Hub"
+            android:theme="@style/Theme.DoAn_LT_DD"
+            android:parentActivityName=".activities.MainActivity"/>
+        
+        <activity 
+            android:name=".activities.SearchFriendsActivity"
+            android:exported="false"
+            android:label="Search Friends"
+            android:theme="@style/Theme.DoAn_LT_DD"
+            android:parentActivityName=".activities.SocialHubActivity"/>
+        
         <!-- Reminder Receiver for notifications -->
         <receiver
             android:name=".services.ReminderReceiver"

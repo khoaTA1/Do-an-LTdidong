@@ -13,6 +13,8 @@ import vn.ltdidong.apphoctienganh.models.LearningSession;
 import vn.ltdidong.apphoctienganh.models.SkillProgress;
 import vn.ltdidong.apphoctienganh.models.StudyHabit;
 import vn.ltdidong.apphoctienganh.models.StudySchedule;
+import vn.ltdidong.apphoctienganh.models.ChatConversation;
+import vn.ltdidong.apphoctienganh.models.AITutorMessage;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,8 +23,7 @@ import java.util.concurrent.Executors;
  * Room Database chính cho ứng dụng
  * Chỉ lưu UserProgress (tiến độ người dùng) và UserStreak (chuỗi ngày) - local database
  * Lessons và Questions load từ Firebase Firestore
- * Version 8: Thêm LearningSession, SkillProgress, StudyHabit, StudySchedule 
- *            để hỗ trợ phân tích học tập và lập lịch tự động
+ * Version 10: Thêm ChatConversation, AITutorMessage cho AI Tutor feature
  */
 @Database(
     entities = {
@@ -32,9 +33,11 @@ import java.util.concurrent.Executors;
         LearningSession.class,
         SkillProgress.class,
         StudyHabit.class,
-        StudySchedule.class
+        StudySchedule.class,
+        ChatConversation.class,
+        AITutorMessage.class
     },
-    version = 8,
+    version = 10,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -47,6 +50,8 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SkillProgressDao skillProgressDao();
     public abstract StudyHabitDao studyHabitDao();
     public abstract StudyScheduleDao studyScheduleDao();
+    public abstract ChatConversationDao chatConversationDao();
+    public abstract AITutorMessageDao aiTutorMessageDao();
     
     // Singleton instance
     private static volatile AppDatabase INSTANCE;

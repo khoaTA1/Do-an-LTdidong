@@ -34,10 +34,12 @@ android {
         val groqApiKey = localProperties.getProperty("GROQ_API_KEY") ?: ""
         val groqChatModel = localProperties.getProperty("GROQ_CHAT_MODEL") ?: ""
         val groqVisionModel = localProperties.getProperty("GROQ_VISION_MODEL") ?: ""
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
 
         buildConfigField("String", "GROQ_API_KEY", "\"$groqApiKey\"")
         buildConfigField("String", "GROQ_CHAT_MODEL", "\"$groqChatModel\"")
         buildConfigField("String", "GROQ_VISION_MODEL", "\"$groqVisionModel\"")
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
