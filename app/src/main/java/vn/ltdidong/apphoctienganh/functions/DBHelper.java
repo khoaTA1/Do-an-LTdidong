@@ -132,7 +132,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 rp_value.put(READINGPASSAGE_COLUMN_ID, rp.getId());
                 rp_value.put(READINGPASSAGE_COLUMN_PASSAGE, rp.getPassage());
                 Log.d(">>> SQLite", "Id: " + rp.getId() + ", passage: " + rp.getPassage());
-                db.insert(READINGPASSAGE_TABLE_NAME, null, rp_value);
+                db.insertWithOnConflict(READINGPASSAGE_TABLE_NAME, null, rp_value, SQLiteDatabase.CONFLICT_IGNORE);
 
                 for (QuestionAnswer qa : rp.getQAList()) {
                     ContentValues qa_value = new ContentValues();
@@ -143,7 +143,7 @@ public class DBHelper extends SQLiteOpenHelper {
                     qa_value.put(QA_COLUMN_QUESTION, qa.getQuestionContent());
                     qa_value.put(QA_COLUMN_CORRECTANSWER, qa.getCorrectAnswer());
                     qa_value.put(QA_COLUMN_PREFID, rp.getId());
-                    db.insert(QA_TABLE_NAME, null, qa_value);
+                    db.insertWithOnConflict(QA_TABLE_NAME, null, qa_value, SQLiteDatabase.CONFLICT_IGNORE);
 
                     for (Map.Entry<Integer, String> entry : qa.getAnswers().entrySet()) {
                         ContentValues a_value = new ContentValues();
@@ -151,7 +151,7 @@ public class DBHelper extends SQLiteOpenHelper {
                         a_value.put(ANSWER_DETAIL, entry.getValue());
                         a_value.put(ANSWER_COLUMN_DEDICATEDID, entry.getKey());
                         a_value.put(ANSWER_COLUMN_QREFID, qa.getId());
-                        db.insert(ANSWER_TABLE_NAME, null, a_value);
+                        db.insertWithOnConflict(ANSWER_TABLE_NAME, null, a_value, SQLiteDatabase.CONFLICT_IGNORE);
                     }
                 }
             }
@@ -482,5 +482,20 @@ public class DBHelper extends SQLiteOpenHelper {
         }
 
         return list;
+    }
+
+    public Long getCountWord() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + HISTORY_SEARCH_TABLE_NAME, null);
+
+        long count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+
+        cursor.close();
+
+        return count;
     }
 }
