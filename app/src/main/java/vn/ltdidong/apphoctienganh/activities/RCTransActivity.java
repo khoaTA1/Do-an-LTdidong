@@ -12,6 +12,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 import vn.ltdidong.apphoctienganh.models.ReadingPassage;
 import vn.ltdidong.apphoctienganh.repositories.QuestionAnswerRepo;
@@ -37,7 +40,9 @@ public class RCTransActivity extends AppCompatActivity {
 
     private SharedPreferences sharedPreferences;
     private long totalRP = 0;
-    private String[] passedIdRP;
+    private FirebaseFirestore firestore;
+    private SharedPreferencesManager sharedPref;
+    private int lvl = 0;
 
     @Override
     protected void onCreate(Bundle savedins) {
@@ -46,6 +51,9 @@ public class RCTransActivity extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences("Reading_Skill_Param", MODE_PRIVATE);
         totalRP = sharedPreferences.getLong("totalPassedRP", 0);
+
+        firestore = FirebaseFirestore.getInstance();
+        sharedPref = SharedPreferencesManager.getInstance(this);
 
         // khởi tạo các repo và sqlite helper
         rprepo = new ReadingPassageRepo();
@@ -72,6 +80,8 @@ public class RCTransActivity extends AppCompatActivity {
         btnStart.setAlpha(0.3f);
         btnStart.setEnabled(false);
 
+        userLvlLoad();
+
         loadFromFirestore(cb -> {
             if (cb.toString().equals("ok")) {
                 // thanh load được ẩn đi
@@ -92,6 +102,31 @@ public class RCTransActivity extends AppCompatActivity {
 
     }
 
+    // load level người học theo email
+    private void userLvlLoad() {
+        String email = sharedPref.getUserEmail();
+        firestore.collection("users").whereEqualTo("email", email).get()
+                .addOnSuccessListener(snap -> {
+                    if (!snap.isEmpty()) {
+                        DocumentSnapshot doc = snap.getDocuments().get(0);
+                        Long temp = doc.getLong("current_level");
+                        if (temp != null) {
+                            int userLvl = temp.intValue();
+                            Log.d(">>> RC Trans Activity", "Level của người dùng: " + userLvl);
+
+                            if (userLvl >= 2) lvl = 1;
+                        } else {
+                            Log.e("!!! RC Trans Activity", "Trường level null -> level mặc định");
+                            lvl = 0;
+                        }
+                    } else {
+                        Log.e("!!! RC Trans Activity", "Không tìm thấy người dùng -> level mặc định");
+                        lvl = 0;
+                    }
+                });
+
+    }
+
     // hàm lấy dữ liệu từ firestore và lưu vào sqlite làm cache
     private void loadFromFirestore(FirestoreCallBack callback) {
         // kiểm tra xem cache RP đã dùng hết chưa
@@ -103,7 +138,7 @@ public class RCTransActivity extends AppCompatActivity {
             callback.returnResult("ok");
         } else {
             Log.d(">>> DEBUG", "Load từ Firestore");
-            rprepo.getRandomPassage(list -> {
+            rprepo.getRandomPassage(lvl , list -> {
                 if (list != null) {
                     int totalPassages = ((List<ReadingPassage>) list).size();
                     List<ReadingPassage> RPlist = (List<ReadingPassage>) list;
@@ -114,7 +149,7 @@ public class RCTransActivity extends AppCompatActivity {
                     for (ReadingPassage rp : RPlist) {
 
                         // lấy các câu hỏi thuộc đoạn văn này bằng passage id
-                        qarepo.getQuestionAnswerByPassageId(rp.getId(), qa_list -> {
+                        qarepo.getQuestionAnswerByPassageId(rp.getId(), lvl, qa_list -> {
                             if (qa_list != null) {
                                 List<QuestionAnswer> QAlist = (List<QuestionAnswer>) qa_list;
 

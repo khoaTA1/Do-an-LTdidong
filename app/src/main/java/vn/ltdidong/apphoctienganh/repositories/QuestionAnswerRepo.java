@@ -15,8 +15,11 @@ import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 
 public class QuestionAnswerRepo {
-    private static final String QUESTION_COLLECTION_NAME = "question";
-    private static final String ANSWER_COLLECTION_NAME = "answer";
+    private static final String QUESTION_A_COLLECTION_NAME = "question";
+    private static final String ANSWER_A_COLLECTION_NAME = "answer";
+
+    private static final String QUESTION_B_COLLECTION_NAME = "questionB";
+    private static final String ANSWER_B_COLLECTION_NAME = "answerB";
 
     private final FirebaseFirestore firestore;
     private int correctAnswer;
@@ -27,7 +30,10 @@ public class QuestionAnswerRepo {
         firestore = FirebaseFirestore.getInstance();
     }
 
-    public void getQuestionAnswerByPassageId(long pid, FirestoreCallBack callback) {
+    public void getQuestionAnswerByPassageId(long pid, int lvl, FirestoreCallBack callback) {
+        String QUESTION_COLLECTION_NAME = QUESTION_A_COLLECTION_NAME;
+        if (lvl == 1) QUESTION_COLLECTION_NAME = QUESTION_B_COLLECTION_NAME;
+
         firestore.collection(QUESTION_COLLECTION_NAME).whereEqualTo("passageId", pid)
                 .get().addOnSuccessListener(q_snapshots -> {
                     if (!q_snapshots.isEmpty()) {
@@ -47,7 +53,7 @@ public class QuestionAnswerRepo {
                             QA.setId(questionId);
 
                             // lấy các answer liên quan đến câu hỏi hiện tại
-                            getAnswerByQuestionId(questionId, result -> {
+                            getAnswerByQuestionId(questionId, lvl, result -> {
                                 if (result != null) {
                                     // set Map<> answer
                                     QA.setAnswers((Map<Integer, String>) result);
@@ -81,7 +87,10 @@ public class QuestionAnswerRepo {
                 });
     }
 
-    private void getAnswerByQuestionId(long questionId, FirestoreCallBack callback) {
+    private void getAnswerByQuestionId(long questionId, int lvl, FirestoreCallBack callback) {
+            String ANSWER_COLLECTION_NAME = ANSWER_A_COLLECTION_NAME;
+            if (lvl == 1) ANSWER_COLLECTION_NAME = ANSWER_B_COLLECTION_NAME;
+
             Log.d(">>> QuestionAnswer Repo ^2", "Tìm danh sách câu trả lời cho question id: " + questionId);
             firestore.collection(ANSWER_COLLECTION_NAME).whereEqualTo("questionId", questionId)
                     .get().addOnSuccessListener(a_snapshots -> {

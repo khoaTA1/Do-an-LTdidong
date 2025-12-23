@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import vn.ltdidong.apphoctienganh.adapters.ReadingQAAdapter;
 import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
 import vn.ltdidong.apphoctienganh.functions.LoadFromJSON;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.ClozeTestQA;
 import vn.ltdidong.apphoctienganh.models.QuestionAnswer;
 import vn.ltdidong.apphoctienganh.models.ReadingPassage;
@@ -53,8 +56,8 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
     private List<String> passedIdRP;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(@Nullable Bundle savedInstanceSt) {
+        super.onCreate(savedInstanceSt);
         EdgeToEdge.enable(this);
         setContentView(R.layout.reading_comprehension_mode);
 
@@ -106,6 +109,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
             finish();
         });
     }
+
     // load đoạn văn và câu hỏi
     private void mainLoad() {
         // clear nội dung đoạn văn
