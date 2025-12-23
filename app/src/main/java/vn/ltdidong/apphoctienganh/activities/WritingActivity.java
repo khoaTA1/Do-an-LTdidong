@@ -21,7 +21,9 @@ import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.api.AiService;
 import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.firebase.firestore.FirebaseFirestore;
 import io.noties.markwon.Markwon;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 
 public class WritingActivity extends AppCompatActivity {
 
@@ -128,6 +130,8 @@ public class WritingActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String result = response.body().getOutputText();
                     showResultBottomSheet(result);
+                    // Update XP when writing is graded
+                    updateUserXPForWriting(text.split("\\s+").length);
                 } else {
                     Toast.makeText(WritingActivity.this, "AI Error", Toast.LENGTH_SHORT).show();
                 }
@@ -180,5 +184,89 @@ public class WritingActivity extends AppCompatActivity {
         }
         String[] words = text.trim().split("\\s+");
         tvWordCount.setText(words.length + " words");
+    }
+    
+    /**
+     * Cập nhật kinh nghiệm (XP) cho user khi hoàn thành writing
+     */
+    private void updateUserXPForWriting(int wordCount) {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) return;
+        
+        // Tính XP dựa trên số từ viết được
+        // 5 XP cho mỗi 10 từ, tối thiểu 20 XP, tối đa 100 XP
+        int earnedXP = Math.max(20, Math.min(100, (wordCount / 10) * 5));
+        
+        // Bonus nếu viết trên 100 từ
+        if (wordCount >= 100) {
+            earnedXP += 30;
+        }
+        
+        final int finalXP = earnedXP;
+        
+        // Lấy thông tin user từ Firebase và cập nhật XP
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Lấy XP hiện tại
+                        Long currentTotalXP = documentSnapshot.getLong("total_xp");
+                        Long currentLevel = documentSnapshot.getLong("current_level");
+                        Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
+                        Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
+                        
+                        // Khởi tạo giá trị mặc định nếu null
+                        int newTotalXP = (currentTotalXP != null) ? currentTotalXP.intValue() : 0;
+                        int newLevel = (currentLevel != null) ? currentLevel.intValue() : 1;
+                        int newLevelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
+                        int newNextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
+                        
+                        // Cộng XP mới
+                        newTotalXP += finalXP;
+                        newLevelXP += finalXP;
+                        
+                        // Kiểm tra level up
+                        boolean leveledUp = false;
+                        while (newLevelXP >= newNextLevelXP) {
+                            leveledUp = true;
+                            newLevelXP -= newNextLevelXP;
+                            newLevel++;
+                            newNextLevelXP = 100 + (newLevel - 1) * 50;
+                        }
+                        
+                        // Cập nhật lên Firebase
+                        final int finalTotalXP = newTotalXP;
+                        final int finalLevel = newLevel;
+                        final int finalLevelXP = newLevelXP;
+                        final int finalNextLevelXP = newNextLevelXP;
+                        final boolean finalLeveledUp = leveledUp;
+                        
+                        java.util.Map<String, Object> updates = new java.util.HashMap<>();
+                        updates.put("total_xp", finalTotalXP);
+                        updates.put("current_level", finalLevel);
+                        updates.put("current_level_xp", finalLevelXP);
+                        updates.put("xp_to_next_level", finalNextLevelXP);
+                        
+                        FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(userId)
+                                .update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    String xpMessage = "+" + finalXP + " XP earned! (" + wordCount + " words)";
+                                    if (finalLeveledUp) {
+                                        xpMessage += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
+                                    }
+                                    Toast.makeText(WritingActivity.this, xpMessage, Toast.LENGTH_LONG).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    android.util.Log.e("WritingActivity", "Failed to update XP", e);
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    android.util.Log.e("WritingActivity", "Failed to get user data", e);
+                });
     }
 }
