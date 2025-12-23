@@ -1,10 +1,12 @@
 package vn.ltdidong.apphoctienganh.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,10 +29,13 @@ import vn.ltdidong.apphoctienganh.models.LeaderboardUser;
  */
 public class GlobalLeaderboardFragment extends Fragment {
     
+    private static final String TAG = "GlobalLeaderboard";
+    
     private RecyclerView recyclerView;
     private LeaderboardAdapter adapter;
     private List<LeaderboardUser> leaderboard;
     private ProgressBar progressBar;
+    private TextView tvEmptyState;
     
     private SocialManager socialManager;
     private String userId;
@@ -52,7 +57,10 @@ public class GlobalLeaderboardFragment extends Fragment {
     private void initViews(View view) {
         recyclerView = view.findViewById(R.id.recyclerViewLeaderboard);
         progressBar = view.findViewById(R.id.progressBar);
+        tvEmptyState = view.findViewById(R.id.tvEmptyState);
         leaderboard = new ArrayList<>();
+        
+        Log.d(TAG, "Views initialized");
     }
     
     private void setupManagers() {
@@ -67,36 +75,64 @@ public class GlobalLeaderboardFragment extends Fragment {
     }
     
     private void loadLeaderboard() {
+        Log.d(TAG, "Loading leaderboard for userId: " + userId);
         progressBar.setVisibility(View.VISIBLE);
+        recyclerView.setVisibility(View.GONE);
+        if (tvEmptyState != null) {
+            tvEmptyState.setVisibility(View.GONE);
+        }
         
-        socialManager.getGlobalLeaderboard(100, new SocialManager.LeaderboardCallback() {
+        // Lấy tất cả users từ Firebase (max 10000 - Firebase limit)
+        socialManager.getGlobalLeaderboard(10000, new SocialManager.LeaderboardCallback() {
             @Override
             public void onLeaderboard(List<LeaderboardUser> users) {
+                Log.d(TAG, "Received " + users.size() + " users from Firebase");
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         progressBar.setVisibility(View.GONE);
                         leaderboard.clear();
                         
-                        // Mark current user
-                        for (LeaderboardUser user : users) {
-                            if (user.getUserId().equals(userId)) {
-                                user.setCurrentUser(true);
+                        if (users.isEmpty()) {
+                            // Show empty state
+                            recyclerView.setVisibility(View.GONE);
+                            if (tvEmptyState != null) {
+                                tvEmptyState.setVisibility(View.VISIBLE);
+                                tvEmptyState.setText("No users in leaderboard yet.\nBe the first!");
                             }
-                            leaderboard.add(user);
+                            Log.d(TAG, "No users found in Firebase");
+                        } else {
+                            // Mark current user and show list
+                            for (LeaderboardUser user : users) {
+                                if (userId != null && user.getUserId().equals(userId)) {
+                                    user.setCurrentUser(true);
+                                }
+                                leaderboard.add(user);
+                            }
+                            
+                            recyclerView.setVisibility(View.VISIBLE);
+                            if (tvEmptyState != null) {
+                                tvEmptyState.setVisibility(View.GONE);
+                            }
+                            adapter.notifyDataSetChanged();
+                            Log.d(TAG, "Leaderboard updated with " + leaderboard.size() + " users");
                         }
-                        
-                        adapter.notifyDataSetChanged();
                     });
                 }
             }
             
             @Override
             public void onError(String error) {
+                Log.e(TAG, "Error loading leaderboard: " + error);
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         progressBar.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.GONE);
+                        if (tvEmptyState != null) {
+                            tvEmptyState.setVisibility(View.VISIBLE);
+                            tvEmptyState.setText("Failed to load leaderboard\n\n" + error);
+                        }
                         Toast.makeText(requireContext(), 
-                            "Failed to load leaderboard", Toast.LENGTH_SHORT).show();
+                            "Error: " + error, Toast.LENGTH_LONG).show();
                     });
                 }
             }

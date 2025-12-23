@@ -37,6 +37,7 @@ public class SocialHubActivity extends AppCompatActivity {
     private ImageButton btnBack, btnSearch, btnAddFriend;
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
+    private TextView tvRequestBadge;
     
     private SocialManager socialManager;
     private String userId;
@@ -78,10 +79,16 @@ public class SocialHubActivity extends AppCompatActivity {
                     tab.setText("👥 Friends");
                     break;
                 case 2:
+                    tab.setText("� Requests");
+                    break;
+                case 3:
                     tab.setText("🔔 Activity");
                     break;
             }
         }).attach();
+        
+        // Load request count for badge
+        loadRequestCount();
     }
     
     private void setupListeners() {
@@ -96,5 +103,33 @@ public class SocialHubActivity extends AppCompatActivity {
             Intent intent = new Intent(this, SearchFriendsActivity.class);
             startActivity(intent);
         });
+    }
+    
+    private void loadRequestCount() {
+        socialManager.getPendingRequestCount(userId, new SocialManager.RequestCountCallback() {
+            @Override
+            public void onCount(int count) {
+                runOnUiThread(() -> {
+                    if (count > 0) {
+                        // Show badge on Requests tab
+                        TabLayout.Tab requestTab = tabLayout.getTabAt(2);
+                        if (requestTab != null) {
+                            requestTab.setText("📬 Requests (" + count + ")");
+                        }
+                    }
+                });
+            }
+            
+            @Override
+            public void onError(String error) {
+                // Silent fail
+            }
+        });
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadRequestCount();
     }
 }

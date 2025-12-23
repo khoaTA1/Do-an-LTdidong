@@ -13,16 +13,13 @@ import java.util.Map;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import vn.ltdidong.apphoctienganh.api.GeminiApi;
+import vn.ltdidong.apphoctienganh.api.AiService;
 import vn.ltdidong.apphoctienganh.database.AITutorMessageDao;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.ChatConversationDao;
 import vn.ltdidong.apphoctienganh.models.AITutorMessage;
 import vn.ltdidong.apphoctienganh.models.ChatConversation;
-import vn.ltdidong.apphoctienganh.models.GeminiRequest;
-import vn.ltdidong.apphoctienganh.models.GeminiResponse;
+import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 import vn.ltdidong.apphoctienganh.models.SkillProgress;
 
 /**
@@ -36,13 +33,12 @@ import vn.ltdidong.apphoctienganh.models.SkillProgress;
 public class AITutorManager {
     
     private static final String TAG = "AITutorManager";
-    private static final String API_KEY = "AIzaSyDOJpBmNfXE6aWZGRrb8Dy9XlzED1_QQNY";
     
     private Context context;
     private AppDatabase database;
     private ChatConversationDao conversationDao;
     private AITutorMessageDao messageDao;
-    private GeminiApi geminiApi;
+    private AiService aiService;
     private FirebaseFirestore firestore;
     
     public AITutorManager(Context context) {
@@ -52,12 +48,8 @@ public class AITutorManager {
         this.messageDao = database.aiTutorMessageDao();
         this.firestore = FirebaseFirestore.getInstance();
         
-        // Initialize Gemini API
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://generativelanguage.googleapis.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        geminiApi = retrofit.create(GeminiApi.class);
+        // Initialize GROQ AI Service
+        this.aiService = AiService.getInstance();
     }
     
     /**
@@ -89,13 +81,13 @@ public class AITutorManager {
             // 3. Lấy context từ lịch sử chat và user progress
             String context = buildContextPrompt(conversationId, userId);
             
-            // 4. Gọi Gemini AI
+            // 4. Gọi GROQ AI
             String fullPrompt = context + "\n\nUser: " + userMessage + "\n\nAI Tutor:";
             
-            geminiApi.generateContent(API_KEY, new GeminiRequest(fullPrompt))
-                .enqueue(new Callback<GeminiResponse>() {
+            aiService.generateText(fullPrompt)
+                .enqueue(new Callback<GroqChatCompletionResponse>() {
                     @Override
-                    public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+                    public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             String aiResponse = response.body().getOutputText().trim();
                             
@@ -120,7 +112,7 @@ public class AITutorManager {
                     }
                     
                     @Override
-                    public void onFailure(Call<GeminiResponse> call, Throwable t) {
+                    public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                         Log.e(TAG, "AI call failed", t);
                         if (callback != null) {
                             callback.onError("Network error: " + t.getMessage());
@@ -215,10 +207,10 @@ public class AITutorManager {
             }
             
             // Call AI
-            geminiApi.generateContent(API_KEY, new GeminiRequest(prompt.toString()))
-                .enqueue(new Callback<GeminiResponse>() {
+            aiService.generateText(prompt.toString())
+                .enqueue(new Callback<GroqChatCompletionResponse>() {
                     @Override
-                    public void onResponse(Call<GeminiResponse> call, Response<GeminiResponse> response) {
+                    public void onResponse(Call<GroqChatCompletionResponse> call, Response<GroqChatCompletionResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             String suggestion = response.body().getOutputText().trim();
                             if (callback != null) {
@@ -232,7 +224,7 @@ public class AITutorManager {
                     }
                     
                     @Override
-                    public void onFailure(Call<GeminiResponse> call, Throwable t) {
+                    public void onFailure(Call<GroqChatCompletionResponse> call, Throwable t) {
                         if (callback != null) {
                             callback.onError(t.getMessage());
                         }

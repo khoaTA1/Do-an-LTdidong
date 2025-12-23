@@ -146,12 +146,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
         
-        // Learning Path button click
-        findViewById(R.id.cardLearningPath).setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, PersonalizedLearningPathActivity.class);
-            startActivity(intent);
-        });
-        
         // Social Hub button click
         findViewById(R.id.cardSocialHub).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SocialHubActivity.class);

@@ -37,25 +37,85 @@ public class SocialManager {
      * Tìm kiếm user theo email hoặc username
      */
     public void searchUsers(String query, SearchCallback callback) {
+        Log.d(TAG, "Searching users with query: " + query);
+        
+        // Search by email first
         firestore.collection("users")
-            .orderBy("username")
-            .startAt(query)
-            .endAt(query + "\uf8ff")
+            .whereEqualTo("email", query)
             .limit(20)
             .get()
-            .addOnSuccessListener(querySnapshot -> {
+            .addOnSuccessListener(emailSnapshot -> {
                 List<Map<String, Object>> users = new ArrayList<>();
-                for (QueryDocumentSnapshot doc : querySnapshot) {
-                    Map<String, Object> userData = doc.getData();
+                
+                // Add email matches
+                for (QueryDocumentSnapshot doc : emailSnapshot) {
+                    Map<String, Object> userData = new HashMap<>();
                     userData.put("userId", doc.getId());
+                    
+                    // Use fullname, fallback to username or email
+                    String displayName = doc.getString("fullname");
+                    if (displayName == null || displayName.isEmpty()) {
+                        displayName = doc.getString("username");
+                    }
+                    if (displayName == null || displayName.isEmpty()) {
+                        displayName = doc.getString("email");
+                    }
+                    userData.put("username", displayName);
+                    userData.put("email", doc.getString("email"));
+                    userData.put("fullname", doc.getString("fullname"));
+                    userData.put("level", doc.getLong("current_level"));
+                    userData.put("totalXP", doc.getLong("total_xp"));
                     users.add(userData);
                 }
-                if (callback != null) {
-                    callback.onUsersFound(users);
+                
+                // If no email match, try username/fullname search
+                if (users.isEmpty()) {
+                    firestore.collection("users")
+                        .orderBy("fullname")
+                        .startAt(query)
+                        .endAt(query + "\uf8ff")
+                        .limit(20)
+                        .get()
+                        .addOnSuccessListener(nameSnapshot -> {
+                            for (QueryDocumentSnapshot doc : nameSnapshot) {
+                                Map<String, Object> userData = new HashMap<>();
+                                userData.put("userId", doc.getId());
+                                
+                                String displayName = doc.getString("fullname");
+                                if (displayName == null || displayName.isEmpty()) {
+                                    displayName = doc.getString("username");
+                                }
+                                if (displayName == null || displayName.isEmpty()) {
+                                    displayName = doc.getString("email");
+                                }
+                                userData.put("username", displayName);
+                                userData.put("email", doc.getString("email"));
+                                userData.put("fullname", doc.getString("fullname"));
+                                userData.put("level", doc.getLong("current_level"));
+                                userData.put("totalXP", doc.getLong("total_xp"));
+                                users.add(userData);
+                            }
+                            
+                            Log.d(TAG, "Found " + users.size() + " users");
+                            if (callback != null) {
+                                callback.onUsersFound(users);
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Failed to search by name", e);
+                            if (callback != null) {
+                                callback.onError(e.getMessage());
+                            }
+                        });
+                } else {
+                    Log.d(TAG, "Found " + users.size() + " users by email");
+                    if (callback != null) {
+                        callback.onUsersFound(users);
+                    }
                 }
             })
             .addOnFailureListener(e -> {
-                Log.e(TAG, "Search failed", e);
+                Log.e(TAG, "Failed to search users", e);
                 if (callback != null) {
                     callback.onError(e.getMessage());
                 }
@@ -172,13 +232,23 @@ public class SocialManager {
                     if (doc.exists()) {
                         Friend friend = new Friend();
                         friend.setFriendId(friendId);
-                        friend.setFriendName(doc.getString("username"));
+                        
+                        // Try fullname first, fallback to username, then email
+                        String name = doc.getString("fullname");
+                        if (name == null || name.isEmpty()) {
+                            name = doc.getString("username");
+                        }
+                        if (name == null || name.isEmpty()) {
+                            name = doc.getString("email");
+                        }
+                        friend.setFriendName(name);
+                        
                         friend.setFriendEmail(doc.getString("email"));
                         friend.setFriendAvatarUrl(doc.getString("avatarUrl"));
-                        friend.setFriendLevel(doc.getLong("level") != null ? 
-                            doc.getLong("level").intValue() : 0);
-                        friend.setFriendTotalXP(doc.getLong("totalXP") != null ? 
-                            doc.getLong("totalXP") : 0);
+                        friend.setFriendLevel(doc.getLong("current_level") != null ? 
+                            doc.getLong("current_level").intValue() : 0);
+                        friend.setFriendTotalXP(doc.getLong("total_xp") != null ? 
+                            doc.getLong("total_xp") : 0);
                         friend.setStatus("ACCEPTED");
                         friends.add(friend);
                     }
@@ -197,27 +267,48 @@ public class SocialManager {
      * Lấy bảng xếp hạng toàn cầu
      */
     public void getGlobalLeaderboard(int limit, LeaderboardCallback callback) {
+        Log.d(TAG, "Fetching global leaderboard with limit: " + limit);
+        
         firestore.collection("users")
-            .orderBy("totalXP", Query.Direction.DESCENDING)
+            .orderBy("total_xp", Query.Direction.DESCENDING)
             .limit(limit)
             .get()
             .addOnSuccessListener(querySnapshot -> {
+                Log.d(TAG, "Query successful, found " + querySnapshot.size() + " documents");
                 List<LeaderboardUser> leaderboard = new ArrayList<>();
                 int rank = 1;
                 
                 for (QueryDocumentSnapshot doc : querySnapshot) {
                     LeaderboardUser user = new LeaderboardUser();
                     user.setUserId(doc.getId());
-                    user.setUsername(doc.getString("username"));
+                    
+                    // Try fullname first, fallback to username, then email
+                    String displayName = doc.getString("fullname");
+                    if (displayName == null || displayName.isEmpty()) {
+                        displayName = doc.getString("username");
+                    }
+                    if (displayName == null || displayName.isEmpty()) {
+                        displayName = doc.getString("email");
+                    }
+                    user.setUsername(displayName != null ? displayName : "Unknown");
+                    
                     user.setAvatarUrl(doc.getString("avatarUrl"));
-                    user.setLevel(doc.getLong("level") != null ? 
-                        doc.getLong("level").intValue() : 0);
-                    user.setTotalXP(doc.getLong("totalXP") != null ? 
-                        doc.getLong("totalXP") : 0);
+                    
+                    // Use current_level from Firebase
+                    user.setLevel(doc.getLong("current_level") != null ? 
+                        doc.getLong("current_level").intValue() : 0);
+                    
+                    // Use total_xp from Firebase
+                    user.setTotalXP(doc.getLong("total_xp") != null ? 
+                        doc.getLong("total_xp") : 0);
+                    
                     user.setRank(rank++);
                     leaderboard.add(user);
+                    
+                    Log.d(TAG, "User " + rank + ": " + user.getUsername() + " (XP: " + user.getTotalXP() + ")");
                 }
                 
+                Log.d(TAG, "Returning " + leaderboard.size() + " users in leaderboard");
                 if (callback != null) {
                     callback.onLeaderboard(leaderboard);
                 }
@@ -255,12 +346,22 @@ public class SocialManager {
                             if (doc.exists()) {
                                 LeaderboardUser user = new LeaderboardUser();
                                 user.setUserId(friend.getFriendId());
-                                user.setUsername(doc.getString("username"));
+                                
+                                // Try fullname first, fallback to username, then email
+                                String displayName = doc.getString("fullname");
+                                if (displayName == null || displayName.isEmpty()) {
+                                    displayName = doc.getString("username");
+                                }
+                                if (displayName == null || displayName.isEmpty()) {
+                                    displayName = doc.getString("email");
+                                }
+                                user.setUsername(displayName != null ? displayName : "Unknown");
+                                
                                 user.setAvatarUrl(doc.getString("avatarUrl"));
-                                user.setLevel(doc.getLong("level") != null ? 
-                                    doc.getLong("level").intValue() : 0);
-                                user.setTotalXP(doc.getLong("totalXP") != null ? 
-                                    doc.getLong("totalXP") : 0);
+                                user.setLevel(doc.getLong("current_level") != null ? 
+                                    doc.getLong("current_level").intValue() : 0);
+                                user.setTotalXP(doc.getLong("total_xp") != null ? 
+                                    doc.getLong("total_xp") : 0);
                                 user.setFriend(true);
                                 leaderboard.add(user);
                             }
@@ -296,6 +397,109 @@ public class SocialManager {
     /**
      * Xóa bạn
      */
+    /**
+     * Lấy danh sách friend requests đang pending
+     */
+    public void getPendingFriendRequests(String userId, FriendRequestsCallback callback) {
+        firestore.collection("friend_requests")
+            .whereEqualTo("toUserId", userId)
+            .whereEqualTo("status", "PENDING")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .get()
+            .addOnSuccessListener(querySnapshot -> {
+                List<Map<String, Object>> requests = new ArrayList<>();
+                
+                for (QueryDocumentSnapshot doc : querySnapshot) {
+                    Map<String, Object> requestData = new HashMap<>();
+                    requestData.put("requestId", doc.getId());
+                    requestData.put("fromUserId", doc.getString("fromUserId"));
+                    requestData.put("fromUserName", doc.getString("toUserName")); // Name of sender
+                    requestData.put("fromUserEmail", doc.getString("toUserEmail"));
+                    requestData.put("timestamp", doc.getLong("timestamp"));
+                    
+                    // Get sender's full info
+                    String fromUserId = doc.getString("fromUserId");
+                    firestore.collection("users")
+                        .document(fromUserId)
+                        .get()
+                        .addOnSuccessListener(userDoc -> {
+                            if (userDoc.exists()) {
+                                String displayName = userDoc.getString("fullname");
+                                if (displayName == null || displayName.isEmpty()) {
+                                    displayName = userDoc.getString("username");
+                                }
+                                if (displayName == null || displayName.isEmpty()) {
+                                    displayName = userDoc.getString("email");
+                                }
+                                requestData.put("fromUserName", displayName);
+                                requestData.put("level", userDoc.getLong("current_level"));
+                                requestData.put("totalXP", userDoc.getLong("total_xp"));
+                            }
+                            
+                            requests.add(requestData);
+                            
+                            // If all requests loaded, return
+                            if (requests.size() == querySnapshot.size()) {
+                                if (callback != null) {
+                                    callback.onRequestsLoaded(requests);
+                                }
+                            }
+                        });
+                }
+                
+                if (querySnapshot.isEmpty() && callback != null) {
+                    callback.onRequestsLoaded(new ArrayList<>());
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to get friend requests", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
+            });
+    }
+    
+    /**
+     * Reject friend request
+     */
+    public void rejectFriendRequest(String requestId, FriendCallback callback) {
+        firestore.collection("friend_requests")
+            .document(requestId)
+            .update("status", "REJECTED")
+            .addOnSuccessListener(aVoid -> {
+                if (callback != null) {
+                    callback.onSuccess("Request rejected");
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to reject request", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
+            });
+    }
+    
+    /**
+     * Get count of pending friend requests
+     */
+    public void getPendingRequestCount(String userId, RequestCountCallback callback) {
+        firestore.collection("friend_requests")
+            .whereEqualTo("toUserId", userId)
+            .whereEqualTo("status", "PENDING")
+            .get()
+            .addOnSuccessListener(querySnapshot -> {
+                if (callback != null) {
+                    callback.onCount(querySnapshot.size());
+                }
+            })
+            .addOnFailureListener(e -> {
+                Log.e(TAG, "Failed to get request count", e);
+                if (callback != null) {
+                    callback.onError(e.getMessage());
+                }
+            });
+    }
+    
     public void removeFriend(String userId, String friendId, FriendCallback callback) {
         firestore.collection("users")
             .document(userId)
@@ -340,6 +544,16 @@ public class SocialManager {
     
     public interface LeaderboardCallback {
         void onLeaderboard(List<LeaderboardUser> users);
+        void onError(String error);
+    }
+    
+    public interface FriendRequestsCallback {
+        void onRequestsLoaded(List<Map<String, Object>> requests);
+        void onError(String error);
+    }
+    
+    public interface RequestCountCallback {
+        void onCount(int count);
         void onError(String error);
     }
 }

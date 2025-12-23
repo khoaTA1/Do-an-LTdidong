@@ -33,6 +33,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.api.AiService;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 import vn.ltdidong.apphoctienganh.models.GroqChatCompletionResponse;
 
 public class SpeakingActivity extends AppCompatActivity {

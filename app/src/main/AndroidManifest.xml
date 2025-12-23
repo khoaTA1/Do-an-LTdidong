@@ -100,14 +100,6 @@
             android:theme="@style/Theme.DoAn_LT_DD"
             android:parentActivityName=".activities.MainActivity"/>
         
-        <!-- Personalized Learning Path Feature -->
-        <activity 
-            android:name=".activities.PersonalizedLearningPathActivity"
-            android:exported="false"
-            android:label="Learning Path"
-            android:theme="@style/Theme.DoAn_LT_DD"
-            android:parentActivityName=".activities.MainActivity"/>
-        
         <!-- Social Features -->
         <activity 
             android:name=".activities.SocialHubActivity"

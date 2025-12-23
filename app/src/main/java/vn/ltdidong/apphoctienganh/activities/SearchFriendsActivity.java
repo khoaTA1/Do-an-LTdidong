@@ -1,6 +1,7 @@
 package vn.ltdidong.apphoctienganh.activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -9,6 +10,8 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +27,10 @@ import vn.ltdidong.apphoctienganh.managers.SocialManager;
  */
 public class SearchFriendsActivity extends AppCompatActivity {
     
-    private ImageButton btnBack, btnSearch;
+    private static final String TAG = "SearchFriends";
+    
+    private ImageButton btnBack;
+    private MaterialButton btnSearch;
     private EditText etSearch;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -67,7 +73,16 @@ public class SearchFriendsActivity extends AppCompatActivity {
         
         adapter.setOnAddFriendClickListener(user -> {
             String friendId = (String) user.get("userId");
-            String friendName = (String) user.get("username");
+            
+            // Get name with fallback logic
+            String friendName = (String) user.get("fullname");
+            if (friendName == null || friendName.isEmpty()) {
+                friendName = (String) user.get("username");
+            }
+            if (friendName == null || friendName.isEmpty()) {
+                friendName = (String) user.get("email");
+            }
+            
             String friendEmail = (String) user.get("email");
             
             sendFriendRequest(friendId, friendName, friendEmail);
@@ -78,21 +93,38 @@ public class SearchFriendsActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         
         btnSearch.setOnClickListener(v -> performSearch());
+        
+        // Search when pressing Enter on keyboard
+        etSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                performSearch();
+                return true;
+            }
+            return false;
+        });
     }
     
     private void performSearch() {
         String query = etSearch.getText().toString().trim();
         
+        Log.d(TAG, "Performing search with query: " + query);
+        
         if (query.isEmpty()) {
-            Toast.makeText(this, "Enter username or email", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Enter name or email to search", Toast.LENGTH_SHORT).show();
             return;
         }
+        
+        // Hide keyboard
+        android.view.inputmethod.InputMethodManager imm = 
+            (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(etSearch.getWindowToken(), 0);
         
         progressBar.setVisibility(android.view.View.VISIBLE);
         
         socialManager.searchUsers(query, new SocialManager.SearchCallback() {
             @Override
             public void onUsersFound(List<Map<String, Object>> users) {
+                Log.d(TAG, "Found " + users.size() + " users");
                 runOnUiThread(() -> {
                     progressBar.setVisibility(android.view.View.GONE);
                     searchResults.clear();
@@ -108,13 +140,17 @@ public class SearchFriendsActivity extends AppCompatActivity {
                     
                     if (searchResults.isEmpty()) {
                         Toast.makeText(SearchFriendsActivity.this,
-                            "No users found", Toast.LENGTH_SHORT).show();
+                            "No users found matching \"" + query + "\"", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(SearchFriendsActivity.this,
+                            "Found " + searchResults.size() + " user(s)", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
             
             @Override
             public void onError(String error) {
+                Log.e(TAG, "Search error: " + error);
                 runOnUiThread(() -> {
                     progressBar.setVisibility(android.view.View.GONE);
                     Toast.makeText(SearchFriendsActivity.this,
