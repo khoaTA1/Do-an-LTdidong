@@ -28,8 +28,16 @@ import vn.ltdidong.apphoctienganh.base.BaseActivity;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.DailyChallengeDao;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
+import vn.ltdidong.apphoctienganh.managers.SkillManager;
 import vn.ltdidong.apphoctienganh.models.ChallengeItem;
 import vn.ltdidong.apphoctienganh.models.DailyChallenge;
+import vn.ltdidong.apphoctienganh.models.User;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.Map;
 
 /**
  * Activity hiển thị Daily Challenges
@@ -122,6 +130,31 @@ public class DailyChallengeActivity extends BaseActivity {
     }
 
     private void updateUI() {
+        // Fetch user data to adapt challenges
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                User user = null;
+                if (documentSnapshot.exists()) {
+                     user = documentSnapshot.toObject(User.class);
+                     // Manually parse maps if Gson fails or structure differs slightly
+                     if (user != null) {
+                         Map<String, Object> data = documentSnapshot.getData();
+                         if (data != null && data.containsKey("skill_scores")) {
+                             try {
+                                 Map<String, Double> scores = (Map<String, Double>) data.get("skill_scores");
+                                 user.setSkillScores(scores);
+                             } catch (Exception e) { e.printStackTrace(); }
+                         }
+                     }
+                }
+                updateUIWithUser(user);
+            })
+            .addOnFailureListener(e -> {
+                updateUIWithUser(null); // Fallback to default
+            });
+    }
+
+    private void updateUIWithUser(User user) {
         // Update progress
         todayChallenge.calculateProgress();
         todayChallenge.calculateXP();
@@ -131,29 +164,49 @@ public class DailyChallengeActivity extends BaseActivity {
         tvProgress.setText(todayChallenge.getCompletedChallenges() + "/" + todayChallenge.getTotalChallenges());
         tvXP.setText(todayChallenge.getXpEarned() + " XP");
 
+        // Determine Adaptive Logic
+        String weakSkill = SkillManager.SKILL_WRITING; // Default
+        String strongSkill = SkillManager.SKILL_READING; // Default
+        
+        if (user != null) {
+            weakSkill = SkillManager.getWeakestSkill(user);
+            strongSkill = SkillManager.getStrongestSkill(user);
+        }
+
         // Update challenge list
         challengeItems.clear();
+
+        // 1. Weak Skill Challenge (Priority: High, Level: Basic)
         challengeItems.add(new ChallengeItem(
-            "Complete Writing Exercise",
-            "Practice your writing skills",
-            10,
-            "writing",
-            todayChallenge.isWritingCompleted()
+            "Basic " + capitalize(weakSkill) + " Practice",
+            "Improve your " + weakSkill + " skills (Weakest Skill Focus)",
+            15, // Higher XP for weak skill
+            weakSkill,
+            isSkillCompleted(weakSkill)
         ));
+
+        // 2. Strong Skill Challenge (Priority: Normal, Level: Advanced)
         challengeItems.add(new ChallengeItem(
-            "Complete Listening Exercise",
-            "Practice your listening skills",
+            "Advanced " + capitalize(strongSkill) + " Challenge",
+            "Master your " + strongSkill + " skills (Strongest Skill Focus)",
             10,
-            "listening",
-            todayChallenge.isListeningCompleted()
+            strongSkill,
+            isSkillCompleted(strongSkill)
         ));
-        challengeItems.add(new ChallengeItem(
-            "Complete Speaking Exercise",
-            "Practice your speaking skills",
-            10,
-            "speaking",
-            todayChallenge.isSpeakingCompleted()
-        ));
+
+        // 3. Fill with other standard challenges
+        if (!weakSkill.equals("writing") && !strongSkill.equals("writing")) {
+             challengeItems.add(new ChallengeItem("Daily Writing", "Practice writing", 10, "writing", todayChallenge.isWritingCompleted()));
+        }
+        if (!weakSkill.equals("listening") && !strongSkill.equals("listening")) {
+             challengeItems.add(new ChallengeItem("Daily Listening", "Practice listening", 10, "listening", todayChallenge.isListeningCompleted()));
+        }
+        
+        // Ensure we have enough items (fallback)
+        if (challengeItems.size() < 3) {
+             challengeItems.add(new ChallengeItem("Daily Speaking", "Practice speaking", 10, "speaking", todayChallenge.isSpeakingCompleted()));
+        }
+
         challengeItems.add(new ChallengeItem(
             "Learn 5 New Words",
             todayChallenge.getNewWordsCount() + "/5 words learned",
@@ -185,6 +238,21 @@ public class DailyChallengeActivity extends BaseActivity {
         } else {
             cardReward.setVisibility(View.GONE);
         }
+    }
+
+    private boolean isSkillCompleted(String skill) {
+        switch (skill) {
+            case "writing": return todayChallenge.isWritingCompleted();
+            case "listening": return todayChallenge.isListeningCompleted();
+            case "speaking": return todayChallenge.isSpeakingCompleted();
+            case "reading": return false; // Assuming reading isn't in DailyChallenge model yet, default false
+            default: return false;
+        }
+    }
+
+    private String capitalize(String str) {
+        if (str == null || str.isEmpty()) return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
     private void onChallengeClick(ChallengeItem item) {
