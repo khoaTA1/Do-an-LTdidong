@@ -13,8 +13,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,22 +25,34 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.noties.markwon.Markwon;
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
 
 public class ReadingArticleActivity extends AppCompatActivity {
 
     private TextView tvContent;
-    private ProgressBar progressBar;
     private Markwon markwon;
     private Button btnReadMore;
+    private NestedScrollView nestedScrollView;
+
+    // XP Reward Variables
+    private long startTime;
+    private boolean hasScrolledToEnd = false;
+    private boolean isXpRewarded = false;
+    private static final long MIN_READING_TIME_MILLIS = 15 * 1000; // 1 minute
+    private static final int READING_XP_REWARD = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reading_article);
+
+        startTime = System.currentTimeMillis();
 
         ImageButton btnBack = findViewById(R.id.btnBack);
         ImageView imgArticle = findViewById(R.id.imgArticleDetail);
@@ -46,12 +60,13 @@ public class ReadingArticleActivity extends AppCompatActivity {
         tvContent = findViewById(R.id.tvArticleContentDetail);
         TextView tvAuthor = findViewById(R.id.tvAuthorDate);
         btnReadMore = findViewById(R.id.btnReadMore);
+        nestedScrollView = findViewById(R.id.nestedScrollView);
         
         markwon = Markwon.create(this);
 
         // Get data from Intent
         String title = getIntent().getStringExtra("title");
-        String content = getIntent().getStringExtra("content"); // This is the short preview
+        String content = getIntent().getStringExtra("content"); 
         String imageUrl = getIntent().getStringExtra("imageUrl");
         String description = getIntent().getStringExtra("description");
         String author = getIntent().getStringExtra("author");
@@ -63,7 +78,7 @@ public class ReadingArticleActivity extends AppCompatActivity {
         
         String metaInfo = "";
         if (author != null) metaInfo += "By " + author;
-        if (date != null) metaInfo += " • " + date.substring(0, 10); 
+        if (date != null && date.length() >= 10) metaInfo += " • " + date.substring(0, 10); 
         tvAuthor.setText(metaInfo);
 
         Glide.with(this)
@@ -80,18 +95,21 @@ public class ReadingArticleActivity extends AppCompatActivity {
             }
         });
 
-        // Hide button initially if we are attempting to fetch content
-        btnReadMore.setVisibility(View.GONE);
+        // Setup Scroll Listener for XP
+        nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if (v.getChildAt(0).getBottom() <= (v.getHeight() + v.getScrollY())) {
+                // Reached bottom
+                hasScrolledToEnd = true;
+                checkAndRewardXP();
+            }
+        });
 
         // Start fetching full content
         if (url != null && !url.isEmpty()) {
-            // Don't set "Loading..." text initially to avoid flicker/space if it loads fast
-            // Or use a dedicated ProgressBar instead of text in tvContent
             tvContent.setText(""); 
             new FetchContentTask().execute(url);
         } else {
-            // Fallback to description + short content
-             String fullContent = "";
+            String fullContent = "";
             if (description != null) fullContent += "**" + description + "**\n\n";
             if (content != null) {
                  String cleanContent = content.replaceAll("\\[\\+\\d+ chars\\]", "");
@@ -100,6 +118,70 @@ public class ReadingArticleActivity extends AppCompatActivity {
             markwon.setMarkdown(tvContent, fullContent);
             btnReadMore.setVisibility(View.VISIBLE); 
         }
+    }
+
+    private void checkAndRewardXP() {
+        if (isXpRewarded) return;
+
+        long currentTime = System.currentTimeMillis();
+        long duration = currentTime - startTime;
+
+        if (hasScrolledToEnd && duration >= MIN_READING_TIME_MILLIS) {
+            rewardXP();
+        }
+    }
+
+    private void rewardXP() {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) return;
+
+        isXpRewarded = true; // Mark as rewarded to prevent double reward
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Long currentTotalXP = documentSnapshot.getLong("total_xp");
+                        Long currentLevel = documentSnapshot.getLong("current_level");
+                        Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
+                        Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
+
+                        int newTotalXP = (currentTotalXP != null) ? currentTotalXP.intValue() : 0;
+                        int newLevel = (currentLevel != null) ? currentLevel.intValue() : 1;
+                        int newLevelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
+                        int newNextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
+
+                        newTotalXP += READING_XP_REWARD;
+                        newLevelXP += READING_XP_REWARD;
+
+                        boolean leveledUp = false;
+                        while (newLevelXP >= newNextLevelXP) {
+                            leveledUp = true;
+                            newLevelXP -= newNextLevelXP;
+                            newLevel++;
+                            newNextLevelXP = 100 + (newLevel - 1) * 50;
+                        }
+
+                        Map<String, Object> updates = new HashMap<>();
+                        updates.put("total_xp", newTotalXP);
+                        updates.put("current_level", newLevel);
+                        updates.put("current_level_xp", newLevelXP);
+                        updates.put("xp_to_next_level", newNextLevelXP);
+
+                        final int finalLevel = newLevel;
+                        final boolean finalLeveledUp = leveledUp;
+
+                        db.collection("users").document(userId)
+                                .update(updates)
+                                .addOnSuccessListener(aVoid -> {
+                                    String msg = "+" + READING_XP_REWARD + " XP for reading!";
+                                    if (finalLeveledUp) {
+                                        msg += "\n🎉 Level Up! You're now Level " + finalLevel + "!";
+                                    }
+                                    Toast.makeText(ReadingArticleActivity.this, msg, Toast.LENGTH_LONG).show();
+                                });
+                    }
+                });
     }
 
     private class FetchContentTask extends AsyncTask<String, Void, String> {
@@ -113,8 +195,8 @@ public class ReadingArticleActivity extends AppCompatActivity {
             "cookie policy",
             "privacy policy",
             "all rights reserved",
-            "by elizabeth redden", // Example of author line in body
-            "freshsplash" // Image credits
+            "by elizabeth redden", 
+            "freshsplash" 
         );
 
         @Override
@@ -146,15 +228,13 @@ public class ReadingArticleActivity extends AppCompatActivity {
                 }
 
             } catch (IOException e) {
-                e.printStackTrace();
                 return null;
             }
-            return fullText.toString().trim(); // Trim result to remove leading/trailing newlines
+            return fullText.toString().trim(); 
         }
 
         private boolean isValidContent(String text) {
             if (text == null || text.trim().isEmpty()) return false;
-            // Filter out very short lines that are likely captions or metadata
             if (text.length() < 20 && !text.endsWith(".")) return false; 
             
             String lowerText = text.toLowerCase();
@@ -173,7 +253,7 @@ public class ReadingArticleActivity extends AppCompatActivity {
                 btnReadMore.setVisibility(View.GONE);
             } else {
                 String currentText = tvContent.getText().toString();
-                if (currentText.isEmpty()) { // Only show error if nothing else is shown
+                if (currentText.isEmpty()) { 
                      tvContent.setText("Could not load full content automatically.\nPlease use the button below to read on the web.");
                 }
                 btnReadMore.setVisibility(View.VISIBLE);

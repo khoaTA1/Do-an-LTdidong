@@ -24,10 +24,14 @@ public class SkillManager {
     public static double calculateNewScore(double currentScore, double lessonScore) {
         double adjustment = 0.0;
 
-        if (lessonScore < 3.0) {
-            adjustment = -0.2;
+        if (lessonScore < 1.0) {
+            adjustment = -0.5;
+        } else if (lessonScore < 2.0) {
+            adjustment = -0.4;
+        } else if (lessonScore < 3.0) {
+            adjustment = -0.3;
         } else if (lessonScore < 4.0) {
-            adjustment = -0.15;
+            adjustment = -0.2;
         } else if (lessonScore < 5.0) {
             adjustment = -0.1;
         } else if (lessonScore < 6.0) {
