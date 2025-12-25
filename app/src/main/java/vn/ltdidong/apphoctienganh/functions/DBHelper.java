@@ -31,23 +31,42 @@ public class DBHelper extends SQLiteOpenHelper {
 
     // bảng cho chế độ trắc nghiệm trong kỹ năng đọc
     /// bảng reading pasage
-    private String READINGPASSAGE_TABLE_NAME = "readingpassage";
-    private String READINGPASSAGE_COLUMN_ID = "id";
-    private String READINGPASSAGE_COLUMN_PASSAGE = "passage";
+    private String READINGPASSAGE_A_TABLE_NAME = "readingpassage";
+    private String READINGPASSAGE_A_COLUMN_ID = "id";
+    private String READINGPASSAGE_A_COLUMN_PASSAGE = "passage";
 
     /// bảng question answer
-    private String QA_TABLE_NAME = "questionanswer";
-    private String QA_COLUMN_ID = "id";
-    private String QA_COLUMN_PREFID = "p_id";
-    private String QA_COLUMN_QUESTION = "pasage";
-    private String QA_COLUMN_CORRECTANSWER = "correctanswer";
+    private String QA_A_TABLE_NAME = "questionanswer";
+    private String QA_A_COLUMN_ID = "id";
+    private String QA_A_COLUMN_PREFID = "p_id";
+    private String QA_A_COLUMN_QUESTION = "pasage";
+    private String QA_A_COLUMN_CORRECTANSWER = "correctanswer";
 
     /// bảng answers
-    private String ANSWER_TABLE_NAME = "answers";
-    private String ANSWER_COLUMN_ID = "id";
-    private String ANSWER_COLUMN_QREFID = "q_id";
-    private String ANSWER_COLUMN_DEDICATEDID = "dedicated_id";
-    private String ANSWER_DETAIL = "detail";
+    private String ANSWER_A_TABLE_NAME = "answers";
+    private String ANSWER_A_COLUMN_ID = "id";
+    private String ANSWER_A_COLUMN_QREFID = "q_id";
+    private String ANSWER_A_COLUMN_DEDICATEDID = "dedicated_id";
+    private String ANSWER_A_DETAIL = "detail";
+
+    /// bảng reading pasage trình độ B1
+    private String READINGPASSAGE_B_TABLE_NAME = "readingpassageB";
+    private String READINGPASSAGE_B_COLUMN_ID = "id";
+    private String READINGPASSAGE_B_COLUMN_PASSAGE = "passage";
+
+    /// bảng question answer trình độ B1
+    private String QA_B_TABLE_NAME = "questionanswerB";
+    private String QA_B_COLUMN_ID = "id";
+    private String QA_B_COLUMN_PREFID = "p_id";
+    private String QA_B_COLUMN_QUESTION = "pasage";
+    private String QA_B_COLUMN_CORRECTANSWER = "correctanswer";
+
+    /// bảng answers trình độ B1
+    private String ANSWER_B_TABLE_NAME = "answersB";
+    private String ANSWER_B_COLUMN_ID = "id";
+    private String ANSWER_B_COLUMN_QREFID = "q_id";
+    private String ANSWER_B_COLUMN_DEDICATEDID = "dedicated_id";
+    private String ANSWER_B_DETAIL = "detail";
 
     // bảng cloze test QA
     private String CLOZETEST_QA_TABLE_NAME = "clozetest_qa";
@@ -64,29 +83,48 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String HISTORY_SEARCH_COLUM_SYNONYM = "synonym";
 
     public DBHelper(Context context) {
-        super(context, DATABASE_NAME, null, 5);
+        super(context, DATABASE_NAME, null, 6);
         this.context = context.getApplicationContext();
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createRPTable = "create table " + READINGPASSAGE_TABLE_NAME + " ("
-                + READINGPASSAGE_COLUMN_ID + " integer primary key, "
-                + READINGPASSAGE_COLUMN_PASSAGE + " text"
+        String createRPTable = "create table " + READINGPASSAGE_A_TABLE_NAME + " ("
+                + READINGPASSAGE_A_COLUMN_ID + " integer primary key, "
+                + READINGPASSAGE_A_COLUMN_PASSAGE + " text"
                 + ")";
 
-        String createQATable = "create table " + QA_TABLE_NAME + " ("
-                + QA_COLUMN_ID + " integer primary key, "
-                + QA_COLUMN_PREFID + " integer, "
-                + QA_COLUMN_QUESTION + " text, "
-                + QA_COLUMN_CORRECTANSWER + " integer"
+        String createQATable = "create table " + QA_A_TABLE_NAME + " ("
+                + QA_A_COLUMN_ID + " integer primary key, "
+                + QA_A_COLUMN_PREFID + " integer, "
+                + QA_A_COLUMN_QUESTION + " text, "
+                + QA_A_COLUMN_CORRECTANSWER + " integer"
                 + ")";
 
-        String createAnswerTable = "create table " + ANSWER_TABLE_NAME + " ("
-                + ANSWER_COLUMN_ID + " integer primary key, "
-                + ANSWER_COLUMN_DEDICATEDID + " integer, "
-                + ANSWER_COLUMN_QREFID + " integer, "
-                + ANSWER_DETAIL + " text"
+        String createAnswerTable = "create table " + ANSWER_A_TABLE_NAME + " ("
+                + ANSWER_A_COLUMN_ID + " integer primary key, "
+                + ANSWER_A_COLUMN_DEDICATEDID + " integer, "
+                + ANSWER_A_COLUMN_QREFID + " integer, "
+                + ANSWER_A_DETAIL + " text"
+                + ")";
+
+        String createRP_BTable = "create table " + READINGPASSAGE_B_TABLE_NAME + " ("
+                + READINGPASSAGE_B_COLUMN_ID + " integer primary key, "
+                + READINGPASSAGE_B_COLUMN_PASSAGE + " text"
+                + ")";
+
+        String createQA_BTable = "create table " + QA_B_TABLE_NAME + " ("
+                + QA_B_COLUMN_ID + " integer primary key, "
+                + QA_B_COLUMN_PREFID + " integer, "
+                + QA_B_COLUMN_QUESTION + " text, "
+                + QA_B_COLUMN_CORRECTANSWER + " integer"
+                + ")";
+
+        String createAnswer_BTable = "create table " + ANSWER_B_TABLE_NAME + " ("
+                + ANSWER_B_COLUMN_ID + " integer primary key, "
+                + ANSWER_B_COLUMN_DEDICATEDID + " integer, "
+                + ANSWER_B_COLUMN_QREFID + " integer, "
+                + ANSWER_B_DETAIL + " text"
                 + ")";
 
         String createCTQATable = "create table " + CLOZETEST_QA_TABLE_NAME + " ("
@@ -106,23 +144,57 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(createRPTable);
         db.execSQL(createQATable);
         db.execSQL(createAnswerTable);
+        db.execSQL(createRP_BTable);
+        db.execSQL(createQA_BTable);
+        db.execSQL(createAnswer_BTable);
         db.execSQL(createCTQATable);
         db.execSQL(createHSTable);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("drop table if exists " + READINGPASSAGE_TABLE_NAME);
-        db.execSQL("drop table if exists " + QA_TABLE_NAME);
-        db.execSQL("drop table if exists " + ANSWER_TABLE_NAME);
+        db.execSQL("drop table if exists " + READINGPASSAGE_A_TABLE_NAME);
+        db.execSQL("drop table if exists " + QA_A_TABLE_NAME);
+        db.execSQL("drop table if exists " + ANSWER_A_TABLE_NAME);
+        db.execSQL("drop table if exists " + READINGPASSAGE_B_TABLE_NAME);
+        db.execSQL("drop table if exists " + QA_B_TABLE_NAME);
+        db.execSQL("drop table if exists " + ANSWER_B_TABLE_NAME);
         db.execSQL("drop table if exists " + CLOZETEST_QA_TABLE_NAME);
         db.execSQL("drop table if exists " + HISTORY_SEARCH_TABLE_NAME);
         onCreate(db);
     }
 
     // một số phương thức giao tiếp với sqlite cho mode reading comprehension
-    public int insertRPList(List<ReadingPassage> RPList) {
+    public int insertRPList(List<ReadingPassage> RPList, int lvl) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        String READINGPASSAGE_COLUMN_ID = READINGPASSAGE_A_COLUMN_ID;
+        String READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_A_COLUMN_PASSAGE;
+        String READINGPASSAGE_TABLE_NAME = READINGPASSAGE_A_TABLE_NAME;
+        String QA_COLUMN_ID = QA_A_COLUMN_ID;
+        String QA_COLUMN_QUESTION = QA_A_COLUMN_QUESTION;
+        String QA_COLUMN_CORRECTANSWER = QA_A_COLUMN_CORRECTANSWER;
+        String QA_COLUMN_PREFID = QA_A_COLUMN_PREFID;
+        String QA_TABLE_NAME = QA_A_TABLE_NAME;
+        String ANSWER_DETAIL = ANSWER_A_DETAIL;
+        String ANSWER_COLUMN_DEDICATEDID = ANSWER_A_COLUMN_DEDICATEDID;
+        String ANSWER_COLUMN_QREFID = ANSWER_A_COLUMN_QREFID;
+        String ANSWER_TABLE_NAME = ANSWER_A_TABLE_NAME;
+
+        if (lvl == 1) {
+            READINGPASSAGE_COLUMN_ID = READINGPASSAGE_B_COLUMN_ID;
+            READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_B_COLUMN_PASSAGE;
+            READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
+            QA_COLUMN_ID = QA_B_COLUMN_ID;
+            QA_COLUMN_QUESTION = QA_B_COLUMN_QUESTION;
+            QA_COLUMN_CORRECTANSWER = QA_B_COLUMN_CORRECTANSWER;
+            QA_COLUMN_PREFID = QA_B_COLUMN_PREFID;
+            QA_TABLE_NAME = QA_B_TABLE_NAME;
+            ANSWER_DETAIL = ANSWER_B_DETAIL;
+            ANSWER_COLUMN_DEDICATEDID = ANSWER_B_COLUMN_DEDICATEDID;
+            ANSWER_COLUMN_QREFID = ANSWER_B_COLUMN_QREFID;
+            ANSWER_TABLE_NAME = ANSWER_B_TABLE_NAME;
+        }
 
         try {
             for (ReadingPassage rp : RPList) {
@@ -163,9 +235,37 @@ public class DBHelper extends SQLiteOpenHelper {
         return 1;
     }
 
-    public ReadingPassage getReadingPassageById(long passageId) {
+    public ReadingPassage getReadingPassageById(long passageId, int lvl) {
         SQLiteDatabase db = this.getReadableDatabase();
         ReadingPassage returnReadingPassage = new ReadingPassage();
+
+        String READINGPASSAGE_COLUMN_ID = READINGPASSAGE_A_COLUMN_ID;
+        String READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_A_COLUMN_PASSAGE;
+        String READINGPASSAGE_TABLE_NAME = READINGPASSAGE_A_TABLE_NAME;
+        String QA_COLUMN_ID = QA_A_COLUMN_ID;
+        String QA_COLUMN_QUESTION = QA_A_COLUMN_QUESTION;
+        String QA_COLUMN_CORRECTANSWER = QA_A_COLUMN_CORRECTANSWER;
+        String QA_COLUMN_PREFID = QA_A_COLUMN_PREFID;
+        String QA_TABLE_NAME = QA_A_TABLE_NAME;
+        String ANSWER_DETAIL = ANSWER_A_DETAIL;
+        String ANSWER_COLUMN_DEDICATEDID = ANSWER_A_COLUMN_DEDICATEDID;
+        String ANSWER_COLUMN_QREFID = ANSWER_A_COLUMN_QREFID;
+        String ANSWER_TABLE_NAME = ANSWER_A_TABLE_NAME;
+
+        if (lvl == 1) {
+            READINGPASSAGE_COLUMN_ID = READINGPASSAGE_B_COLUMN_ID;
+            READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_B_COLUMN_PASSAGE;
+            READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
+            QA_COLUMN_ID = QA_B_COLUMN_ID;
+            QA_COLUMN_QUESTION = QA_B_COLUMN_QUESTION;
+            QA_COLUMN_CORRECTANSWER = QA_B_COLUMN_CORRECTANSWER;
+            QA_COLUMN_PREFID = QA_B_COLUMN_PREFID;
+            QA_TABLE_NAME = QA_B_TABLE_NAME;
+            ANSWER_DETAIL = ANSWER_B_DETAIL;
+            ANSWER_COLUMN_DEDICATEDID = ANSWER_B_COLUMN_DEDICATEDID;
+            ANSWER_COLUMN_QREFID = ANSWER_B_COLUMN_QREFID;
+            ANSWER_TABLE_NAME = ANSWER_B_TABLE_NAME;
+        }
 
         // lấy nội dung đoạn văn trước tiên
         Cursor cursor = db.query(
@@ -239,8 +339,11 @@ public class DBHelper extends SQLiteOpenHelper {
         return returnReadingPassage;
     }
 
-    public long getCountPassage() {
+    public long getCountPassage(int lvl) {
         SQLiteDatabase db = this.getReadableDatabase();
+        String READINGPASSAGE_TABLE_NAME = READINGPASSAGE_A_TABLE_NAME;
+
+        if (lvl == 1) READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
 
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + READINGPASSAGE_TABLE_NAME, null);
 
@@ -255,10 +358,19 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     // hàm lấy danh sách id các đoạn văn trong trường hợp nó không liên tục
-    public List<Long> getAllPassageIds() {
+    public List<Long> getAllPassageIds(int lvl) {
         List<Long> ids = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = null;
+
+        String READINGPASSAGE_COLUMN_ID = READINGPASSAGE_A_COLUMN_ID;
+        String READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_A_COLUMN_PASSAGE;
+        String READINGPASSAGE_TABLE_NAME = READINGPASSAGE_A_TABLE_NAME;
+        if (lvl == 1) {
+            READINGPASSAGE_COLUMN_ID = READINGPASSAGE_B_COLUMN_ID;
+            READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_B_COLUMN_PASSAGE;
+            READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
+        }
 
         try {
             cursor = db.query(READINGPASSAGE_TABLE_NAME,
@@ -283,11 +395,15 @@ public class DBHelper extends SQLiteOpenHelper {
         return ids;
     }
 
+
     public void clearAllTables() {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DELETE FROM " + READINGPASSAGE_TABLE_NAME + ";");
-        db.execSQL("DELETE FROM " + QA_TABLE_NAME + ";");
-        db.execSQL("DELETE FROM " + ANSWER_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + READINGPASSAGE_A_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + QA_A_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + ANSWER_A_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + READINGPASSAGE_B_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + QA_B_TABLE_NAME + ";");
+        db.execSQL("DELETE FROM " + ANSWER_B_TABLE_NAME + ";");
         db.execSQL("DELETE FROM " + CLOZETEST_QA_TABLE_NAME + ";");
 
         // db.close(); // không nên đóng DB ở đây nếu gọi nhiều lần
