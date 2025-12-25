@@ -182,6 +182,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String ANSWER_TABLE_NAME = ANSWER_A_TABLE_NAME;
 
         if (lvl == 1) {
+            Log.d(">>> SQLite", "Các đoạn văn tải về thuộc trình độ B1 trở lên");
             READINGPASSAGE_COLUMN_ID = READINGPASSAGE_B_COLUMN_ID;
             READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_B_COLUMN_PASSAGE;
             READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
@@ -253,6 +254,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String ANSWER_TABLE_NAME = ANSWER_A_TABLE_NAME;
 
         if (lvl == 1) {
+            Log.d(">>> SQLite", "Các đoạn văn lấy ra thuộc trình độ B1 trở lên");
             READINGPASSAGE_COLUMN_ID = READINGPASSAGE_B_COLUMN_ID;
             READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_B_COLUMN_PASSAGE;
             READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
@@ -343,7 +345,10 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         String READINGPASSAGE_TABLE_NAME = READINGPASSAGE_A_TABLE_NAME;
 
-        if (lvl == 1) READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
+        if (lvl == 1) {
+            Log.d(">>> SQLite", "Các đoạn văn đếm được thuộc trình độ B1 trở lên");
+            READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;
+        }
 
         Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + READINGPASSAGE_TABLE_NAME, null);
 
@@ -367,6 +372,7 @@ public class DBHelper extends SQLiteOpenHelper {
         String READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_A_COLUMN_PASSAGE;
         String READINGPASSAGE_TABLE_NAME = READINGPASSAGE_A_TABLE_NAME;
         if (lvl == 1) {
+            Log.d(">>> SQLite", "Các đoạn văn lấy id thuộc trình độ B1 trở lên");
             READINGPASSAGE_COLUMN_ID = READINGPASSAGE_B_COLUMN_ID;
             READINGPASSAGE_COLUMN_PASSAGE = READINGPASSAGE_B_COLUMN_PASSAGE;
             READINGPASSAGE_TABLE_NAME = READINGPASSAGE_B_TABLE_NAME;

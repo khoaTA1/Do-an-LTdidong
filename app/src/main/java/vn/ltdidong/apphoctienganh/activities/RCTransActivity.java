@@ -80,30 +80,31 @@ public class RCTransActivity extends AppCompatActivity {
         btnStart.setAlpha(0.3f);
         btnStart.setEnabled(false);
 
-        userLvlLoad();
+        userLvlLoad(cb1 -> {
+            lvl = (int) cb1;
 
-        loadFromFirestore(cb -> {
-            if (cb.toString().equals("ok")) {
-                // thanh load được ẩn đi
-                progressBar.setVisibility(View.GONE);
-                textLoading.setVisibility(View.GONE);
+            loadFromFirestore(cb -> {
+                if (cb.toString().equals("ok")) {
+                    // thanh load được ẩn đi
+                    progressBar.setVisibility(View.GONE);
+                    textLoading.setVisibility(View.GONE);
 
-                // nút start quay lại bình thường sau khi đợi hàm load dữ liệu xong
-                btnStart.animate().alpha(1f).setDuration(300).start();
-                btnStart.setEnabled(true);
+                    // nút start quay lại bình thường sau khi đợi hàm load dữ liệu xong
+                    btnStart.animate().alpha(1f).setDuration(300).start();
+                    btnStart.setEnabled(true);
 
-                btnStart.setOnClickListener(v -> {
-                    Intent intent = new Intent(RCTransActivity.this, ReadingComprehensionActivity.class);
-                    startActivity(intent);
-                    finish();
-                });
-            }
+                    btnStart.setOnClickListener(v -> {
+                        Intent intent = new Intent(RCTransActivity.this, ReadingComprehensionActivity.class);
+                        startActivity(intent);
+                        finish();
+                    });
+                }
+            });
         });
-
     }
 
     // load level người học theo email
-    private void userLvlLoad() {
+    private void userLvlLoad(FirestoreCallBack cb) {
         String email = sharedPref.getUserEmail();
         firestore.collection("users").whereEqualTo("email", email).get()
                 .addOnSuccessListener(snap -> {
@@ -114,14 +115,14 @@ public class RCTransActivity extends AppCompatActivity {
                             int userLvl = temp.intValue();
                             Log.d(">>> RC Trans Activity", "Level của người dùng: " + userLvl);
 
-                            if (userLvl >= 2) lvl = 1;
+                            if (userLvl >= 2) cb.returnResult(1);
                         } else {
                             Log.e("!!! RC Trans Activity", "Trường level null -> level mặc định");
-                            lvl = 0;
+                            cb.returnResult(1);
                         }
                     } else {
                         Log.e("!!! RC Trans Activity", "Không tìm thấy người dùng -> level mặc định");
-                        lvl = 0;
+                        cb.returnResult(0);
                     }
                 });
 

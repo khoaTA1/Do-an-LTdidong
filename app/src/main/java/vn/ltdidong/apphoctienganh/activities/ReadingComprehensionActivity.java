@@ -59,6 +59,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
     private List<String> passedIdRP;
     private SharedPreferencesManager sharedPreferencesManager;
     private FirebaseFirestore firestore;
+    private int lvl = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceSt) {
@@ -70,7 +71,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
 
         sharedPreferences = getSharedPreferences("Reading_Skill_Param", MODE_PRIVATE);
         totalRP = sharedPreferences.getLong("totalPassedRP", 0);
-        String temp = sharedPreferences.getString("passedIdRP", "0");
+        String temp = sharedPreferences.getString("passedIdRP", "");
 
         sharedPreferencesManager = SharedPreferencesManager.getInstance(this);
         firestore = FirebaseFirestore.getInstance();
@@ -97,34 +98,62 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
             finish();
         });
 
-        setupRecyclerView();
+        userLvlLoad(cb -> {
+            lvl = (int) cb;
 
-        mainLoad();
-
-        btnNext.setOnClickListener(v -> {
-            scoring(currentRPObj);
+            setupRecyclerView();
 
             mainLoad();
+
+            btnNext.setOnClickListener(v -> {
+                scoring(currentRPObj);
+
+                mainLoad();
+            });
+
+            // tắt nút submit cho đến khi lướt qua hết tất cả các câu hỏi
+            btnSubmit.setAlpha(0.3f);
+            btnSubmit.setEnabled(false);
+
+            btnSubmit.setOnClickListener(v -> {
+                scoring(currentRPObj);
+
+                Intent intent = new Intent(ReadingComprehensionActivity.this, ReadingSkillResultActivity.class);
+                intent.putExtra("score", score);
+                intent.putExtra("total", totalScore);
+
+                // cập nhật thống kê cho user
+                float calculatedScore = totalScore > 0 ? (float) score /totalScore * 10 : 5f;
+                updateUserStatistics(calculatedScore);
+
+                startActivity(intent);
+                finish();
+            });
         });
+    }
 
-        // tắt nút submit cho đến khi lướt qua hết tất cả các câu hỏi
-        btnSubmit.setAlpha(0.3f);
-        btnSubmit.setEnabled(false);
+    private void userLvlLoad(FirestoreCallBack cb) {
+        String email = sharedPreferencesManager.getUserEmail();
+        firestore.collection("users").whereEqualTo("email", email).get()
+                .addOnSuccessListener(snap -> {
+                    if (!snap.isEmpty()) {
+                        DocumentSnapshot doc = snap.getDocuments().get(0);
+                        Long temp = doc.getLong("current_level");
+                        if (temp != null) {
+                            int userLvl = temp.intValue();
+                            Log.d(">>> RC Trans Activity", "Level của người dùng: " + userLvl);
 
-        btnSubmit.setOnClickListener(v -> {
-            scoring(currentRPObj);
+                            if (userLvl >= 2) cb.returnResult(1);
+                        } else {
+                            Log.e("!!! RC Trans Activity", "Trường level null -> level mặc định");
+                            cb.returnResult(0);
+                        }
+                    } else {
+                        Log.e("!!! RC Trans Activity", "Không tìm thấy người dùng -> level mặc định");
+                        cb.returnResult(0);
+                    }
+                });
 
-            Intent intent = new Intent(ReadingComprehensionActivity.this, ReadingSkillResultActivity.class);
-            intent.putExtra("score", score);
-            intent.putExtra("total", totalScore);
-
-            // cập nhật thống kê cho user
-            float calculatedScore = totalScore > 0 ? (float) score /totalScore * 10 : 5f;
-            updateUserStatistics(calculatedScore);
-
-            startActivity(intent);
-            finish();
-        });
     }
 
     // thay đổi điểm đánh giá chung dựa trên kết quả của người dùng
@@ -211,15 +240,24 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         if (sqlite == null) sqlite = new DBHelper(this);
 
         // random bằng danh sách id có thể không liên tục
-        List<Long> ids = sqlite.getAllPassageIds();
+        List<Long> ids = sqlite.getAllPassageIds(lvl);
         Log.d(">>> RC Activity", "Số lượng passage hiện tại: " + ids.size());
 
         Log.d(">>> RC Activity", "Passed Id RP: " + passedIdRP);
-        long randomId = 0;
-        do {
-            randomId = ids.get(new Random().nextInt(ids.size()));
-            Log.d(">>> RC Activity", "random id: " + randomId);
-        } while (passedIdRP.contains(String.valueOf(randomId)));
+
+        List<Long> available = new ArrayList<>();
+        for (Long id : ids) {
+            if (!passedIdRP.contains(String.valueOf(id))) {
+                available.add(id);
+            }
+        }
+
+        if (available.isEmpty()) {
+            passedIdRP.clear();
+            available.addAll(ids);
+        }
+
+        long randomId = available.get(new Random().nextInt(available.size()));
 
         Log.d(">>> RC Activity", "id được sinh nghẫu nhiên: " + randomId);
         passedIdRP.add(String.valueOf(randomId));
@@ -228,7 +266,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         totalRP++;
         sharedPreferences.edit().putLong("totalPassedRP", totalRP).apply();
 
-        ReadingPassage randomPassage = sqlite.getReadingPassageById(randomId);
+        ReadingPassage randomPassage = sqlite.getReadingPassageById(randomId, lvl);
         Log.d(">>> RC Activity", "Đã tìm được đoạn văn ngẫu nhiên: " + randomPassage.getPassage());
 
         return randomPassage;
