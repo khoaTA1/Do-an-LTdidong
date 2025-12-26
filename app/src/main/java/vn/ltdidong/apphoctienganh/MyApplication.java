@@ -1,6 +1,7 @@
 package vn.ltdidong.apphoctienganh;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.work.Constraints;
@@ -9,20 +10,46 @@ import androidx.work.NetworkType;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import com.google.firebase.FirebaseApp;
+
 import java.util.concurrent.TimeUnit;
 
+import vn.ltdidong.apphoctienganh.functions.DBHelper;
 import vn.ltdidong.apphoctienganh.workers.DailyAnalysisWorker;
 
 public class MyApplication extends Application {
     
     private static final String TAG = "MyApplication";
+    private SharedPreferences sharedPreferences;
+    private long totalRP = 0;
+    private String[] passedIdRP;
     
     @Override
     public void onCreate() {
         super.onCreate();
         
         Log.d(TAG, "Application started");
-        
+
+        try {
+            FirebaseApp.initializeApp(this);
+            Log.d("App", "Firebase initialized successfully");
+        } catch (Exception e) {
+            Log.e("App", "Failed to initialize Firebase: " + e.getMessage());
+        }
+
+        // Xóa cache SQLite khi app khởi động
+        try {
+            DBHelper sqlite = new DBHelper(this);
+            sqlite.clearAllTables();
+            Log.d("App", "SQLite cache cleared on app start");
+        } catch (Exception e) {
+            Log.e("App", "Failed to clear SQLite cache", e);
+        }
+
+        sharedPreferences = getSharedPreferences("Reading_Skill_Param", MODE_PRIVATE);
+        sharedPreferences.edit().putString("passedIdRP", "");
+        sharedPreferences.edit().putLong("totalPassedRP", 0);
+
         // Schedule daily background work
         scheduleDailyWork();
     }

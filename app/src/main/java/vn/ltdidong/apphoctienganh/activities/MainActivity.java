@@ -51,14 +51,25 @@ import vn.ltdidong.apphoctienganh.models.NewsResponse;
 import vn.ltdidong.apphoctienganh.models.Word;
 import vn.ltdidong.apphoctienganh.models.WordEntry;
 
+import vn.ltdidong.apphoctienganh.managers.SkillManager;
+
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+
+    // UI Components for Skills
+    private TextView tvReadingLevel, tvWritingLevel, tvListeningLevel, tvSpeakingLevel;
+    private TextView tvWelcome, tvSubtitle;
+
+    // ... existing variables ...
     private EditText searchEditText;
     private DictionaryApi dictionaryApi;
     private NewsApi newsApi;
-
-    private RecyclerView newsRecyclerView;
+    
+    private RecyclerView newsRecyclerView; // Added this back
+    // ... existing variables ...
     private ArticleAdapter newsAdapter;
     private List<Article> newsList;
 
@@ -108,6 +119,16 @@ public class MainActivity extends AppCompatActivity {
         tvStreakCount = findViewById(R.id.tvStreakCount);
         tvLongestStreak = findViewById(R.id.tvLongestStreak);
 
+        // Initialize Skill TextViews
+        tvReadingLevel = findViewById(R.id.tvReadingLevel);
+        tvWritingLevel = findViewById(R.id.tvWritingLevel);
+        tvListeningLevel = findViewById(R.id.tvListeningLevel);
+        tvSpeakingLevel = findViewById(R.id.tvSpeakingLevel);
+
+        // Initialize Welcome Texts
+        tvWelcome = findViewById(R.id.homeTitle);
+        tvSubtitle = findViewById(R.id.tvSubtitle);
+
         newWordSuggestion = findViewById(R.id.newWord);
 
         // Setup News RecyclerView
@@ -118,10 +139,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Load News
         loadEnglishNews();
-        
+
         // Load user progress
         loadUserProgress();
-        
+        loadUserSkillScores();
+        updateWelcomeMessage();
+
         // Practice Now button click
         findViewById(R.id.btnPracticeNow).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
@@ -133,19 +156,19 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, DailyChallengeActivity.class);
             startActivity(intent);
         });
-        
+
         // Dashboard button click
         findViewById(R.id.btnDashboard).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, LearningDashboardActivity.class);
             startActivity(intent);
         });
-        
+
         // AI Tutor button click
         findViewById(R.id.cardAITutor).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AITutorActivity.class);
             startActivity(intent);
         });
-        
+
         // Social Hub button click
         findViewById(R.id.cardSocialHub).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SocialHubActivity.class);
@@ -176,21 +199,23 @@ public class MainActivity extends AppCompatActivity {
         });
 
         getRandomSuggestion(word -> {
-            if (word != null) newWordSuggestion.setText((String) word);
+            if (word != null)
+                newWordSuggestion.setText((String) word);
         });
 
         // xử lí khi người duùng bấm vào từ vựng gợi ý
         newWordSuggestion.setOnClickListener(v -> {
             String word = newWordSuggestion.getText().toString();
 
-            if (!word.isBlank()) lookupWord(word);
+            if (!word.isBlank())
+                lookupWord(word);
         });
 
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
             if (id == R.id.nav_home) {
-                return  true;
+                return true;
             } else if (id == R.id.nav_skills) {
                 Intent intent = new Intent(MainActivity.this, SkillHomeActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -225,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
         }
         // Refresh user progress khi quay lại activity
         loadUserProgress();
+        loadUserSkillScores();
+        updateWelcomeMessage();
     }
 
     /**
@@ -241,16 +268,16 @@ public class MainActivity extends AppCompatActivity {
 
         AppDatabase db = AppDatabase.getDatabase(this);
         UserStreakDao streakDao = db.userStreakDao();
-        
+
         // Load streak
         streakDao.getStreakByUser(userId).observe(this, streak -> {
             if (streak != null) {
                 int currentStreak = streak.getCurrentStreak();
                 int longestStreak = streak.getLongestStreak();
-                
+
                 String streakText = currentStreak + (currentStreak == 1 ? " day streak" : " days streak");
                 String longestText = "Longest: " + longestStreak + (longestStreak == 1 ? " day" : " days");
-                
+
                 tvStreakCount.setText(streakText);
                 tvLongestStreak.setText(longestText);
             } else {
@@ -260,11 +287,89 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void updateWelcomeMessage() {
+        String username = SharedPreferencesManager.getInstance(this).getUsername();
+        if (username != null && !username.isEmpty()) {
+            // Capitalize first letter
+            String displayName = username.substring(0, 1).toUpperCase() + username.substring(1);
+            tvWelcome.setText("Hello, " + displayName + "!");
+        } else {
+            tvWelcome.setText("Hello, Learner!");
+        }
+
+        // Dynamic subtitle based on time of day
+        java.util.Calendar c = java.util.Calendar.getInstance();
+        int timeOfDay = c.get(java.util.Calendar.HOUR_OF_DAY);
+
+        if (timeOfDay >= 0 && timeOfDay < 12) {
+            tvSubtitle.setText("Good morning! Ready to start?");
+        } else if (timeOfDay >= 12 && timeOfDay < 16) {
+            tvSubtitle.setText("Good afternoon! Keep up the work!");
+        } else if (timeOfDay >= 16 && timeOfDay < 21) {
+            tvSubtitle.setText("Good evening! Time for a quick review?");
+        } else if (timeOfDay >= 21 && timeOfDay < 24) {
+            tvSubtitle.setText("Good night! Maybe one last lesson?");
+        }
+    }
+
+    private void loadUserSkillScores() {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null)
+            return;
+
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Map<String, Object> data = documentSnapshot.getData();
+                        if (data != null && data.containsKey("skill_scores")) {
+                            try {
+                                Map<String, Double> scores = (Map<String, Double>) data.get("skill_scores");
+                                updateSkillUI(scores);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing skill scores", e);
+                            }
+                        } else {
+                            // Default if no scores yet
+                            tvReadingLevel.setText("Level 1 (5.0)");
+                            tvWritingLevel.setText("Level 1 (5.0)");
+                            tvListeningLevel.setText("Level 1 (5.0)");
+                            tvSpeakingLevel.setText("Level 1 (5.0)");
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to load skill scores", e));
+    }
+
+    private void updateSkillUI(Map<String, Double> scores) {
+        if (scores == null)
+            return;
+
+        updateSingleSkill(tvReadingLevel, scores.get(SkillManager.SKILL_READING));
+        updateSingleSkill(tvWritingLevel, scores.get(SkillManager.SKILL_WRITING));
+        updateSingleSkill(tvListeningLevel, scores.get(SkillManager.SKILL_LISTENING));
+        updateSingleSkill(tvSpeakingLevel, scores.get(SkillManager.SKILL_SPEAKING));
+    }
+
+    private void updateSingleSkill(TextView tv, Double score) {
+        if (tv == null)
+            return;
+        double val = (score != null) ? score : 5.0;
+
+        String level = "Level 1"; // Beginner
+        if (val >= 7.0)
+            level = "Level 3"; // Advanced
+        else if (val >= 4.0)
+            level = "Level 2"; // Intermediate
+
+        tv.setText(String.format("%s (%.1f)", level, val));
+    }
+
     private void loadEnglishNews() {
         Log.d(">>> Main Activity", "Bắt đầu load tin tức");
         // Replace with your actual API Key from NewsAPI.org
-        String apiKey = "ce2c44c423d24ce7adf1b1990dc7ea20"; 
-        // Changed query to target IELTS / English Learning news, sorted by published date
+        String apiKey = "ce2c44c423d24ce7adf1b1990dc7ea20";
+        // Changed query to target IELTS / English Learning news, sorted by published
+        // date
         newsApi.getEnglishNews("Learn English", "en", "publishedAt", 4, apiKey).enqueue(new Callback<NewsResponse>() {
             @Override
             public void onResponse(Call<NewsResponse> call, Response<NewsResponse> response) {
@@ -300,7 +405,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "onResponse: Word found: " + result.getWord());
                     showResultDialog(result);
                 } else {
-                    Log.d(TAG, "onResponse: Word not found or empty response for: " + word + ", Code: " + response.code());
+                    Log.d(TAG,
+                            "onResponse: Word not found or empty response for: " + word + ", Code: " + response.code());
                     Toast.makeText(MainActivity.this, "Không tìm thấy từ: " + word, Toast.LENGTH_LONG).show();
                 }
             }

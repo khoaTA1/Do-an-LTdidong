@@ -85,7 +85,18 @@ public class SearchFriendsActivity extends AppCompatActivity {
             
             String friendEmail = (String) user.get("email");
             
-            sendFriendRequest(friendId, friendName, friendEmail);
+            // Create final variables for lambda
+            String finalFriendName = friendName;
+            
+            // Show confirmation dialog before sending request
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Add Friend")
+                .setMessage("Send friend request to " + finalFriendName + "?")
+                .setPositiveButton("Send", (dialog, which) -> {
+                    sendFriendRequest(friendId, finalFriendName, friendEmail);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
         });
     }
     

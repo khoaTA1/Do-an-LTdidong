@@ -25,7 +25,7 @@ public class User {
     private String avatarUrl;
 
     @SerializedName("created_at")
-    private String createdAt;
+    private long createdAt;
 
     @SerializedName("role")
     private String role; // "user" hoặc "admin"
@@ -45,9 +45,23 @@ public class User {
     @SerializedName("current_level_xp")
     private int currentLevelXP = 0; // XP hiện tại trong level này
 
+    @SerializedName("skill_scores")
+    private java.util.Map<String, Double> skillScores; // Điểm đánh giá kỹ năng: writing, reading, listening, speaking
+
+    @SerializedName("last_practice_time")
+    private java.util.Map<String, Long> lastPracticeTime; // Thời gian luyện tập gần nhất của từng kỹ năng
+
     // Constructors
     public User() {
         this.role = "user"; // Mặc định là user
+        this.skillScores = new java.util.HashMap<>();
+        this.lastPracticeTime = new java.util.HashMap<>();
+
+        // Initialize default scores
+        this.skillScores.put("writing", 5.0);
+        this.skillScores.put("reading", 5.0);
+        this.skillScores.put("listening", 5.0);
+        this.skillScores.put("speaking", 5.0);
     }
 
     public User(String email, String password, String fullName, String phone) {
@@ -113,11 +127,11 @@ public class User {
         this.address = address;
     }
 
-    public String getCreatedAt() {
+    public long getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(long createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -169,38 +183,67 @@ public class User {
         this.currentLevelXP = currentLevelXP;
     }
 
+    public java.util.Map<String, Double> getSkillScores() {
+        if (skillScores == null) {
+            skillScores = new java.util.HashMap<>();
+            skillScores.put("writing", 5.0);
+            skillScores.put("reading", 5.0);
+            skillScores.put("listening", 5.0);
+            skillScores.put("speaking", 5.0);
+        }
+        return skillScores;
+    }
+
+    public void setSkillScores(java.util.Map<String, Double> skillScores) {
+        this.skillScores = skillScores;
+    }
+
+    public java.util.Map<String, Long> getLastPracticeTime() {
+        if (lastPracticeTime == null) {
+            lastPracticeTime = new java.util.HashMap<>();
+        }
+        return lastPracticeTime;
+    }
+
+    public void setLastPracticeTime(java.util.Map<String, Long> lastPracticeTime) {
+        this.lastPracticeTime = lastPracticeTime;
+    }
+
     /**
      * Thêm XP vào tài khoản user
+     * 
      * @param xp Số XP cần thêm
      * @return true nếu level up, false nếu không
      */
     public boolean addXP(int xp) {
         this.totalXP += xp;
         this.currentLevelXP += xp;
-        
+
         // Kiểm tra level up
         boolean leveledUp = false;
         while (this.currentLevelXP >= this.xpToNextLevel) {
             leveledUp = true;
             this.currentLevelXP -= this.xpToNextLevel;
             this.currentLevel++;
-            
+
             // Tính XP cần cho level tiếp theo (tăng 50 XP mỗi level)
             // Level 1->2: 100 XP
             // Level 2->3: 150 XP
             // Level 3->4: 200 XP
             this.xpToNextLevel = 100 + (this.currentLevel - 1) * 50;
         }
-        
+
         return leveledUp;
     }
 
     /**
      * Tính phần trăm progress trong level hiện tại
+     * 
      * @return Giá trị từ 0-100
      */
     public int getLevelProgress() {
-        if (xpToNextLevel <= 0) return 0;
-        return (int)((currentLevelXP * 100.0f) / xpToNextLevel);
+        if (xpToNextLevel <= 0)
+            return 0;
+        return (int) ((currentLevelXP * 100.0f) / xpToNextLevel);
     }
 }
