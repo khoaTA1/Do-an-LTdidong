@@ -80,30 +80,31 @@ public class RCTransActivity extends AppCompatActivity {
         btnStart.setAlpha(0.3f);
         btnStart.setEnabled(false);
 
-        userLvlLoad();
+        userLvlLoad(cb1 -> {
+            lvl = (int) cb1;
 
-        loadFromFirestore(cb -> {
-            if (cb.toString().equals("ok")) {
-                // thanh load được ẩn đi
-                progressBar.setVisibility(View.GONE);
-                textLoading.setVisibility(View.GONE);
+            loadFromFirestore(cb -> {
+                if (cb.toString().equals("ok")) {
+                    // thanh load được ẩn đi
+                    progressBar.setVisibility(View.GONE);
+                    textLoading.setVisibility(View.GONE);
 
-                // nút start quay lại bình thường sau khi đợi hàm load dữ liệu xong
-                btnStart.animate().alpha(1f).setDuration(300).start();
-                btnStart.setEnabled(true);
+                    // nút start quay lại bình thường sau khi đợi hàm load dữ liệu xong
+                    btnStart.animate().alpha(1f).setDuration(300).start();
+                    btnStart.setEnabled(true);
 
-                btnStart.setOnClickListener(v -> {
-                    Intent intent = new Intent(RCTransActivity.this, ReadingComprehensionActivity.class);
-                    startActivity(intent);
-                    finish();
-                });
-            }
+                    btnStart.setOnClickListener(v -> {
+                        Intent intent = new Intent(RCTransActivity.this, ReadingComprehensionActivity.class);
+                        startActivity(intent);
+                        finish();
+                    });
+                }
+            });
         });
-
     }
 
     // load level người học theo email
-    private void userLvlLoad() {
+    private void userLvlLoad(FirestoreCallBack cb) {
         String email = sharedPref.getUserEmail();
         firestore.collection("users").whereEqualTo("email", email).get()
                 .addOnSuccessListener(snap -> {
@@ -114,14 +115,14 @@ public class RCTransActivity extends AppCompatActivity {
                             int userLvl = temp.intValue();
                             Log.d(">>> RC Trans Activity", "Level của người dùng: " + userLvl);
 
-                            if (userLvl >= 2) lvl = 1;
+                            if (userLvl >= 2) cb.returnResult(1);
                         } else {
                             Log.e("!!! RC Trans Activity", "Trường level null -> level mặc định");
-                            lvl = 0;
+                            cb.returnResult(1);
                         }
                     } else {
                         Log.e("!!! RC Trans Activity", "Không tìm thấy người dùng -> level mặc định");
-                        lvl = 0;
+                        cb.returnResult(0);
                     }
                 });
 
@@ -130,111 +131,66 @@ public class RCTransActivity extends AppCompatActivity {
     // hàm lấy dữ liệu từ firestore và lưu vào sqlite làm cache
     private void loadFromFirestore(FirestoreCallBack callback) {
         // kiểm tra xem cache RP đã dùng hết chưa
-        long totalRPDB = sqlite.getCountPassage();
+        long totalRPDB = sqlite.getCountPassage(lvl);
 
         Log.d("DEBUG", "total - totalDB : " + totalRP + " - " + totalRPDB);
-        if (totalRPDB >= 2 && totalRP <= totalRPDB - 2) {
-            Log.d(">>> DEBUG", "Load từ DB");
-            callback.returnResult("ok");
-        } else {
-            Log.d(">>> DEBUG", "Load từ Firestore");
-            rprepo.getRandomPassage(lvl , list -> {
-                if (list != null) {
-                    int totalPassages = ((List<ReadingPassage>) list).size();
-                    List<ReadingPassage> RPlist = (List<ReadingPassage>) list;
-
-                    // CountDownLatch đếm số passage
-                    CountDownLatch latch = new CountDownLatch(totalPassages);
-
-                    for (ReadingPassage rp : RPlist) {
-
-                        // lấy các câu hỏi thuộc đoạn văn này bằng passage id
-                        qarepo.getQuestionAnswerByPassageId(rp.getId(), lvl, qa_list -> {
-                            if (qa_list != null) {
-                                List<QuestionAnswer> QAlist = (List<QuestionAnswer>) qa_list;
-
-                                // set danh sách câu hỏi - câu trả lời cho đoạn văn hiện tại
-                                rp.setQAList(QAlist);
-                            } else rp.setQAList(new ArrayList<>());
-
-                            latch.countDown();
-                        });
-                    }
-
-                    // kiểm tra xem danh sách đoạn văn và các câu hỏi cùng câu trả lời đã load đầy đủ chưa
-                    new Thread(() -> {
-                        try {
-                            // chờ hết countDown
-                            latch.await();
-                            runOnUiThread(() -> {
-                                if (sqlite == null) sqlite = new DBHelper(this);
-                                if (sqlite.insertRPList(RPlist) == 1) {
-                                    Log.d(">>> SQLite", "Thêm danh sách vào cache thành công");
-                                } else {
-                                    Log.e("!!! SQLite", "Thêm danh sách vào cache KHÔNG thành công");
-                                }
-
-                                callback.returnResult("ok");
-                            });
-                        } catch (InterruptedException e) {
-                            Log.e("!!! CountDown", "Lỗi: ", e);
-                            callback.returnResult("err");
-                        }
-                    }).start();
-                } else {
-                    Log.e("!!! Firestore", "Danh sách đoạn văn bị null");
-                    callback.returnResult("err");
-                }
-            });
-        }
-
-        // lấy một số lượng đoạn văn từ firestore
-        /*
-        rprepo.getReadingPassagePagination(LIMIT_LOAD, list -> {
-            if (list != null) {
-                int totalPassages = ((List<ReadingPassage>) list).size();
-                List<ReadingPassage> RPlist = (List<ReadingPassage>) list;
-
-                // CountDownLatch đếm số passage
-                CountDownLatch latch = new CountDownLatch(totalPassages);
-
-                for (ReadingPassage rp : RPlist) {
-
-                    // lấy các câu hỏi thuộc đoạn văn này bằng passage id
-                    qarepo.getQuestionAnswerByPassageId(rp.getId(), qa_list -> {
-                        if (qa_list != null) {
-                            List<QuestionAnswer> QAlist = (List<QuestionAnswer>) qa_list;
-
-                            // set danh sách câu hỏi - câu trả lời cho đoạn văn hiện tại
-                            rp.setQAList(QAlist);
-                        } else rp.setQAList(new ArrayList<>());
-
-                        latch.countDown();
-                    });
-                }
-
-                // kiểm tra xem danh sách đoạn văn và các câu hỏi cùng câu trả lời đã load đầy đủ chưa
-                new Thread(() -> {
-                    try {
-                        // chờ hết countDown
-                        latch.await();
-                        runOnUiThread(() -> {
-                            if (sqlite == null) sqlite = new DBHelper(this);
-                            if (sqlite.insertRPList(RPlist) == 1) {
-                                Log.d(">>> SQLite", "Thêm danh sách vào cache thành công");
-                            } else {
-                                Log.e("!!! SQLite", "Thêm danh sách vào cache KHÔNG thành công");
-                            }
-
-                            callback.returnResult("ok");
-                        });
-                    } catch (InterruptedException e) {
-                        Log.e("!!! CountDown", "Lỗi: ", e);
-                    }
-                }).start();
+        rprepo.getTotalRP(lvl, totalObj -> {
+            long totalFirestore = (long) totalObj;
+            Log.d("DEBUG", "total firestore : " + totalFirestore);
+            if ((totalRPDB >= 2 && totalRP <= totalRPDB - 2) || totalFirestore == totalRPDB) {
+                Log.d(">>> DEBUG", "Load từ DB");
+                callback.returnResult("ok");
             } else {
-                Log.e("!!! Firestore", "Danh sách đoạn văn bị null");
+                Log.d(">>> DEBUG", "Load từ Firestore");
+                rprepo.getRandomPassage(lvl , list -> {
+                    if (list != null) {
+                        int totalPassages = ((List<ReadingPassage>) list).size();
+                        List<ReadingPassage> RPlist = (List<ReadingPassage>) list;
+
+                        // CountDownLatch đếm số passage
+                        CountDownLatch latch = new CountDownLatch(totalPassages);
+
+                        for (ReadingPassage rp : RPlist) {
+
+                            // lấy các câu hỏi thuộc đoạn văn này bằng passage id
+                            qarepo.getQuestionAnswerByPassageId(rp.getId(), lvl, qa_list -> {
+                                if (qa_list != null) {
+                                    List<QuestionAnswer> QAlist = (List<QuestionAnswer>) qa_list;
+
+                                    // set danh sách câu hỏi - câu trả lời cho đoạn văn hiện tại
+                                    rp.setQAList(QAlist);
+                                } else rp.setQAList(new ArrayList<>());
+
+                                latch.countDown();
+                            });
+                        }
+
+                        // kiểm tra xem danh sách đoạn văn và các câu hỏi cùng câu trả lời đã load đầy đủ chưa
+                        new Thread(() -> {
+                            try {
+                                // chờ hết countDown
+                                latch.await();
+                                runOnUiThread(() -> {
+                                    if (sqlite == null) sqlite = new DBHelper(this);
+                                    if (sqlite.insertRPList(RPlist, lvl) == 1) {
+                                        Log.d(">>> SQLite", "Thêm danh sách vào cache thành công");
+                                    } else {
+                                        Log.e("!!! SQLite", "Thêm danh sách vào cache KHÔNG thành công");
+                                    }
+
+                                    callback.returnResult("ok");
+                                });
+                            } catch (InterruptedException e) {
+                                Log.e("!!! CountDown", "Lỗi: ", e);
+                                callback.returnResult("err");
+                            }
+                        }).start();
+                    } else {
+                        Log.e("!!! Firestore", "Danh sách đoạn văn bị null");
+                        callback.returnResult("err");
+                    }
+                });
             }
-        });*/
+        });
     }
 }
