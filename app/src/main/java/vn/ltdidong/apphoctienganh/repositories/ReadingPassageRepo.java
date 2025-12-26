@@ -71,44 +71,17 @@ public class ReadingPassageRepo {
                     Log.e("!!! RP Repo", "Lỗi: " + e);
                 });
     }
-    /*
-    public void getReadingPassagePagination(int pageSize, int lvl, FirestoreCallBack callback) {
-        CollectionReference Ref = firestore.collection(COLLECTION_NAME);
-        Query query;
 
-        if (lastPassage == null) {
-            // trang đầu
-            query = Ref.orderBy(FieldPath.documentId()).limit(pageSize);
-        } else {
-            // trang tiếp theo
-            query = Ref.orderBy(FieldPath.documentId()).startAfter(lastPassage.getId()).limit(pageSize);
-        }
-
-        query.get()
-                .addOnSuccessListener(snapshot -> {
-                    if (!snapshot.isEmpty()) {
-                        lastPassage = snapshot.getDocuments()
-                                .get(snapshot.size() - 1); // lưu doc cuối trang
+    public void getTotalRP(int lvl, FirestoreCallBack cb) {
+        firestore.collection("pref").document("totalReadingPassageData").get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (lvl == 1) {
+                        cb.returnResult(documentSnapshot.getLong("totalB"));
+                    } else {
+                        cb.returnResult(documentSnapshot.getLong("totalA"));
                     }
-
-                    // map mỗi document thành ReadingPassage
-                    List<ReadingPassage> list = new ArrayList<>();
-                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                        ReadingPassage rp = doc.toObject(ReadingPassage.class);
-                        // gán document id vào model nếu cần
-                        rp.setId(Long.valueOf(doc.getId()));
-                        list.add(rp);
-                    }
-
-                    callback.returnResult(list);
-                    Log.d(">>> RP Repo", "Đã tải về 1 số lượng đoạn văn: " + list.size());
-                })
-                .addOnFailureListener(e -> Log.e("!!! RP Repo", "Lỗi: ", e));
+                }).addOnFailureListener(e -> {
+                    Log.e("!!! RP Repo", "Lỗi: " + e);
+                });
     }
-
-    // Reset pagination
-    public void resetPagination() {
-        lastPassage = null;
-    }
-     */
 }

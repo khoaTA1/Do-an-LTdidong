@@ -47,8 +47,8 @@ public class MyApplication extends Application {
         }
 
         sharedPreferences = getSharedPreferences("Reading_Skill_Param", MODE_PRIVATE);
-        sharedPreferences.edit().putString("passedIdRP", "");
-        sharedPreferences.edit().putLong("totalPassedRP", 0);
+        sharedPreferences.edit().putString("passedIdRP", "").apply();
+        sharedPreferences.edit().putLong("totalPassedRP", 0).apply();
 
         // Schedule daily background work
         scheduleDailyWork();
