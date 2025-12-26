@@ -25,7 +25,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
@@ -82,6 +84,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
             passedIdRP = new ArrayList<>(Arrays.asList(temp.split(",")));
         }
 
+        Log.d(">>> RC Activity", "Passed Id RP origin: " + passedIdRP);
 
         // làm sạch danh sách đề đã làm
         passagePassed.clear();
@@ -169,21 +172,45 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
                 return null;
             }
 
-            Long temp = DS.getLong("reading");
+            Double temp = DS.getDouble("reading");
             int readingPoint = 500;
-            if (temp != null) readingPoint = temp.intValue();
+            if (temp != null) {
+                // validate giá trị reading point
+                if (temp < 0) readingPoint = 0;
+                else if (temp > 10) readingPoint = 1000;
+                else {
+                    readingPoint = (int) (temp.doubleValue() * 100);
+                }
+            }
 
-            readingPoint += (int) exchangePoint(score) * 100;
+            /*
+            Object temp = DS.get("skill_scores");
+            int readingPoint = 500;
+            Map<String, Object> skill_scores = new HashMap<>();
+
+            if (temp instanceof Map<?, ?>) {
+                skill_scores = (Map<String, Object>) temp;
+            }
+
+            // validate giá trị reading point
+            if (skill_s)
+             */
+
+
+            int delta = (int) (exchangePoint(score) * 100);
+            Log.d("DEBUG", "Tính điểm: " + readingPoint + " + " + delta);
+            readingPoint = readingPoint + delta;
+            Log.d("DEBUG", "Sau tính điểm: " + readingPoint);
 
             // kiểm tra sau khi cộng/trừ nếu điểm đánh giá chung vượt quá thang đo 10 thì kiềm lại
             if (readingPoint <= 0) {
                 readingPoint = 0;
-            } else if (readingPoint >= 10) {
+            } else if (readingPoint >= 1000) {
                 readingPoint = 1000;
             }
 
-            trans.update(ref, "reading", readingPoint);
-            Log.d(">>> RC Activity", "Đã update thống kê cho người dùng có ID: " + uid + " (" + readingPoint + ")");
+            trans.update(ref, "reading", readingPoint/100.0);
+            Log.d(">>> RC Activity", "Đã update thống kê cho người dùng có ID: " + uid + " (" + readingPoint/100.0 + ")");
             return null;
         });
     }
@@ -229,6 +256,14 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         // qua lượt mới, tăng đếm
         currentRP++;
 
+        String rpId = String.valueOf(chosenPassage.getId());
+        if (!passedIdRP.contains(rpId)) {
+            passedIdRP.add(rpId);
+            sharedPreferences.edit()
+                    .putString("passedIdRP", TextUtils.join(",", passedIdRP))
+                    .apply();
+        }
+
         if (currentRP == 2) {
             btnSubmit.setAlpha(1f);
             btnSubmit.setEnabled(true);
@@ -254,17 +289,22 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
 
         if (available.isEmpty()) {
             passedIdRP.clear();
+            sharedPreferences.edit().putString("passedIdRP", TextUtils.join(",", passedIdRP)).apply();
             available.addAll(ids);
+            totalRP = 0;
+            sharedPreferences.edit().putLong("totalPassedRP", totalRP).apply();
         }
 
         long randomId = available.get(new Random().nextInt(available.size()));
 
         Log.d(">>> RC Activity", "id được sinh nghẫu nhiên: " + randomId);
+        /*
         passedIdRP.add(String.valueOf(randomId));
         sharedPreferences.edit().putString("passedIdRP", TextUtils.join(",", passedIdRP)).apply();
         Log.d(">>> RC Activity", "Passed Id RP new: " + passedIdRP);
         totalRP++;
         sharedPreferences.edit().putLong("totalPassedRP", totalRP).apply();
+         */
 
         ReadingPassage randomPassage = sqlite.getReadingPassageById(randomId, lvl);
         Log.d(">>> RC Activity", "Đã tìm được đoạn văn ngẫu nhiên: " + randomPassage.getPassage());
@@ -284,5 +324,7 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
         QAlist.addAll(newQAList);
 
         adapter.notifyDataSetChanged();
+
+        rvQuestions.scrollToPosition(0);
     }
 }
