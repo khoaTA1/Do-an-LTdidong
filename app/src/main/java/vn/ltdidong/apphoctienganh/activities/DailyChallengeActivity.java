@@ -130,31 +130,56 @@ public class DailyChallengeActivity extends BaseActivity {
     }
 
     private void updateUI() {
-        // Fetch user data to adapt challenges
+        // Lấy dữ liệu user từ Firebase để xác định kỹ năng yếu nhất
         FirebaseFirestore.getInstance().collection("users").document(userId).get()
             .addOnSuccessListener(documentSnapshot -> {
-                User user = null;
+                String weakestSkill = SkillManager.SKILL_READING; // Default
+                
                 if (documentSnapshot.exists()) {
-                     user = documentSnapshot.toObject(User.class);
-                     // Manually parse maps if Gson fails or structure differs slightly
-                     if (user != null) {
-                         Map<String, Object> data = documentSnapshot.getData();
-                         if (data != null && data.containsKey("skill_scores")) {
-                             try {
-                                 Map<String, Double> scores = (Map<String, Double>) data.get("skill_scores");
-                                 user.setSkillScores(scores);
-                             } catch (Exception e) { e.printStackTrace(); }
-                         }
-                     }
+                    Map<String, Object> data = documentSnapshot.getData();
+                    if (data != null && data.containsKey("skill_scores")) {
+                        try {
+                            Map<String, Double> skillScores = (Map<String, Double>) data.get("skill_scores");
+                            if (skillScores != null && !skillScores.isEmpty()) {
+                                // Tìm kỹ năng có điểm thấp nhất
+                                weakestSkill = findWeakestSkill(skillScores);
+                            }
+                        } catch (Exception e) { 
+                            e.printStackTrace(); 
+                        }
+                    }
                 }
-                updateUIWithUser(user);
+                
+                // Update UI với kỹ năng yếu nhất
+                updateUIWithWeakestSkill(weakestSkill);
             })
             .addOnFailureListener(e -> {
-                updateUIWithUser(null); // Fallback to default
+                // Fallback to default
+                updateUIWithWeakestSkill(SkillManager.SKILL_READING);
             });
     }
-
-    private void updateUIWithUser(User user) {
+    
+    /**
+     * Tìm kỹ năng có điểm thấp nhất
+     */
+    private String findWeakestSkill(Map<String, Double> skillScores) {
+        String weakestSkill = SkillManager.SKILL_READING;
+        double lowestScore = 11.0; // Max là 10, nên bắt đầu từ 11
+        
+        for (Map.Entry<String, Double> entry : skillScores.entrySet()) {
+            if (entry.getValue() != null && entry.getValue() < lowestScore) {
+                lowestScore = entry.getValue();
+                weakestSkill = entry.getKey();
+            }
+        }
+        
+        return weakestSkill;
+    }
+    
+    /**
+     * Cập nhật UI với kỹ năng yếu nhất
+     */
+    private void updateUIWithWeakestSkill(String weakestSkill) {
         // Update progress
         todayChallenge.calculateProgress();
         todayChallenge.calculateXP();
@@ -164,70 +189,9 @@ public class DailyChallengeActivity extends BaseActivity {
         tvProgress.setText(todayChallenge.getCompletedChallenges() + "/" + todayChallenge.getTotalChallenges());
         tvXP.setText(todayChallenge.getXpEarned() + " XP");
 
-        // Determine Adaptive Logic
-        String weakSkill = SkillManager.SKILL_WRITING; // Default
-        String strongSkill = SkillManager.SKILL_READING; // Default
-        
-        if (user != null) {
-            weakSkill = SkillManager.getWeakestSkill(user);
-            strongSkill = SkillManager.getStrongestSkill(user);
-        }
-
-        // Update challenge list
+        // Update challenge list dựa trên kỹ năng yếu nhất
         challengeItems.clear();
-
-        // 1. Weak Skill Challenge (Priority: High, Level: Basic)
-        challengeItems.add(new ChallengeItem(
-            "Basic " + capitalize(weakSkill) + " Practice",
-            "Improve your " + weakSkill + " skills (Weakest Skill Focus)",
-            15, // Higher XP for weak skill
-            weakSkill,
-            isSkillCompleted(weakSkill)
-        ));
-
-        // 2. Strong Skill Challenge (Priority: Normal, Level: Advanced)
-        challengeItems.add(new ChallengeItem(
-            "Advanced " + capitalize(strongSkill) + " Challenge",
-            "Master your " + strongSkill + " skills (Strongest Skill Focus)",
-            10,
-            strongSkill,
-            isSkillCompleted(strongSkill)
-        ));
-
-        // 3. Fill with other standard challenges
-        if (!weakSkill.equals("writing") && !strongSkill.equals("writing")) {
-             challengeItems.add(new ChallengeItem("Daily Writing", "Practice writing", 10, "writing", todayChallenge.isWritingCompleted()));
-        }
-        if (!weakSkill.equals("listening") && !strongSkill.equals("listening")) {
-             challengeItems.add(new ChallengeItem("Daily Listening", "Practice listening", 10, "listening", todayChallenge.isListeningCompleted()));
-        }
-        
-        // Ensure we have enough items (fallback)
-        if (challengeItems.size() < 3) {
-             challengeItems.add(new ChallengeItem("Daily Speaking", "Practice speaking", 10, "speaking", todayChallenge.isSpeakingCompleted()));
-        }
-
-        challengeItems.add(new ChallengeItem(
-            "Learn 5 New Words",
-            todayChallenge.getNewWordsCount() + "/5 words learned",
-            10,
-            "vocabulary",
-            todayChallenge.isLearnNewWordsCompleted()
-        ));
-        challengeItems.add(new ChallengeItem(
-            "Practice 10 Flashcards",
-            todayChallenge.getFlashcardCount() + "/10 cards reviewed",
-            10,
-            "flashcard",
-            todayChallenge.isPracticeFlashcardCompleted()
-        ));
-        challengeItems.add(new ChallengeItem(
-            "Complete 1 Quiz",
-            "Test your knowledge",
-            10,
-            "quiz",
-            todayChallenge.isCompleteQuizCompleted()
-        ));
+        challengeItems.addAll(getChallengesForSkill(weakestSkill));
 
         adapter.notifyDataSetChanged();
 
@@ -239,53 +203,287 @@ public class DailyChallengeActivity extends BaseActivity {
             cardReward.setVisibility(View.GONE);
         }
     }
-
-    private boolean isSkillCompleted(String skill) {
+    
+    /**
+     * Lấy danh sách 6 nhiệm vụ cho kỹ năng cụ thể
+     */
+    private List<ChallengeItem> getChallengesForSkill(String skill) {
+        List<ChallengeItem> challenges = new ArrayList<>();
+        
         switch (skill) {
-            case "writing": return todayChallenge.isWritingCompleted();
-            case "listening": return todayChallenge.isListeningCompleted();
-            case "speaking": return todayChallenge.isSpeakingCompleted();
-            case "reading": return false; // Assuming reading isn't in DailyChallenge model yet, default false
-            default: return false;
+            case SkillManager.SKILL_READING:
+                challenges.add(new ChallengeItem(
+                    "📖 Read 1 Article",
+                    "Complete one reading comprehension article",
+                    15, "reading", todayChallenge.isReadingCompleted()));
+                challenges.add(new ChallengeItem(
+                    "📚 Read 3 Passages",
+                    "Practice reading with 3 short passages",
+                    20, "reading_multi", false));
+                challenges.add(new ChallengeItem(
+                    "🎯 Answer 10 Questions",
+                    "Complete 10 reading comprehension questions",
+                    15, "reading_quiz", false));
+                challenges.add(new ChallengeItem(
+                    "⏱️ Speed Reading",
+                    "Read and answer questions within 5 minutes",
+                    20, "reading_speed", false));
+                challenges.add(new ChallengeItem(
+                    "📰 Daily News",
+                    "Read and summarize a news article",
+                    15, "reading_news", false));
+                challenges.add(new ChallengeItem(
+                    "🔤 Vocabulary Building",
+                    "Learn 10 new words from reading context",
+                    15, "reading_vocab", false));
+                break;
+                
+            case SkillManager.SKILL_WRITING:
+                challenges.add(new ChallengeItem(
+                    "✍️ Write an Essay",
+                    "Complete a 200-word essay",
+                    15, "writing", todayChallenge.isWritingCompleted()));
+                challenges.add(new ChallengeItem(
+                    "📝 Daily Journal",
+                    "Write about your day (100 words)",
+                    15, "writing_journal", false));
+                challenges.add(new ChallengeItem(
+                    "💌 Write a Letter",
+                    "Compose a formal or informal letter",
+                    20, "writing_letter", false));
+                challenges.add(new ChallengeItem(
+                    "📋 Summary Writing",
+                    "Summarize a story in 50 words",
+                    15, "writing_summary", false));
+                challenges.add(new ChallengeItem(
+                    "🎨 Creative Writing",
+                    "Write a creative paragraph with given words",
+                    20, "writing_creative", false));
+                challenges.add(new ChallengeItem(
+                    "✅ Grammar Practice",
+                    "Complete 10 grammar correction exercises",
+                    15, "writing_grammar", false));
+                break;
+                
+            case SkillManager.SKILL_LISTENING:
+                challenges.add(new ChallengeItem(
+                    "🎧 Listen to 1 Audio",
+                    "Complete one listening exercise",
+                    15, "listening", todayChallenge.isListeningCompleted()));
+                challenges.add(new ChallengeItem(
+                    "🎵 Song Lyrics",
+                    "Listen and fill in missing lyrics",
+                    20, "listening_song", false));
+                challenges.add(new ChallengeItem(
+                    "📻 Podcast Listening",
+                    "Listen to a 5-minute podcast",
+                    15, "listening_podcast", false));
+                challenges.add(new ChallengeItem(
+                    "🎬 Movie Dialogue",
+                    "Listen and understand movie dialogue",
+                    20, "listening_movie", false));
+                challenges.add(new ChallengeItem(
+                    "👂 Dictation",
+                    "Write what you hear (10 sentences)",
+                    20, "listening_dictation", false));
+                challenges.add(new ChallengeItem(
+                    "🔊 Pronunciation",
+                    "Listen and repeat 20 words correctly",
+                    15, "listening_pronunciation", false));
+                break;
+                
+            case SkillManager.SKILL_SPEAKING:
+                challenges.add(new ChallengeItem(
+                    "🗣️ Speaking Practice",
+                    "Complete one speaking exercise",
+                    15, "speaking", todayChallenge.isSpeakingCompleted()));
+                challenges.add(new ChallengeItem(
+                    "🎤 Record Yourself",
+                    "Record a 1-minute speech",
+                    20, "speaking_record", false));
+                challenges.add(new ChallengeItem(
+                    "💬 Conversation Practice",
+                    "Practice a dialogue with AI",
+                    20, "speaking_conversation", false));
+                challenges.add(new ChallengeItem(
+                    "📢 Describe a Picture",
+                    "Speak about an image for 2 minutes",
+                    15, "speaking_describe", false));
+                challenges.add(new ChallengeItem(
+                    "🎭 Role Play",
+                    "Act out a given scenario",
+                    20, "speaking_roleplay", false));
+                challenges.add(new ChallengeItem(
+                    "🔤 Pronunciation Drill",
+                    "Repeat 30 challenging words",
+                    15, "speaking_drill", false));
+                break;
+                
+            default:
+                // Fallback: Mixed challenges
+                challenges.add(new ChallengeItem(
+                    "📖 Reading", "Practice reading", 15, "reading", todayChallenge.isReadingCompleted()));
+                challenges.add(new ChallengeItem(
+                    "✍️ Writing", "Practice writing", 15, "writing", todayChallenge.isWritingCompleted()));
+                challenges.add(new ChallengeItem(
+                    "🎧 Listening", "Practice listening", 15, "listening", todayChallenge.isListeningCompleted()));
+                challenges.add(new ChallengeItem(
+                    "🗣️ Speaking", "Practice speaking", 15, "speaking", todayChallenge.isSpeakingCompleted()));
+                challenges.add(new ChallengeItem(
+                    "📚 Learn 5 Words", "Expand vocabulary", 10, "vocabulary", todayChallenge.isLearnNewWordsCompleted()));
+                challenges.add(new ChallengeItem(
+                    "🎯 Complete Quiz", "Test knowledge", 10, "quiz", todayChallenge.isCompleteQuizCompleted()));
+                break;
         }
-    }
-
-    private String capitalize(String str) {
-        if (str == null || str.isEmpty()) return str;
-        return str.substring(0, 1).toUpperCase() + str.substring(1);
+        
+        return challenges;
     }
 
     private void onChallengeClick(ChallengeItem item) {
-        Intent intent = null;
+        if (item.isCompleted()) {
+            showToast("✅ Bạn đã hoàn thành nhiệm vụ này!");
+            return;
+        }
         
-        switch (item.getType()) {
-            case "reading":
-                intent = new Intent(this, ReadingComprehensionActivity.class);
-                break;
-            case "writing":
-                intent = new Intent(this, WritingActivity.class);
-                break;
-            case "listening":
-                intent = new Intent(this, ListeningListActivity.class);
-                break;
-            case "speaking":
-                intent = new Intent(this, SpeakingActivity.class);
-                break;
-            case "vocabulary":
-                // Open dictionary or word list
-                intent = new Intent(this, MainActivity.class);
-                break;
-            case "flashcard":
-                intent = new Intent(this, WishlistActivity.class);
-                break;
-            case "quiz":
-                intent = new Intent(this, ListeningListActivity.class);
-                break;
+        Intent intent = null;
+        String type = item.getType();
+        
+        // Route dựa trên skill (kiểm tra prefix của type)
+        if (type.startsWith("reading")) {
+            intent = new Intent(this, ReadingComprehensionActivity.class);
+        } else if (type.startsWith("writing")) {
+            intent = new Intent(this, WritingActivity.class);
+        } else if (type.startsWith("listening")) {
+            intent = new Intent(this, ListeningListActivity.class);
+        } else if (type.startsWith("speaking")) {
+            intent = new Intent(this, SpeakingActivity.class);
+        } else if (type.equals("vocabulary")) {
+            // Open dictionary or word list
+            intent = new Intent(this, MainActivity.class);
+        } else if (type.equals("flashcard")) {
+            intent = new Intent(this, WishlistActivity.class);
+        } else if (type.equals("quiz")) {
+            intent = new Intent(this, ListeningListActivity.class);
         }
         
         if (intent != null) {
-            startActivity(intent);
+            // Lưu loại challenge đang thực hiện để kiểm tra khi quay lại
+            intent.putExtra("from_daily_challenge", true);
+            intent.putExtra("challenge_type", item.getType());
+            intent.putExtra("challenge_xp", item.getXpReward());
+            startActivityForResult(intent, 100);
+        } else {
+            showToast("Chức năng đang phát triển!");
         }
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+            String challengeType = data.getStringExtra("challenge_type");
+            int xpEarned = data.getIntExtra("xp_earned", 15);
+            
+            if (challengeType != null) {
+                markChallengeCompleted(challengeType, xpEarned);
+            }
+        }
+    }
+    
+    /**
+     * Đánh dấu nhiệm vụ hoàn thành và cộng XP
+     */
+    private void markChallengeCompleted(String challengeType, int xpEarned) {
+        executor.execute(() -> {
+            // Cập nhật DailyChallenge trong database
+            boolean updated = false;
+            
+            switch (challengeType) {
+                case "reading":
+                    todayChallenge.setReadingCompleted(true);
+                    updated = true;
+                    break;
+                case "writing":
+                    todayChallenge.setWritingCompleted(true);
+                    updated = true;
+                    break;
+                case "listening":
+                    todayChallenge.setListeningCompleted(true);
+                    updated = true;
+                    break;
+                case "speaking":
+                    todayChallenge.setSpeakingCompleted(true);
+                    updated = true;
+                    break;
+                case "vocabulary":
+                    todayChallenge.setLearnNewWordsCompleted(true);
+                    todayChallenge.setNewWordsCount(5);
+                    updated = true;
+                    break;
+                case "flashcard":
+                    todayChallenge.setPracticeFlashcardCompleted(true);
+                    todayChallenge.setFlashcardCount(10);
+                    updated = true;
+                    break;
+                case "quiz":
+                    todayChallenge.setCompleteQuizCompleted(true);
+                    updated = true;
+                    break;
+            }
+            
+            if (updated) {
+                challengeDao.update(todayChallenge);
+                
+                // Cộng XP cho user trong Firebase
+                updateUserXP(xpEarned);
+                
+                runOnUiThread(() -> {
+                    showToast("✅ Hoàn thành! +" + xpEarned + " XP");
+                    loadTodayChallenge();
+                });
+            }
+        });
+    }
+    
+    /**
+     * Cộng XP cho user trong Firebase
+     */
+    private void updateUserXP(int earnedXP) {
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Long currentTotalXP = documentSnapshot.getLong("total_xp");
+                        Long currentLevel = documentSnapshot.getLong("current_level");
+                        Long currentLevelXP = documentSnapshot.getLong("current_level_xp");
+                        Long xpToNextLevel = documentSnapshot.getLong("xp_to_next_level");
+                        
+                        int newTotalXP = (currentTotalXP != null) ? currentTotalXP.intValue() : 0;
+                        int newLevel = (currentLevel != null) ? currentLevel.intValue() : 1;
+                        int newLevelXP = (currentLevelXP != null) ? currentLevelXP.intValue() : 0;
+                        int newNextLevelXP = (xpToNextLevel != null) ? xpToNextLevel.intValue() : 100;
+                        
+                        newTotalXP += earnedXP;
+                        newLevelXP += earnedXP;
+                        
+                        boolean leveledUp = false;
+                        while (newLevelXP >= newNextLevelXP) {
+                            leveledUp = true;
+                            newLevelXP -= newNextLevelXP;
+                            newLevel++;
+                            newNextLevelXP = 100 + (newLevel - 1) * 50;
+                        }
+                        
+                        Map<String, Object> updates = new java.util.HashMap<>();
+                        updates.put("total_xp", newTotalXP);
+                        updates.put("current_level", newLevel);
+                        updates.put("current_level_xp", newLevelXP);
+                        updates.put("xp_to_next_level", newNextLevelXP);
+                        
+                        FirebaseFirestore.getInstance().collection("users").document(userId)
+                                .update(updates);
+                    }
+                });
     }
 
     private void claimReward() {
@@ -293,7 +491,8 @@ public class DailyChallengeActivity extends BaseActivity {
         btnClaimReward.setEnabled(false);
         btnClaimReward.setText("Claimed");
         
-        // TODO: Update user XP in database
+        // Cộng 50 XP bonus
+        updateUserXP(50);
     }
 
     private String getTodayDate() {

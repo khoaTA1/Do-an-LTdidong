@@ -32,7 +32,7 @@ public class DailyAnalysisWorker extends Worker {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
             Log.d(TAG, "No user logged in, skipping analysis");
-            return Result.failure();
+            return Result.success();
         }
         
         String userId = currentUser.getUid();

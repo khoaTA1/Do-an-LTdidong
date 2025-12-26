@@ -62,4 +62,11 @@
     <color name="skill_writing">#1976D2</color>
     <color name="skill_listening">#00897B</color>
     <color name="skill_speaking">#E53935</color>
+    
+    <!-- Activity Feed Colors -->
+    <color name="activity_achievement">#FFD700</color>
+    <color name="activity_level_up">#9C27B0</color>
+    <color name="activity_streak">#FF5722</color>
+    <color name="activity_challenge">#00BCD4</color>
+    <color name="activity_default">#2196F3</color>
 </resources>

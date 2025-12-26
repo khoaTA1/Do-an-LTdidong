@@ -14,6 +14,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.managers.SkillManager;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.UserProgressDao;
 import vn.ltdidong.apphoctienganh.database.UserStreakDao;
@@ -175,6 +176,9 @@ public class ResultActivity extends AppCompatActivity {
         
         // 3. Cập nhật XP cho User và đồng bộ lên Firebase (chạy trên main thread)
         updateUserXP(userId, correctAnswers, totalQuestions);
+        
+        // 4. Cập nhật Listening Skill Score
+        updateListeningSkillScore(score / 10.0); // Chuyển từ 0-100 sang 0-10
     }
     
     /**
@@ -254,6 +258,70 @@ public class ResultActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     android.util.Log.e("ResultActivity", "Error fetching user data", e);
+                });
+    }
+    
+    /**
+     * Cập nhật điểm kỹ năng Listening
+     */
+    private void updateListeningSkillScore(double lessonScore) {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) return;
+        
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Get current scores map
+                        java.util.Map<String, Object> data = documentSnapshot.getData();
+                        java.util.Map<String, Double> skillScores = (java.util.Map<String, Double>) data.get("skill_scores");
+                        java.util.Map<String, Long> lastPracticeTime = (java.util.Map<String, Long>) data.get("last_practice_time");
+                        
+                        if (skillScores == null) skillScores = new java.util.HashMap<>();
+                        if (lastPracticeTime == null) lastPracticeTime = new java.util.HashMap<>();
+                        
+                        // Initialize if missing
+                        if (!skillScores.containsKey(SkillManager.SKILL_LISTENING)) {
+                            skillScores.put(SkillManager.SKILL_LISTENING, 5.0);
+                        }
+                        
+                        // Get current score
+                        Object currentObj = skillScores.get(SkillManager.SKILL_LISTENING);
+                        double currentScore = 5.0;
+                        if (currentObj instanceof Number) {
+                            currentScore = ((Number) currentObj).doubleValue();
+                        }
+                        
+                        // 1. Apply Decay first
+                        long lastTime = 0;
+                        if (lastPracticeTime.containsKey(SkillManager.SKILL_LISTENING)) {
+                            lastTime = lastPracticeTime.get(SkillManager.SKILL_LISTENING);
+                        }
+                        double decayedScore = SkillManager.applyTimeDecay(currentScore, lastTime);
+                        
+                        // 2. Calculate New Score
+                        double newScore = SkillManager.calculateNewScore(decayedScore, lessonScore);
+                        
+                        // 3. Update Map
+                        skillScores.put(SkillManager.SKILL_LISTENING, newScore);
+                        lastPracticeTime.put(SkillManager.SKILL_LISTENING, System.currentTimeMillis());
+                        
+                        // 4. Save to Firestore
+                        final double finalCurrentScore = currentScore;
+                        final double finalNewScore = newScore;
+                        
+                        db.collection("users").document(userId)
+                                .update(
+                                        "skill_scores", skillScores,
+                                        "last_practice_time", lastPracticeTime)
+                                .addOnSuccessListener(aVoid -> {
+                                    String msg = String.format("Listening Score: %.1f -> %.1f", finalCurrentScore, finalNewScore);
+                                    android.widget.Toast.makeText(ResultActivity.this, msg, android.widget.Toast.LENGTH_LONG).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    android.util.Log.e("ResultActivity", "Error updating skill score", e);
+                                });
+                    }
                 });
     }
     
