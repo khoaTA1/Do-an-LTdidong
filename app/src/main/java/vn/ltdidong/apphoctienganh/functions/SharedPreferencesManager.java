@@ -101,6 +101,13 @@ public class SharedPreferencesManager {
     }
 
     /**
+     * Lấy tên user (alias cho getUserName)
+     */
+    public String getUsername() {
+        return getUserName();
+    }
+
+    /**
      * Lưu tên user
      */
     public void saveUserName(String name) {
