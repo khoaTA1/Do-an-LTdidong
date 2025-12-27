@@ -17,12 +17,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
+
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.adapters.RecommendationAdapter;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.managers.DataSyncManager;
 import vn.ltdidong.apphoctienganh.managers.LearningAnalyzer;
 import vn.ltdidong.apphoctienganh.managers.PersonalizedRecommendationEngine;
+import vn.ltdidong.apphoctienganh.managers.SkillManager;
 import vn.ltdidong.apphoctienganh.managers.StudyScheduleGenerator;
 import vn.ltdidong.apphoctienganh.models.LearningSession;
 import vn.ltdidong.apphoctienganh.models.SkillProgress;
@@ -46,11 +54,12 @@ public class LearningDashboardActivity extends AppCompatActivity {
     private TextView tvStreak;
     private TextView tvTotalTime;
     private TextView tvWeakSkills;
-    private RecyclerView rvRecommendations;
-    private Button btnSyncData;
-    private Button btnGenerateSchedule;
-    private Button btnTestLesson;
     private ProgressBar progressBar;
+    
+    // Skill Scores UI
+    private TextView tvReadingScore, tvWritingScore, tvListeningScore, tvSpeakingScore;
+    private ProgressBar pbReading, pbWriting, pbListening, pbSpeaking;
+    private TextView tvLastPracticeReading, tvLastPracticeWriting, tvLastPracticeListening, tvLastPracticeSpeaking;
     
     // Managers
     private AppDatabase database;
@@ -67,64 +76,8 @@ public class LearningDashboardActivity extends AppCompatActivity {
         
         initComponents();
         
-        // Only proceed if critical views are not null
-        if (btnSyncData != null && btnGenerateSchedule != null && btnTestLesson != null) {
-            initListeners();
-            
-            // Auto-sync data from Firestore when opening Dashboard
-            syncDataFromFirestore();
-            
-            // Load local data first (will update after sync)
-            loadDashboardData();
-        } else {
-            Toast.makeText(this, "Error loading dashboard", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "Critical views are null");
-            finish();
-        }
-    }
-    
-    /**
-     * Auto-sync dữ liệu của user từ Firestore
-     */
-    private void syncDataFromFirestore() {
-        if (progressBar != null) {
-            progressBar.setVisibility(View.VISIBLE);
-        }
-        
-        // Use DataSyncManager for comprehensive sync
-        DataSyncManager syncManager = new DataSyncManager(this);
-        syncManager.downloadAllData(userId, new DataSyncManager.SyncCallback() {
-            @Override
-            public void onSyncSuccess(String message) {
-                runOnUiThread(() -> {
-                    if (progressBar != null) {
-                        progressBar.setVisibility(View.GONE);
-                    }
-                    Log.d(TAG, "Firestore sync success: " + message);
-                    Toast.makeText(LearningDashboardActivity.this, 
-                        "Đã đồng bộ dữ liệu!", Toast.LENGTH_SHORT).show();
-                    // Reload dashboard data after sync
-                    loadDashboardData();
-                });
-            }
-            
-            @Override
-            public void onSyncError(String error) {
-                runOnUiThread(() -> {
-                    if (progressBar != null) {
-                        progressBar.setVisibility(View.GONE);
-                    }
-                    Log.e(TAG, "Firestore sync error: " + error);
-                    // Load local data anyway
-                    loadDashboardData();
-                });
-            }
-            
-            @Override
-            public void onSyncProgress(int current, int total) {
-                Log.d(TAG, "Sync progress: " + current + "/" + total);
-            }
-        });
+        // Load local data first (will update after sync)
+        loadDashboardData();
     }
     
     private void initComponents() {
@@ -147,34 +100,23 @@ public class LearningDashboardActivity extends AppCompatActivity {
         tvStreak = findViewById(R.id.tv_streak);
         tvTotalTime = findViewById(R.id.tv_total_time);
         tvWeakSkills = findViewById(R.id.tv_weak_skills);
-        rvRecommendations = findViewById(R.id.rv_recommendations);
-        btnSyncData = findViewById(R.id.btn_sync_data);
-        btnGenerateSchedule = findViewById(R.id.btn_generate_schedule);
-        btnTestLesson = findViewById(R.id.btn_test_lesson);
         progressBar = findViewById(R.id.progress_bar);
         
-        // Setup RecyclerView only if not null
-        if (rvRecommendations != null) {
-            rvRecommendations.setLayoutManager(new LinearLayoutManager(this));
-        }
-    }
-    
-    private void initListeners() {
-        // Null check để tránh crash
-        if (btnSyncData == null || btnGenerateSchedule == null || btnTestLesson == null) {
-            Log.e(TAG, "One or more buttons are null!");
-            Toast.makeText(this, "Layout error. Please check resources.", Toast.LENGTH_LONG).show();
-            return;
-        }
+        // Initialize Skill Scores UI
+        tvReadingScore = findViewById(R.id.tv_reading_score);
+        tvWritingScore = findViewById(R.id.tv_writing_score);
+        tvListeningScore = findViewById(R.id.tv_listening_score);
+        tvSpeakingScore = findViewById(R.id.tv_speaking_score);
         
-        // Sync button
-        btnSyncData.setOnClickListener(v -> syncData());
+        pbReading = findViewById(R.id.pb_reading);
+        pbWriting = findViewById(R.id.pb_writing);
+        pbListening = findViewById(R.id.pb_listening);
+        pbSpeaking = findViewById(R.id.pb_speaking);
         
-        // Generate schedule button
-        btnGenerateSchedule.setOnClickListener(v -> generateSchedule());
-        
-        // Test lesson button (để test tạo dữ liệu)
-        btnTestLesson.setOnClickListener(v -> createMultipleTestSessions());
+        tvLastPracticeReading = findViewById(R.id.tv_last_practice_reading);
+        tvLastPracticeWriting = findViewById(R.id.tv_last_practice_writing);
+        tvLastPracticeListening = findViewById(R.id.tv_last_practice_listening);
+        tvLastPracticeSpeaking = findViewById(R.id.tv_last_practice_speaking);
     }
     
     /**
@@ -202,259 +144,212 @@ public class LearningDashboardActivity extends AppCompatActivity {
             }
         });
         
-        // Load total study time từ StudyHabit
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            StudyHabit habit = database.studyHabitDao().getByUser(userId);
-            
-            runOnUiThread(() -> {
-                if (habit != null) {
-                    long totalMinutes = habit.getTotalStudyDays() * habit.getAverageSessionMinutes();
-                    int hours = (int) (totalMinutes / 60);
-                    int minutes = (int) (totalMinutes % 60);
-                    tvTotalTime.setText(String.format("%dh %dm", hours, minutes));
-                } else {
-                    tvTotalTime.setText("Chưa có dữ liệu");
-                }
-            });
-        });
+        // Load total time và weak skills từ Firebase
+        loadTimeAndWeakSkillsFromFirebase();
         
-        // Load weak skills - dùng LearningAnalyzer trực tiếp
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            LearningAnalyzer analyzer = new LearningAnalyzer(this);
-            List<SkillProgress> weakSkills = analyzer.getWeakSkills(userId);
-            
-            runOnUiThread(() -> {
-                if (weakSkills.isEmpty()) {
-                    tvWeakSkills.setText("✅ Tất cả kỹ năng đều tốt!");
-                } else {
-                    StringBuilder sb = new StringBuilder();
-                    for (SkillProgress skill : weakSkills) {
-                        sb.append(String.format("• %s: %.1f%%\n", 
-                            getSkillDisplayName(skill.getSkillType()),
-                            skill.getAverageScore()));
-                    }
-                    tvWeakSkills.setText(sb.toString());
-                }
-            });
-        });
-        
-        // Load recommendations
-        loadRecommendations();
+        // Load skill scores from Firebase
+        loadSkillScoresFromFirebase();
     }
     
     /**
-     * Load danh sách gợi ý
+     * Load điểm kỹ năng từ Firebase
      */
-    private void loadRecommendations() {
-        new Thread(() -> {
-            PersonalizedRecommendationEngine recommendationEngine = 
-                new PersonalizedRecommendationEngine(this);
-            List<PersonalizedRecommendationEngine.Recommendation> recommendations = 
-                recommendationEngine.getPersonalizedRecommendations(userId);
-            
-            runOnUiThread(() -> {
-                if (!recommendations.isEmpty()) {
-                    // Setup RecyclerView with adapter
-                    RecommendationAdapter adapter = new RecommendationAdapter();
-                    adapter.setRecommendations(recommendations);
-                    adapter.setOnRecommendationClickListener(recommendation -> {
-                        Toast.makeText(this, 
-                            "Bắt đầu: " + recommendation.title, 
-                            Toast.LENGTH_SHORT).show();
-                    });
-                    rvRecommendations.setAdapter(adapter);
-                    
-                    Log.d(TAG, "Loaded " + recommendations.size() + " recommendations");
-                } else {
-                    Log.d(TAG, "No recommendations available");
-                }
-            });
-        }).start();
-    }
-    
-    /**
-     * Đồng bộ dữ liệu
-     */
-    private void syncData() {
+    private void loadSkillScoresFromFirebase() {
         if (userId == null || userId.isEmpty()) {
-            Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "User ID is null");
             return;
         }
         
-        progressBar.setVisibility(ProgressBar.VISIBLE);
-        btnSyncData.setEnabled(false);
-        
-        // Gọi trực tiếp DataSyncManager với userId
-        vn.ltdidong.apphoctienganh.managers.DataSyncManager syncManager = 
-            new vn.ltdidong.apphoctienganh.managers.DataSyncManager(this);
-        
-        syncManager.downloadAllData(userId, new vn.ltdidong.apphoctienganh.managers.DataSyncManager.SyncCallback() {
-            @Override
-            public void onSyncSuccess(String message) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(ProgressBar.GONE);
-                    btnSyncData.setEnabled(true);
-                    Toast.makeText(LearningDashboardActivity.this, 
-                        "Đồng bộ thành công!", Toast.LENGTH_SHORT).show();
-                    
-                    // Reload dashboard
-                    loadDashboardData();
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Map<String, Object> data = documentSnapshot.getData();
+                        if (data != null) {
+                            // Get skill_scores
+                            Map<String, Double> skillScores = (Map<String, Double>) data.get("skill_scores");
+                            Map<String, Long> lastPracticeTime = (Map<String, Long>) data.get("last_practice_time");
+                            
+                            if (skillScores != null) {
+                                updateSkillScoreUI(SkillManager.SKILL_READING, skillScores, lastPracticeTime, 
+                                    tvReadingScore, pbReading, tvLastPracticeReading);
+                                updateSkillScoreUI(SkillManager.SKILL_WRITING, skillScores, lastPracticeTime, 
+                                    tvWritingScore, pbWriting, tvLastPracticeWriting);
+                                updateSkillScoreUI(SkillManager.SKILL_LISTENING, skillScores, lastPracticeTime, 
+                                    tvListeningScore, pbListening, tvLastPracticeListening);
+                                updateSkillScoreUI(SkillManager.SKILL_SPEAKING, skillScores, lastPracticeTime, 
+                                    tvSpeakingScore, pbSpeaking, tvLastPracticeSpeaking);
+                            } else {
+                                Log.d(TAG, "No skill_scores found in Firebase");
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to load skill scores from Firebase", e);
                 });
-            }
-            
-            @Override
-            public void onSyncError(String error) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(ProgressBar.GONE);
-                    btnSyncData.setEnabled(true);
-                    Toast.makeText(LearningDashboardActivity.this, 
-                        "Lỗi đồng bộ: " + error, Toast.LENGTH_LONG).show();
-                });
-            }
-            
-            @Override
-            public void onSyncProgress(int current, int total) {
-                runOnUiThread(() -> {
-                    // Update progress
-                    Log.d(TAG, "Sync progress: " + current + "/" + total);
-                });
-            }
-        });
     }
     
     /**
-     * Tạo lịch học
+     * Cập nhật UI cho một kỹ năng
      */
-    private void generateSchedule() {
-        if (userId == null || userId.isEmpty()) {
-            Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show();
+    private void updateSkillScoreUI(String skillKey, Map<String, Double> skillScores, 
+                                     Map<String, Long> lastPracticeTime,
+                                     TextView tvScore, ProgressBar progressBar, TextView tvLastPractice) {
+        if (tvScore == null || progressBar == null || tvLastPractice == null) {
             return;
         }
         
-        progressBar.setVisibility(ProgressBar.VISIBLE);
-        btnGenerateSchedule.setEnabled(false);
+        // Get score (default 5.0)
+        Double scoreObj = skillScores.get(skillKey);
+        double score = (scoreObj != null) ? scoreObj : 5.0;
         
-        // Gọi trực tiếp StudyScheduleGenerator với userId
-        vn.ltdidong.apphoctienganh.managers.StudyScheduleGenerator scheduleGenerator = 
-            new vn.ltdidong.apphoctienganh.managers.StudyScheduleGenerator(this);
+        // Update score text
+        tvScore.setText(String.format(Locale.getDefault(), "%.1f / 10", score));
         
-        scheduleGenerator.generateSchedule(userId, 7, new vn.ltdidong.apphoctienganh.managers.StudyScheduleGenerator.ScheduleCallback() {
-            @Override
-            public void onScheduleGenerated(List<vn.ltdidong.apphoctienganh.models.StudySchedule> schedules) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(ProgressBar.GONE);
-                    btnGenerateSchedule.setEnabled(true);
-                    Toast.makeText(LearningDashboardActivity.this, 
-                        "Đã tạo " + schedules.size() + " lịch học!", 
-                        Toast.LENGTH_SHORT).show();
-                    
-                    // Log schedules
-                    for (vn.ltdidong.apphoctienganh.models.StudySchedule schedule : schedules) {
-                        Log.d(TAG, "Schedule: " + schedule.getSkillType() + 
-                                   " - " + schedule.getReason());
-                    }
-                });
+        // Update progress bar (0-10 scale to 0-100 percentage)
+        int progress = (int) (score * 10);
+        progressBar.setProgress(progress);
+        
+        // Update last practice time or advice based on score
+        if (lastPracticeTime != null && lastPracticeTime.containsKey(skillKey)) {
+            Long timestamp = lastPracticeTime.get(skillKey);
+            if (timestamp != null && timestamp > 0) {
+                String timeAgo = getTimeAgo(timestamp);
+                tvLastPractice.setText("Lần cuối: " + timeAgo);
+                return;
             }
-            
-            @Override
-            public void onScheduleError(String error) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(ProgressBar.GONE);
-                    btnGenerateSchedule.setEnabled(true);
-                    Toast.makeText(LearningDashboardActivity.this, 
-                        "Lỗi tạo lịch: " + error, Toast.LENGTH_LONG).show();
-                });
-            }
-        });
+        }
+        
+        // Nếu chưa có lịch sử luyện tập, đưa ra lời khuyên dựa trên điểm
+        String advice = getAdviceForScore(score);
+        tvLastPractice.setText(advice);
     }
     
     /**
-     * Tạo nhiều dữ liệu test (để demo)
+     * Đưa ra lời khuyên dựa trên điểm số
      */
-    private void createMultipleTestSessions() {
-        if (progressBar != null) {
-            progressBar.setVisibility(View.VISIBLE);
+    private String getAdviceForScore(double score) {
+        if (score < 3.0) {
+            return "⚠️ Cần cải thiện khẩn cấp!";
+        } else if (score < 5.0) {
+            return "💪 Cần luyện tập nhiều hơn";
+        } else if (score < 7.0) {
+            return "😊 Ổn, có thể tốt hơn";
+        } else if (score < 9.0) {
+            return "👍 Tốt! Tiếp tục duy trì";
+        } else {
+            return "🌟 Xuất sắc! Giữ vững phong độ";
         }
-        if (btnTestLesson != null) {
-            btnTestLesson.setEnabled(false);
-        }
-        
-        AppDatabase.databaseWriteExecutor.execute(() -> {
-            String[] skills = {"LISTENING", "SPEAKING", "READING", "WRITING", "VOCABULARY", "GRAMMAR"};
-            String[] difficulties = {"EASY", "MEDIUM", "HARD"};
-            
-            for (int i = 0; i < 15; i++) {
-                LearningSession session = new LearningSession();
-                session.setUserId(userId);
-                session.setSkillType(skills[i % skills.length]);
-                session.setLessonId(i + 1);
-                session.setLessonName("Test Lesson " + (i + 1));
-                session.setScore(60 + (float)(Math.random() * 40)); // 60-100
-                session.setCorrectAnswers(12 + (int)(Math.random() * 13)); // 12-24
-                session.setTotalQuestions(25);
-                
-                // Tạo sessions trong 15 ngày qua
-                long daysAgo = (15 - i) * 24 * 60 * 60 * 1000L;
-                session.setStartTime(System.currentTimeMillis() - daysAgo);
-                session.setEndTime(session.getStartTime() + ((20 + (int)(Math.random() * 40)) * 60 * 1000)); // 20-60 phút
-                
-                session.setDifficulty(difficulties[i % 3]);
-                session.setCompleted(true);
-                
-                session.calculateAccuracy();
-                session.calculateDuration();
-                
-                database.learningSessionDao().insert(session);
-            }
-            
-            // Đợi 1 giây rồi phân tích
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                LearningAnalyzer analyzer = new LearningAnalyzer(this);
-                analyzer.analyzeAllData(userId, new LearningAnalyzer.AnalysisCallback() {
-                    @Override
-                    public void onAnalysisComplete(String message) {
-                        runOnUiThread(() -> {
-                            if (progressBar != null) {
-                                progressBar.setVisibility(View.GONE);
-                            }
-                            if (btnTestLesson != null) {
-                                btnTestLesson.setEnabled(true);
-                            }
-                            Toast.makeText(LearningDashboardActivity.this, 
-                                "✅ Đã tạo 15 phiên học test!", Toast.LENGTH_SHORT).show();
-                            loadDashboardData();
-                        });
-                    }
-                    
-                    @Override
-                    public void onAnalysisError(String error) {
-                        runOnUiThread(() -> {
-                            if (progressBar != null) {
-                                progressBar.setVisibility(View.GONE);
-                            }
-                            if (btnTestLesson != null) {
-                                btnTestLesson.setEnabled(true);
-                            }
-                            Toast.makeText(LearningDashboardActivity.this, 
-                                "Lỗi phân tích: " + error, Toast.LENGTH_LONG).show();
-                        });
-                    }
-                });
-            }, 1000);
-        });
     }
     
-
+    /**
+     * Chuyển đổi timestamp thành text "x phút/giờ/ngày trước"
+     */
+    private String getTimeAgo(long timestamp) {
+        long now = System.currentTimeMillis();
+        long diff = now - timestamp;
+        
+        long seconds = diff / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        
+        if (days > 0) {
+            return days + " ngày trước";
+        } else if (hours > 0) {
+            return hours + " giờ trước";
+        } else if (minutes > 0) {
+            return minutes + " phút trước";
+        } else {
+            return "Vừa xong";
+        }
+    }
+    
+    /**
+     * Load tổng thời gian và kỹ năng yếu nhất từ Firebase
+     */
+    private void loadTimeAndWeakSkillsFromFirebase() {
+        if (userId == null || userId.isEmpty()) {
+            Log.e(TAG, "User ID is null");
+            return;
+        }
+        
+        FirebaseFirestore.getInstance().collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Map<String, Object> data = documentSnapshot.getData();
+                        if (data != null) {
+                            // Get skill_scores và last_practice_time
+                            Map<String, Double> skillScores = (Map<String, Double>) data.get("skill_scores");
+                            
+                            // 1. Lấy tổng thời gian sử dụng app từ Firebase
+                            Long totalSessionTime = documentSnapshot.getLong("total_session_time");
+                            if (totalSessionTime != null && totalSessionTime > 0) {
+                                // totalSessionTime lưu bằng milliseconds, chuyển sang phút
+                                long totalMinutes = totalSessionTime / (60 * 1000);
+                                int hours = (int) (totalMinutes / 60);
+                                int minutes = (int) (totalMinutes % 60);
+                                tvTotalTime.setText(String.format("%dh %dm", hours, minutes));
+                            } else {
+                                tvTotalTime.setText("0h 0m");
+                            }
+                            
+                            // 2. Tìm kỹ năng yếu nhất
+                            if (skillScores != null && !skillScores.isEmpty()) {
+                                String weakestSkill = findWeakestSkill(skillScores);
+                                Double weakestScore = skillScores.get(weakestSkill);
+                                if (weakestSkill != null && weakestScore != null) {
+                                    String skillName = getSkillDisplayName(weakestSkill);
+                                    tvWeakSkills.setText(String.format("%s: %.1f/10\nCần cải thiện kỹ năng này!", 
+                                        skillName, weakestScore));
+                                } else {
+                                    tvWeakSkills.setText("✅ Tất cả kỹ năng đều tốt!");
+                                }
+                            } else {
+                                tvWeakSkills.setText("Chưa có dữ liệu");
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to load time and weak skills from Firebase", e);
+                    tvTotalTime.setText("Lỗi tải dữ liệu");
+                    tvWeakSkills.setText("Lỗi tải dữ liệu");
+                });
+    }
+    
+    /**
+     * Tìm kỹ năng có điểm thấp nhất
+     */
+    private String findWeakestSkill(Map<String, Double> skillScores) {
+        String weakestSkill = null;
+        double lowestScore = 11.0; // Max là 10, nên bắt đầu từ 11
+        
+        for (Map.Entry<String, Double> entry : skillScores.entrySet()) {
+            if (entry.getValue() != null && entry.getValue() < lowestScore) {
+                lowestScore = entry.getValue();
+                weakestSkill = entry.getKey();
+            }
+        }
+        
+        return weakestSkill;
+    }
     
     /**
      * Lấy tên hiển thị của kỹ năng
      */
-    private String getSkillDisplayName(String skillType) {
-        try {
-            SkillType skill = SkillType.valueOf(skillType);
-            return skill.getDisplayName();
-        } catch (Exception e) {
-            return skillType;
+    private String getSkillDisplayName(String skillKey) {
+        switch (skillKey) {
+            case SkillManager.SKILL_READING:
+                return "📖 Reading";
+            case SkillManager.SKILL_WRITING:
+                return "✍️ Writing";
+            case SkillManager.SKILL_LISTENING:
+                return "🎧 Listening";
+            case SkillManager.SKILL_SPEAKING:
+                return "🗣️ Speaking";
+            default:
+                return skillKey;
         }
     }
 }

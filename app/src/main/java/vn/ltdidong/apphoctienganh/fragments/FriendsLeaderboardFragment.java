@@ -36,6 +36,7 @@ public class FriendsLeaderboardFragment extends Fragment {
     
     private SocialManager socialManager;
     private String userId;
+    private boolean isDataLoaded = false; // Flag để tránh load trùng
     
     @Nullable
     @Override
@@ -46,7 +47,7 @@ public class FriendsLeaderboardFragment extends Fragment {
         initViews(view);
         setupManagers();
         setupRecyclerView();
-        loadFriendsLeaderboard();
+        // Load sẽ được gọi trong onResume()
         
         return view;
     }
@@ -73,12 +74,20 @@ public class FriendsLeaderboardFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         tvEmpty.setVisibility(View.GONE);
         
+        if (userId == null || userId.isEmpty()) {
+            progressBar.setVisibility(View.GONE);
+            tvEmpty.setText("Please log in to view friends leaderboard");
+            tvEmpty.setVisibility(View.VISIBLE);
+            return;
+        }
+        
         socialManager.getFriendsLeaderboard(userId, new SocialManager.LeaderboardCallback() {
             @Override
             public void onLeaderboard(List<LeaderboardUser> users) {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         progressBar.setVisibility(View.GONE);
+                        isDataLoaded = true; // Đánh dấu đã load xong
                         leaderboard.clear();
                         leaderboard.addAll(users);
                         adapter.notifyDataSetChanged();
@@ -102,5 +111,21 @@ public class FriendsLeaderboardFragment extends Fragment {
                 }
             }
         });
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Chỉ load khi chưa có data
+        if (!isDataLoaded) {
+            loadFriendsLeaderboard();
+        }
+    }
+    
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Reset flag khi rời khỏi fragment để có thể refresh lần sau
+        isDataLoaded = false;
     }
 }

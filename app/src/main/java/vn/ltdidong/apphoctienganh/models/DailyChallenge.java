@@ -21,6 +21,13 @@ public class DailyChallenge {
     private boolean listeningCompleted;
     private boolean speakingCompleted;
     
+    // Listening detailed tracking
+    private int listeningEasyCount;  // Number of easy lessons completed
+    private int listeningMediumCount;  // Number of medium lessons completed
+    private int listeningHardCount;  // Number of hard lessons completed
+    private int listeningFillBlankCount;  // Number of fill blank exercises completed
+    private int listeningExpEarned;  // Total exp earned from listening
+    
     // Additional challenges
     private boolean learnNewWordsCompleted;  // Learn 5 new words
     private int newWordsCount;
@@ -90,6 +97,46 @@ public class DailyChallenge {
 
     public void setListeningCompleted(boolean listeningCompleted) {
         this.listeningCompleted = listeningCompleted;
+    }
+
+    public int getListeningEasyCount() {
+        return listeningEasyCount;
+    }
+
+    public void setListeningEasyCount(int listeningEasyCount) {
+        this.listeningEasyCount = listeningEasyCount;
+    }
+
+    public int getListeningMediumCount() {
+        return listeningMediumCount;
+    }
+
+    public void setListeningMediumCount(int listeningMediumCount) {
+        this.listeningMediumCount = listeningMediumCount;
+    }
+
+    public int getListeningHardCount() {
+        return listeningHardCount;
+    }
+
+    public void setListeningHardCount(int listeningHardCount) {
+        this.listeningHardCount = listeningHardCount;
+    }
+
+    public int getListeningFillBlankCount() {
+        return listeningFillBlankCount;
+    }
+
+    public void setListeningFillBlankCount(int listeningFillBlankCount) {
+        this.listeningFillBlankCount = listeningFillBlankCount;
+    }
+
+    public int getListeningExpEarned() {
+        return listeningExpEarned;
+    }
+
+    public void setListeningExpEarned(int listeningExpEarned) {
+        this.listeningExpEarned = listeningExpEarned;
     }
 
     public boolean isSpeakingCompleted() {

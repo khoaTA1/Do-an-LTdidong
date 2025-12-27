@@ -347,7 +347,17 @@ public class LessonDetailActivity extends AppCompatActivity {
             // Chuyển sang QuizActivity
             Intent intent = new Intent(LessonDetailActivity.this, QuizActivity.class);
             intent.putExtra("lesson_id", lessonId);
-            startActivity(intent);
+            
+            // Truyền thêm thông tin từ daily challenge nếu có
+            if (getIntent().hasExtra("from_daily_challenge")) {
+                intent.putExtra("from_daily_challenge", true);
+                intent.putExtra("challenge_type", getIntent().getStringExtra("challenge_type"));
+                intent.putExtra("challenge_xp", getIntent().getIntExtra("challenge_xp", 15));
+                intent.putExtra("lesson_difficulty", lesson != null ? lesson.getDifficulty() : "EASY");
+                startActivityForResult(intent, 200);
+            } else {
+                startActivity(intent);
+            }
         });
     }
     
@@ -355,6 +365,21 @@ public class LessonDetailActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         finish();
         return true;
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (requestCode == 200 && resultCode == RESULT_OK && data != null) {
+            // Nhận kết quả từ QuizActivity và truyền tiếp cho DailyChallengeActivity
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("challenge_type", data.getStringExtra("challenge_type"));
+            resultIntent.putExtra("xp_earned", data.getIntExtra("xp_earned", 15));
+            resultIntent.putExtra("lesson_difficulty", data.getStringExtra("lesson_difficulty"));
+            setResult(RESULT_OK, resultIntent);
+            finish();
+        }
     }
     
     @Override

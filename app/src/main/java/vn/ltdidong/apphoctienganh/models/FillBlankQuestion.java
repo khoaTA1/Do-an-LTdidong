@@ -36,8 +36,8 @@ public class FillBlankQuestion {
     // Thứ tự câu hỏi trong bài
     private int orderIndex;
     
-    // Thời điểm audio tương ứng (giây) - để tự động play từ đây
-    private int audioTimestamp;
+    // URL audio riêng cho câu hỏi này (optional - nếu mỗi câu có audio riêng)
+    private String audioUrl;
 
     // Constructor
     public FillBlankQuestion() {
@@ -46,13 +46,13 @@ public class FillBlankQuestion {
     @Ignore
     public FillBlankQuestion(int lessonId, String sentenceWithBlanks, 
                             String correctAnswers, String hint, 
-                            int orderIndex, int audioTimestamp) {
+                            int orderIndex, String audioUrl) {
         this.lessonId = lessonId;
         this.sentenceWithBlanks = sentenceWithBlanks;
         this.correctAnswers = correctAnswers;
         this.hint = hint;
         this.orderIndex = orderIndex;
-        this.audioTimestamp = audioTimestamp;
+        this.audioUrl = audioUrl;
     }
 
     // Getters and Setters
@@ -103,13 +103,13 @@ public class FillBlankQuestion {
     public void setOrderIndex(int orderIndex) {
         this.orderIndex = orderIndex;
     }
-
-    public int getAudioTimestamp() {
-        return audioTimestamp;
+    
+    public String getAudioUrl() {
+        return audioUrl;
     }
-
-    public void setAudioTimestamp(int audioTimestamp) {
-        this.audioTimestamp = audioTimestamp;
+    
+    public void setAudioUrl(String audioUrl) {
+        this.audioUrl = audioUrl;
     }
     
     /**

@@ -296,6 +296,22 @@ public class QuizActivity extends AppCompatActivity {
 
         viewModel.saveProgress(p);
 
+        // Kiểm tra xem có từ daily challenge không
+        boolean fromDailyChallenge = getIntent().getBooleanExtra("from_daily_challenge", false);
+        
+        if (fromDailyChallenge) {
+            // Trả kết quả về cho DailyChallengeActivity
+            String challengeType = getIntent().getStringExtra("challenge_type");
+            String lessonDifficulty = getIntent().getStringExtra("lesson_difficulty");
+            int xpEarned = getIntent().getIntExtra("challenge_xp", 15);
+            
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("challenge_type", challengeType);
+            resultIntent.putExtra("xp_earned", xpEarned);
+            resultIntent.putExtra("lesson_difficulty", lessonDifficulty);
+            setResult(RESULT_OK, resultIntent);
+        }
+
         Intent i = new Intent(this, ResultActivity.class);
         i.putExtra("lesson_id", lessonId);
         i.putExtra("correct_answers", correctCount);

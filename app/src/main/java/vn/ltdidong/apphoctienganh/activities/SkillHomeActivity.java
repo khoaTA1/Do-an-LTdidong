@@ -247,7 +247,7 @@ public class SkillHomeActivity extends AppCompatActivity {
                 if (mode.equals("Nghe cơ bản")) {
                     startActivity(new Intent(this, ListeningListActivity.class));
                 } else if (mode.equals("Điền chỗ trống")) {
-                    startActivity(new Intent(this, FillBlankActivity.class));
+                    startActivity(new Intent(this, FillBlankLessonListActivity.class));
                 }
                 break;
 

@@ -34,6 +34,7 @@ import java.util.concurrent.CountDownLatch;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.adapters.ReadingQAAdapter;
 import vn.ltdidong.apphoctienganh.functions.DBHelper;
+import vn.ltdidong.apphoctienganh.managers.SkillManager;
 import vn.ltdidong.apphoctienganh.functions.FirestoreCallBack;
 import vn.ltdidong.apphoctienganh.functions.LoadFromJSON;
 import vn.ltdidong.apphoctienganh.functions.SharedPreferencesManager;
@@ -172,30 +173,30 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
                 return null;
             }
 
-            Double temp = DS.getDouble("reading");
+            // Lấy skill_scores map
+            Map<String, Object> data = DS.getData();
+            Map<String, Object> skillScores = (Map<String, Object>) data.get("skill_scores");
+            
+            if (skillScores == null) {
+                skillScores = new HashMap<>();
+            }
+            
+            // Lấy điểm reading hiện tại
             int readingPoint = 500;
-            if (temp != null) {
+            Object readingObj = skillScores.get("reading");
+            if (readingObj != null) {
+                double temp = 0;
+                if (readingObj instanceof Number) {
+                    temp = ((Number) readingObj).doubleValue();
+                }
+                
                 // validate giá trị reading point
                 if (temp < 0) readingPoint = 0;
                 else if (temp > 10) readingPoint = 1000;
                 else {
-                    readingPoint = (int) (temp.doubleValue() * 100);
+                    readingPoint = (int) (temp * 100);
                 }
             }
-
-            /*
-            Object temp = DS.get("skill_scores");
-            int readingPoint = 500;
-            Map<String, Object> skill_scores = new HashMap<>();
-
-            if (temp instanceof Map<?, ?>) {
-                skill_scores = (Map<String, Object>) temp;
-            }
-
-            // validate giá trị reading point
-            if (skill_s)
-             */
-
 
             int delta = (int) (exchangePoint(score) * 100);
             Log.d("DEBUG", "Tính điểm: " + readingPoint + " + " + delta);
@@ -209,7 +210,10 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
                 readingPoint = 1000;
             }
 
-            trans.update(ref, "reading", readingPoint/100.0);
+            // Cập nhật vào skill_scores.reading thay vì field reading riêng
+            skillScores.put("reading", readingPoint/100.0);
+            trans.update(ref, "skill_scores", skillScores);
+            
             Log.d(">>> RC Activity", "Đã update thống kê cho người dùng có ID: " + uid + " (" + readingPoint/100.0 + ")");
             return null;
         });
@@ -293,6 +297,14 @@ public class ReadingComprehensionActivity extends AppCompatActivity {
             available.addAll(ids);
             totalRP = 0;
             sharedPreferences.edit().putLong("totalPassedRP", totalRP).apply();
+        }
+        
+        // Kiểm tra lại nếu vẫn không có passage nào
+        if (available.isEmpty()) {
+            Log.e(">>> RC Activity", "Không có passage nào cho level: " + lvl);
+            Toast.makeText(this, "Không có bài đọc cho trình độ hiện tại. Vui lòng thêm dữ liệu!", Toast.LENGTH_LONG).show();
+            finish();
+            return null;
         }
 
         long randomId = available.get(new Random().nextInt(available.size()));

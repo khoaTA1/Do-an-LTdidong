@@ -5,6 +5,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +21,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,6 +35,7 @@ import java.util.Map;
 import vn.ltdidong.apphoctienganh.R;
 import vn.ltdidong.apphoctienganh.models.FillBlankQuestion;
 import vn.ltdidong.apphoctienganh.models.ListeningLesson;
+import vn.ltdidong.apphoctienganh.repositories.FillBlankRepository;
 
 /**
  * Activity cho bài tập Fill-in-the-blank
@@ -45,6 +51,7 @@ public class FillBlankActivity extends AppCompatActivity {
     private SeekBar seekBarAudio;
     private ProgressBar progressBar;
     private MaterialCardView cardHint;
+    private LinearProgressIndicator progressIndicator;
 
     // Data
     private ListeningLesson lesson;
@@ -60,15 +67,20 @@ public class FillBlankActivity extends AppCompatActivity {
     private Handler handler = new Handler();
     private boolean isPlaying = false;
 
+    // Repository
+    private FillBlankRepository repository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fill_blank);
+        
+        // Initialize repository
+        repository = new FillBlankRepository();
 
         initViews();
         loadData();
-        setupMediaPlayer();
-        displayQuestion();
+        // setupMediaPlayer() will be called after data is loaded
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -102,6 +114,7 @@ public class FillBlankActivity extends AppCompatActivity {
         seekBarAudio = findViewById(R.id.seekBarAudio);
         progressBar = findViewById(R.id.progressBar);
         cardHint = findViewById(R.id.cardHint);
+        progressIndicator = findViewById(R.id.progressIndicator);
 
         // Click listeners
         btnPlay.setOnClickListener(v -> togglePlayPause());
@@ -114,19 +127,114 @@ public class FillBlankActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        // Get lesson from Intent
-        lesson = (ListeningLesson) getIntent().getSerializableExtra("lesson");
+        // Get lesson info from Intent (new approach - from lesson list)
+        String lessonId = getIntent().getStringExtra("lesson_id");
+        String lessonTitle = getIntent().getStringExtra("lesson_title");
 
-        // TODO: Load fill-blank questions from Firebase
-        // Tạm thời dùng dữ liệu mẫu
-        questions = createSampleQuestions();
-
-        if (lesson != null) {
-            tvLessonTitle.setText(lesson.getTitle());
+        if (lessonId != null) {
+            // New approach: Load từ FillBlankLessonListActivity
+            tvLessonTitle.setText(lessonTitle != null ? lessonTitle : "Fill in the Blanks");
+            
+            // Load questions from Firebase using String ID
+            // Mỗi câu hỏi sẽ có audioUrl riêng
+            loadQuestionsFromFirebaseByStringId(lessonId);
         } else {
-            // If no lesson provided, use default title
-            tvLessonTitle.setText("Fill in the Blanks");
+            // Old approach: Check for ListeningLesson object (backward compatibility)
+            lesson = (ListeningLesson) getIntent().getSerializableExtra("lesson");
+
+            if (lesson != null) {
+                tvLessonTitle.setText(lesson.getTitle());
+                // Load questions from Firebase using int ID
+                loadQuestionsFromFirebase(lesson.getId());
+            } else {
+                // If no lesson provided, use default title and sample data
+                tvLessonTitle.setText("Fill in the Blanks");
+                questions = createSampleQuestions();
+                displayQuestion();
+            }
         }
+    }
+
+    /**Sử dụng Repository pattern giống như mode Listening cơ bản
+     * @param lessonId ID của bài học (String format - document ID)
+     */
+    private void loadQuestionsFromFirebaseByStringId(String lessonId) {
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Load trực tiếp từ document ID
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("fill_blank_lesson_listening")
+                .document(lessonId)
+                .collection("questions")
+                .orderBy("orderIndex")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    progressBar.setVisibility(View.GONE);
+
+                    if (!querySnapshot.isEmpty()) {
+                        questions = new ArrayList<>();
+                        
+                        for (QueryDocumentSnapshot doc : querySnapshot) {
+                            FillBlankQuestion q = new FillBlankQuestion();
+                            q.setLessonId(0); // String ID không cần convert
+                            q.setSentenceWithBlanks(doc.getString("sentenceWithBlanks"));
+                            q.setCorrectAnswers(doc.getString("correctAnswers"));
+                            q.setHint(doc.getString("hint"));
+                            q.setAudioUrl(doc.getString("audioUrl"));
+                            
+                            // Get orderIndex as number from Firebase
+                            Long orderIndexLong = doc.getLong("orderIndex");
+                            q.setOrderIndex(orderIndexLong != null ? orderIndexLong.intValue() : 0);
+                            
+                            questions.add(q);
+                        }
+                        
+                        Log.d("FillBlank", "Loaded " + questions.size() + " questions from Firebase");
+                    } else {
+                        Log.w("FillBlank", "No questions found for lesson " + lessonId);
+                        Toast.makeText(this, "Chưa có câu hỏi cho bài học này", Toast.LENGTH_SHORT).show();
+                        questions = createSampleQuestions();
+                    }
+
+                    // Không setup media player ở đây nữa, sẽ setup khi displayQuestion
+                    displayQuestion();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FillBlank", "Error loading questions", e);
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Lỗi tải câu hỏi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    questions = createSampleQuestions();
+                    // Không setup media player ở đây nữa
+                    displayQuestion();
+                });
+    }
+
+    /**Sử dụng Repository pattern giống như mode Listening cơ bản
+     * @param lessonId ID của bài học
+     */
+    private void loadQuestionsFromFirebase(int lessonId) {
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Sử dụng Repository để load dữ liệu
+        repository.getFillBlankQuestionsByLesson(lessonId).observe(this, loadedQuestions -> {
+            progressBar.setVisibility(View.GONE);
+
+            if (loadedQuestions != null && !loadedQuestions.isEmpty()) {
+                // Load thành công từ Firebase
+                questions = loadedQuestions;
+                Log.d("FillBlank", "Loaded " + questions.size() + " questions from Firebase");
+            } else {
+                // Không có dữ liệu trên Firebase -> dùng dữ liệu mẫu
+                Log.w("FillBlank", "No questions found on Firebase for lesson " + lessonId + ". Using sample data.");
+                Toast.makeText(this, "Chưa có dữ liệu trên Firebase. Dùng dữ liệu mẫu.", 
+                    Toast.LENGTH_SHORT).show();
+                questions = createSampleQuestions();
+            }
+
+            // Không setup media player ở đây nữa, sẽ setup khi displayQuestion
+            // Hiển thị câu hỏi đầu tiên
+            displayQuestion();
+        });
     }
 
     private List<FillBlankQuestion> createSampleQuestions() {
@@ -141,7 +249,6 @@ public class FillBlankActivity extends AppCompatActivity {
         q1.setCorrectAnswers("7 AM");
         q1.setHint("What time? (Format: number + AM/PM)");
         q1.setOrderIndex(1);
-        q1.setAudioTimestamp(0);
 
         FillBlankQuestion q2 = new FillBlankQuestion();
         q2.setLessonId(lessonId);
@@ -149,7 +256,6 @@ public class FillBlankActivity extends AppCompatActivity {
         q2.setCorrectAnswers("brush my teeth");
         q2.setHint("What do you do first in the morning?");
         q2.setOrderIndex(2);
-        q2.setAudioTimestamp(5);
 
         FillBlankQuestion q3 = new FillBlankQuestion();
         q3.setLessonId(lessonId);
@@ -157,7 +263,6 @@ public class FillBlankActivity extends AppCompatActivity {
         q3.setCorrectAnswers("breakfast");
         q3.setHint("What meal do you eat in the morning?");
         q3.setOrderIndex(3);
-        q3.setAudioTimestamp(10);
 
         list.add(q1);
         list.add(q2);
@@ -166,9 +271,27 @@ public class FillBlankActivity extends AppCompatActivity {
         return list;
     }
 
-    private void setupMediaPlayer() {
-        // Skip media player setup if no lesson with audio is provided
-        if (lesson == null || lesson.getAudioUrl() == null || lesson.getAudioUrl().isEmpty()) {
+    private void setupMediaPlayerForCurrentQuestion() {
+        // Release previous media player if exists
+        if (mediaPlayer != null) {
+            if (isPlaying) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+            isPlaying = false;
+        }
+        
+        // Reset UI
+        btnPlay.setImageResource(R.drawable.ic_play);
+        seekBarAudio.setProgress(0);
+        
+        // Get audio URL from current question
+        String audioUrl = (currentQuestion != null) ? currentQuestion.getAudioUrl() : null;
+        
+        // Skip media player setup if no audio URL
+        if (audioUrl == null || audioUrl.isEmpty()) {
+            Log.w("FillBlank", "No audio URL for question " + (currentIndex + 1));
             progressBar.setVisibility(View.GONE);
             btnPlay.setEnabled(false);
             btnReplay.setEnabled(false);
@@ -180,7 +303,6 @@ public class FillBlankActivity extends AppCompatActivity {
             mediaPlayer = new MediaPlayer();
 
             // Handle different audio URL formats
-            String audioUrl = lesson.getAudioUrl();
             if (audioUrl.startsWith("raw://")) {
                 // Local resource
                 String resourceName = audioUrl.substring(6);
@@ -191,12 +313,17 @@ public class FillBlankActivity extends AppCompatActivity {
                 }
             } else {
                 // URL from Firebase or web
+                Log.d("FillBlank", "Loading audio from URL: " + audioUrl);
                 mediaPlayer.setDataSource(audioUrl);
             }
 
             mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(mp -> {
+                Log.d("FillBlank", "Audio prepared successfully for question " + (currentIndex + 1));
                 progressBar.setVisibility(View.GONE);
+                btnPlay.setEnabled(true);
+                btnReplay.setEnabled(true);
+                seekBarAudio.setEnabled(true);
                 seekBarAudio.setMax(mediaPlayer.getDuration());
                 updateSeekBar();
             });
@@ -204,6 +331,15 @@ public class FillBlankActivity extends AppCompatActivity {
             mediaPlayer.setOnCompletionListener(mp -> {
                 isPlaying = false;
                 btnPlay.setImageResource(R.drawable.ic_play);
+            });
+            
+            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                Log.e("FillBlank", "MediaPlayer error: what=" + what + ", extra=" + extra);
+                Toast.makeText(this, "Lỗi phát audio", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE);
+                btnPlay.setEnabled(false);
+                btnReplay.setEnabled(false);
+                return true;
             });
 
             seekBarAudio.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -224,7 +360,11 @@ public class FillBlankActivity extends AppCompatActivity {
             });
 
         } catch (IOException e) {
+            Log.e("FillBlank", "Error setting up media player", e);
             Toast.makeText(this, "Không thể tải audio: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            progressBar.setVisibility(View.GONE);
+            btnPlay.setEnabled(false);
+            btnReplay.setEnabled(false);
         }
     }
 
@@ -251,9 +391,8 @@ public class FillBlankActivity extends AppCompatActivity {
     }
 
     private void replayQuestion() {
-        if (mediaPlayer != null && currentQuestion != null) {
-            int timestamp = currentQuestion.getAudioTimestamp() * 1000; // Convert to milliseconds
-            mediaPlayer.seekTo(timestamp);
+        if (mediaPlayer != null) {
+            mediaPlayer.seekTo(0); // Restart from beginning
             if (!isPlaying) {
                 togglePlayPause();
             }
@@ -267,8 +406,17 @@ public class FillBlankActivity extends AppCompatActivity {
 
         currentQuestion = questions.get(currentIndex);
 
+        // Setup media player cho câu hỏi hiện tại (mỗi câu có audio riêng)
+        setupMediaPlayerForCurrentQuestion();
+
         // Update UI
         tvQuestionNumber.setText("Câu " + (currentIndex + 1) + "/" + questions.size());
+        
+        // Update progress indicator
+        if (progressIndicator != null && questions.size() > 0) {
+            int progress = (int) (((currentIndex + 1) * 100.0) / questions.size());
+            progressIndicator.setProgress(progress);
+        }
 
         // Display sentence with blanks replaced by underscores
         String displayText = currentQuestion.getSentenceWithBlanks().replace("{blank}", "______");
@@ -298,9 +446,6 @@ public class FillBlankActivity extends AppCompatActivity {
         btnCheck.setVisibility(View.VISIBLE);
         btnNext.setVisibility(View.GONE);
         btnSubmit.setVisibility(currentIndex == questions.size() - 1 ? View.VISIBLE : View.GONE);
-
-        // Replay audio for this question
-        replayQuestion();
     }
 
     private void createInputFields() {
@@ -407,6 +552,46 @@ public class FillBlankActivity extends AppCompatActivity {
 
         float score = totalBlanks > 0 ? (totalCorrect * 100f / totalBlanks) : 0;
 
+        // Prepare detailed results as JSON string
+        org.json.JSONArray resultsArray = new org.json.JSONArray();
+        try {
+            Log.d("FillBlank", "Creating detailed results for " + questions.size() + " questions");
+            
+            for (int i = 0; i < questions.size(); i++) {
+                FillBlankQuestion q = questions.get(i);
+                org.json.JSONObject questionResult = new org.json.JSONObject();
+                questionResult.put("sentence", q.getSentenceWithBlanks());
+                
+                // Convert correctAnswers List to JSONArray manually
+                org.json.JSONArray correctAnswersArray = new org.json.JSONArray();
+                List<String> correctAnswers = q.getCorrectAnswersList();
+                if (correctAnswers != null) {
+                    for (String answer : correctAnswers) {
+                        correctAnswersArray.put(answer);
+                    }
+                }
+                questionResult.put("correctAnswers", correctAnswersArray);
+                
+                // Convert userAnswers to JSONArray
+                org.json.JSONArray userAnswersArray = new org.json.JSONArray();
+                List<String> userAns = userAnswers.get(i);
+                if (userAns != null) {
+                    for (String answer : userAns) {
+                        userAnswersArray.put(answer);
+                    }
+                }
+                questionResult.put("userAnswers", userAnswersArray);
+                
+                resultsArray.put(questionResult);
+                Log.d("FillBlank", "Added question " + (i + 1) + " to results");
+            }
+            
+            Log.d("FillBlank", "Final results JSON: " + resultsArray.toString());
+        } catch (org.json.JSONException e) {
+            Log.e("FillBlank", "Error creating JSON results", e);
+            e.printStackTrace();
+        }
+
         // Navigate to result screen
         Intent intent = new Intent(this, ResultActivity.class);
         // Use lesson ID if available, otherwise use default 0
@@ -419,6 +604,8 @@ public class FillBlankActivity extends AppCompatActivity {
         intent.putExtra("total_questions", totalBlanks);
         intent.putExtra("score", score);
         intent.putExtra("quiz_type", "fill_blank");
+        intent.putExtra("detailed_results", resultsArray.toString());
+        Log.d("FillBlank", "Starting ResultActivity with detailed_results: " + resultsArray.toString());
         startActivity(intent);
         finish();
     }

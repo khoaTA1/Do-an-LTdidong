@@ -142,7 +142,8 @@ public class SearchFriendsActivity extends AppCompatActivity {
                     
                     // Filter out current user
                     for (Map<String, Object> user : users) {
-                        if (!userId.equals(user.get("userId"))) {
+                        String searchUserId = (String) user.get("userId");
+                        if (userId == null || !userId.equals(searchUserId)) {
                             searchResults.add(user);
                         }
                     }

@@ -14,6 +14,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import vn.ltdidong.apphoctienganh.R;
+import vn.ltdidong.apphoctienganh.managers.SkillManager;
 import vn.ltdidong.apphoctienganh.database.AppDatabase;
 import vn.ltdidong.apphoctienganh.database.UserProgressDao;
 import vn.ltdidong.apphoctienganh.database.UserStreakDao;
@@ -35,6 +36,8 @@ public class ResultActivity extends AppCompatActivity {
     private int totalQuestions;
     private float score;
     private ListeningLesson lesson;
+    private String quizType; // "listening" or "fill_blank"
+    private String detailedResults; // JSON string for fill_blank results
     
     // UI components
     private TextView tvScorePercentage;
@@ -52,10 +55,7 @@ public class ResultActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                Intent intent = new Intent(ResultActivity.this, ListeningListActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                finish();
+                navigateBackToList();
             }
         });
         
@@ -67,6 +67,11 @@ public class ResultActivity extends AppCompatActivity {
         correctAnswers = getIntent().getIntExtra("correct_answers", 0);
         totalQuestions = getIntent().getIntExtra("total_questions", 0);
         score = getIntent().getFloatExtra("score", 0);
+        quizType = getIntent().getStringExtra("quiz_type"); // "listening" or "fill_blank"
+        detailedResults = getIntent().getStringExtra("detailed_results");
+        
+        // Debug log
+        android.util.Log.d("ResultActivity", "Quiz Type: " + quizType);
         
         // Initialize views
         initViews();
@@ -175,6 +180,9 @@ public class ResultActivity extends AppCompatActivity {
         
         // 3. Cập nhật XP cho User và đồng bộ lên Firebase (chạy trên main thread)
         updateUserXP(userId, correctAnswers, totalQuestions);
+        
+        // 4. Cập nhật Listening Skill Score
+        updateListeningSkillScore(score / 10.0); // Chuyển từ 0-100 sang 0-10
     }
     
     /**
@@ -258,6 +266,70 @@ public class ResultActivity extends AppCompatActivity {
     }
     
     /**
+     * Cập nhật điểm kỹ năng Listening
+     */
+    private void updateListeningSkillScore(double lessonScore) {
+        String userId = SharedPreferencesManager.getInstance(this).getUserId();
+        if (userId == null) return;
+        
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Get current scores map
+                        java.util.Map<String, Object> data = documentSnapshot.getData();
+                        java.util.Map<String, Double> skillScores = (java.util.Map<String, Double>) data.get("skill_scores");
+                        java.util.Map<String, Long> lastPracticeTime = (java.util.Map<String, Long>) data.get("last_practice_time");
+                        
+                        if (skillScores == null) skillScores = new java.util.HashMap<>();
+                        if (lastPracticeTime == null) lastPracticeTime = new java.util.HashMap<>();
+                        
+                        // Initialize if missing
+                        if (!skillScores.containsKey(SkillManager.SKILL_LISTENING)) {
+                            skillScores.put(SkillManager.SKILL_LISTENING, 5.0);
+                        }
+                        
+                        // Get current score
+                        Object currentObj = skillScores.get(SkillManager.SKILL_LISTENING);
+                        double currentScore = 5.0;
+                        if (currentObj instanceof Number) {
+                            currentScore = ((Number) currentObj).doubleValue();
+                        }
+                        
+                        // 1. Apply Decay first
+                        long lastTime = 0;
+                        if (lastPracticeTime.containsKey(SkillManager.SKILL_LISTENING)) {
+                            lastTime = lastPracticeTime.get(SkillManager.SKILL_LISTENING);
+                        }
+                        double decayedScore = SkillManager.applyTimeDecay(currentScore, lastTime);
+                        
+                        // 2. Calculate New Score
+                        double newScore = SkillManager.calculateNewScore(decayedScore, lessonScore);
+                        
+                        // 3. Update Map
+                        skillScores.put(SkillManager.SKILL_LISTENING, newScore);
+                        lastPracticeTime.put(SkillManager.SKILL_LISTENING, System.currentTimeMillis());
+                        
+                        // 4. Save to Firestore
+                        final double finalCurrentScore = currentScore;
+                        final double finalNewScore = newScore;
+                        
+                        db.collection("users").document(userId)
+                                .update(
+                                        "skill_scores", skillScores,
+                                        "last_practice_time", lastPracticeTime)
+                                .addOnSuccessListener(aVoid -> {
+                                    String msg = String.format("Listening Score: %.1f -> %.1f", finalCurrentScore, finalNewScore);
+                                    android.widget.Toast.makeText(ResultActivity.this, msg, android.widget.Toast.LENGTH_LONG).show();
+                                })
+                                .addOnFailureListener(e -> {
+                                    android.util.Log.e("ResultActivity", "Error updating skill score", e);
+                                });
+                    }
+                });
+    }
+    
+    /**
      * Hiển thị kết quả
      */
     private void displayResults() {
@@ -300,27 +372,147 @@ public class ResultActivity extends AppCompatActivity {
      * Setup các buttons
      */
     private void setupButtons() {
-        btnViewTranscript.setOnClickListener(v -> {
-            if (lesson != null) {
-                showTranscriptDialog();
-            }
-        });
+        // Thay đổi label và chức năng nút tùy theo quiz type
+        if ("fill_blank".equals(quizType)) {
+            btnViewTranscript.setText("Xem lại kết quả");
+            btnViewTranscript.setVisibility(android.view.View.VISIBLE);
+            btnViewTranscript.setOnClickListener(v -> showDetailedResultsDialog());
+        } else {
+            btnViewTranscript.setText("Xem lại ghi chú");
+            btnViewTranscript.setVisibility(android.view.View.VISIBLE);
+            btnViewTranscript.setOnClickListener(v -> {
+                if (lesson != null) {
+                    showTranscriptDialog();
+                }
+            });
+        }
         
         btnTryAgain.setOnClickListener(v -> {
-            // Quay lại QuizActivity để làm lại
-            Intent intent = new Intent(ResultActivity.this, QuizActivity.class);
-            intent.putExtra("lesson_id", lessonId);
+            // Điều hướng về đúng activity tương ứng để làm lại
+            Intent intent;
+            if ("fill_blank".equals(quizType)) {
+                intent = new Intent(ResultActivity.this, FillBlankActivity.class);
+                intent.putExtra("lesson_id", String.valueOf(lessonId));
+                intent.putExtra("lesson_title", getIntent().getStringExtra("lesson_title"));
+            } else {
+                intent = new Intent(ResultActivity.this, QuizActivity.class);
+                intent.putExtra("lesson_id", lessonId);
+            }
             startActivity(intent);
             finish();
         });
         
         btnBackToLessons.setOnClickListener(v -> {
-            // Quay về ListeningListActivity
-            Intent intent = new Intent(ResultActivity.this, ListeningListActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
-            finish();
+            navigateBackToList();
         });
+    }
+    
+    /**
+     * Điều hướng quay lại danh sách tương ứng với quiz type
+     */
+    private void navigateBackToList() {
+        android.util.Log.d("ResultActivity", "navigateBackToList - Quiz Type: " + quizType);
+        Intent intent;
+        if ("fill_blank".equals(quizType)) {
+            // Quay về FillBlankLessonListActivity
+            android.util.Log.d("ResultActivity", "Navigating to FillBlankLessonListActivity");
+            intent = new Intent(ResultActivity.this, FillBlankLessonListActivity.class);
+        } else {
+            // Mặc định quay về ListeningListActivity
+            android.util.Log.d("ResultActivity", "Navigating to ListeningListActivity");
+            intent = new Intent(ResultActivity.this, ListeningListActivity.class);
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
+    }
+    
+    /**
+     * Hiển thị dialog với kết quả chi tiết Fill Blank
+     */
+    private void showDetailedResultsDialog() {
+        android.util.Log.d("ResultActivity", "showDetailedResultsDialog called");
+        android.util.Log.d("ResultActivity", "detailedResults: " + detailedResults);
+        
+        if (detailedResults == null || detailedResults.isEmpty()) {
+            android.widget.Toast.makeText(this, "Không có dữ liệu kết quả", android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_fill_blank_results);
+        
+        android.widget.LinearLayout llResultsContainer = dialog.findViewById(R.id.llResultsContainer);
+        MaterialButton btnClose = dialog.findViewById(R.id.btnClose);
+        
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        
+        // Parse JSON and create result items
+        try {
+            org.json.JSONArray resultsArray = new org.json.JSONArray(detailedResults);
+            android.util.Log.d("ResultActivity", "Results array length: " + resultsArray.length());
+            
+            for (int i = 0; i < resultsArray.length(); i++) {
+                org.json.JSONObject questionResult = resultsArray.getJSONObject(i);
+                android.util.Log.d("ResultActivity", "Processing question " + (i + 1));
+                
+                // Inflate item layout
+                android.view.View itemView = getLayoutInflater().inflate(R.layout.item_fill_blank_result, llResultsContainer, false);
+                
+                TextView tvQuestionNumber = itemView.findViewById(R.id.tvQuestionNumber);
+                TextView tvSentence = itemView.findViewById(R.id.tvSentence);
+                TextView tvUserAnswers = itemView.findViewById(R.id.tvUserAnswers);
+                TextView tvCorrectAnswers = itemView.findViewById(R.id.tvCorrectAnswers);
+                
+                // Set data
+                tvQuestionNumber.setText("Câu " + (i + 1));
+                tvSentence.setText(questionResult.getString("sentence"));
+                
+                // User answers
+                org.json.JSONArray userAnswersArray = questionResult.getJSONArray("userAnswers");
+                StringBuilder userAnswersText = new StringBuilder();
+                for (int j = 0; j < userAnswersArray.length(); j++) {
+                    if (j > 0) userAnswersText.append(", ");
+                    String answer = userAnswersArray.getString(j);
+                    userAnswersText.append(answer.isEmpty() ? "(chưa điền)" : answer);
+                }
+                tvUserAnswers.setText(userAnswersText.toString());
+                android.util.Log.d("ResultActivity", "User answers: " + userAnswersText.toString());
+                
+                // Correct answers
+                org.json.JSONArray correctAnswersArray = questionResult.getJSONArray("correctAnswers");
+                StringBuilder correctAnswersText = new StringBuilder();
+                for (int j = 0; j < correctAnswersArray.length(); j++) {
+                    if (j > 0) correctAnswersText.append(" / ");
+                    correctAnswersText.append(correctAnswersArray.getString(j));
+                }
+                tvCorrectAnswers.setText(correctAnswersText.toString());
+                android.util.Log.d("ResultActivity", "Correct answers: " + correctAnswersText.toString());
+                
+                llResultsContainer.addView(itemView);
+                android.util.Log.d("ResultActivity", "Added view to container");
+            }
+            
+            android.util.Log.d("ResultActivity", "Total views in container: " + llResultsContainer.getChildCount());
+        } catch (org.json.JSONException e) {
+            android.util.Log.e("ResultActivity", "JSON parsing error", e);
+            e.printStackTrace();
+            android.widget.Toast.makeText(this, "Lỗi khi hiển thị kết quả: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            dialog.dismiss();
+            return;
+        }
+        
+        dialog.show();
+        
+        // Set dialog size
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(
+                (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
+                (int) (getResources().getDisplayMetrics().heightPixels * 0.8)
+            );
+        }
     }
     
     /**

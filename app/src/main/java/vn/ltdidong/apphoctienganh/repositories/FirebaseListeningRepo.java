@@ -260,18 +260,53 @@ public class FirebaseListeningRepo {
     private ListeningLesson documentToLesson(DocumentSnapshot document) {
         try {
             ListeningLesson lesson = new ListeningLesson();
-            lesson.setId(document.getLong("id").intValue());
+            
+            // Xử lý ID - có thể là String hoặc Number trong Firebase
+            Object idObj = document.get("id");
+            int id;
+            if (idObj instanceof String) {
+                id = Integer.parseInt((String) idObj);
+            } else if (idObj instanceof Long) {
+                id = ((Long) idObj).intValue();
+            } else if (idObj instanceof Number) {
+                id = ((Number) idObj).intValue();
+            } else {
+                Log.e(TAG, "Invalid id type in document: " + document.getId());
+                return null;
+            }
+            lesson.setId(id);
+            
             lesson.setTitle(document.getString("title"));
             lesson.setDescription(document.getString("description"));
             lesson.setDifficulty(document.getString("difficulty"));
             lesson.setAudioUrl(document.getString("audioUrl"));
-            lesson.setDuration(document.getLong("duration").intValue());
+            
+            // Xử lý duration - có thể là String hoặc Number
+            Object durationObj = document.get("duration");
+            if (durationObj instanceof String) {
+                lesson.setDuration(Integer.parseInt((String) durationObj));
+            } else if (durationObj instanceof Number) {
+                lesson.setDuration(((Number) durationObj).intValue());
+            } else {
+                lesson.setDuration(0);
+            }
+            
             lesson.setTranscript(document.getString("transcript"));
             lesson.setImageUrl(document.getString("imageUrl"));
-            lesson.setQuestionCount(document.getLong("questionCount").intValue());
+            
+            // Xử lý questionCount - có thể là String hoặc Number
+            Object qCountObj = document.get("questionCount");
+            if (qCountObj instanceof String) {
+                lesson.setQuestionCount(Integer.parseInt((String) qCountObj));
+            } else if (qCountObj instanceof Number) {
+                lesson.setQuestionCount(((Number) qCountObj).intValue());
+            } else {
+                lesson.setQuestionCount(0);
+            }
+            
             return lesson;
         } catch (Exception e) {
-            Log.e(TAG, "Error converting document to lesson", e);
+            Log.e(TAG, "Error converting document to lesson: " + document.getId(), e);
             return null;
         }
     }

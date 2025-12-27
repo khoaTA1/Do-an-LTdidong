@@ -183,59 +183,237 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Recommendations Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="💡 Gợi ý hôm nay"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#333"
-            android:layout_marginBottom="8dp"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_recommendations"
+        <!-- Skill Scores Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:nestedScrollingEnabled="false"/>
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
 
-        <!-- Action Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp">
-
-            <Button
-                android:id="@+id/btn_sync_data"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="🔄 Đồng bộ"
-                android:textAllCaps="false"
-                android:backgroundTint="#4CAF50"/>
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <Button
-                android:id="@+id/btn_generate_schedule"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="📅 Tạo lịch"
-                android:textAllCaps="false"
-                android:backgroundTint="#2196F3"/>
-        </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📊 Điểm kỹ năng"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#333"
+                    android:layout_marginBottom="16dp"/>
 
-        <Button
-            android:id="@+id/btn_test_lesson"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="🧪 Test: Tạo dữ liệu mẫu"
-            android:textAllCaps="false"
-            android:backgroundTint="#FF9800"/>
+                <!-- Reading Skill -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="📖 Reading"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#333"/>
+
+                        <TextView
+                            android:id="@+id/tv_reading_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5.0 / 10"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#1976D2"/>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pb_reading"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:progress="50"
+                        android:progressTint="#1976D2"/>
+
+                    <TextView
+                        android:id="@+id/tv_last_practice_reading"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Chưa luyện tập"
+                        android:textSize="12sp"
+                        android:textColor="#999"/>
+                </LinearLayout>
+
+                <!-- Writing Skill -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="✍️ Writing"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#333"/>
+
+                        <TextView
+                            android:id="@+id/tv_writing_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5.0 / 10"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#4CAF50"/>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pb_writing"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:progress="50"
+                        android:progressTint="#4CAF50"/>
+
+                    <TextView
+                        android:id="@+id/tv_last_practice_writing"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Chưa luyện tập"
+                        android:textSize="12sp"
+                        android:textColor="#999"/>
+                </LinearLayout>
+
+                <!-- Listening Skill -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🎧 Listening"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#333"/>
+
+                        <TextView
+                            android:id="@+id/tv_listening_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5.0 / 10"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#FF9800"/>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pb_listening"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:progress="50"
+                        android:progressTint="#FF9800"/>
+
+                    <TextView
+                        android:id="@+id/tv_last_practice_listening"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Chưa luyện tập"
+                        android:textSize="12sp"
+                        android:textColor="#999"/>
+                </LinearLayout>
+
+                <!-- Speaking Skill -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🗣️ Speaking"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#333"/>
+
+                        <TextView
+                            android:id="@+id/tv_speaking_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5.0 / 10"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#E91E63"/>
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pb_speaking"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="8dp"
+                        android:max="100"
+                        android:progress="50"
+                        android:progressTint="#E91E63"/>
+
+                    <TextView
+                        android:id="@+id/tv_last_practice_speaking"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Chưa luyện tập"
+                        android:textSize="12sp"
+                        android:textColor="#999"/>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <ProgressBar
             android:id="@+id/progress_bar"

@@ -15,7 +15,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/DoAn_LT_DD"
+        android:label="Learning English"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DoAn_LT_DD"
@@ -48,7 +48,10 @@
             android:parentActivityName=".activities.ListeningListActivity" />
         <activity 
             android:name=".activities.FillBlankActivity"
-            android:parentActivityName=".activities.LessonDetailActivity" />
+            android:parentActivityName=".activities.FillBlankLessonListActivity" />
+        <activity 
+            android:name=".activities.FillBlankLessonListActivity"
+            android:parentActivityName=".activities.SkillHomeActivity" />
         <activity android:name=".activities.RegisterActivity"/>
         <activity android:name=".activities.LoginActivity"/>
         <activity 
