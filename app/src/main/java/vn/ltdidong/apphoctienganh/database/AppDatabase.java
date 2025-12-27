@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
  * Chỉ lưu UserProgress (tiến độ người dùng) và UserStreak (chuỗi ngày) - local database
  * Lessons và Questions load từ Firebase Firestore
  * Version 10: Thêm ChatConversation, AITutorMessage cho AI Tutor feature
+ * Version 11: Thêm tracking chi tiết cho listening challenges (easy/medium/hard count, fill blank, exp earned)
  */
 @Database(
     entities = {
@@ -37,7 +38,7 @@ import java.util.concurrent.Executors;
         ChatConversation.class,
         AITutorMessage.class
     },
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

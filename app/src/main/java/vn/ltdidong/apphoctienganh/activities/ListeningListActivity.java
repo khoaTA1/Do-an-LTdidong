@@ -43,6 +43,11 @@ public class ListeningListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_listening_list);
 
+        // Kiểm tra xem có filter từ intent không (từ DailyChallengeActivity)
+        if (getIntent().hasExtra("filter_difficulty")) {
+            currentFilter = getIntent().getStringExtra("filter_difficulty");
+        }
+
         // Initialize views
         initViews();
 
@@ -104,6 +109,22 @@ public class ListeningListActivity extends AppCompatActivity {
      * Setup filter chips
      */
     private void setupFilters() {
+        // Chọn chip tương ứng với currentFilter
+        switch (currentFilter) {
+            case "EASY":
+                chipGroupFilter.check(R.id.chipEasy);
+                break;
+            case "MEDIUM":
+                chipGroupFilter.check(R.id.chipMedium);
+                break;
+            case "HARD":
+                chipGroupFilter.check(R.id.chipHard);
+                break;
+            default:
+                chipGroupFilter.check(R.id.chipAll);
+                break;
+        }
+        
         chipGroupFilter.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.chipAll) {
                 currentFilter = "ALL";

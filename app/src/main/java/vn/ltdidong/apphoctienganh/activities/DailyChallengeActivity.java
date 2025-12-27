@@ -267,25 +267,25 @@ public class DailyChallengeActivity extends BaseActivity {
                 
             case SkillManager.SKILL_LISTENING:
                 challenges.add(new ChallengeItem(
+                    "🎧 Listen to 2 Audio",
+                    "Complete two easy listening exercise (" + todayChallenge.getListeningEasyCount() + "/2)",
+                    15, "listening_easy", todayChallenge.getListeningEasyCount() >= 2));
+                challenges.add(new ChallengeItem(
+                    "🎵 Fill blank exercise",
+                    "Complete one fill-in-the-blank exercise (" + todayChallenge.getListeningFillBlankCount() + "/1)",
+                    20, "listening_fill_blank", todayChallenge.getListeningFillBlankCount() >= 1));
+                challenges.add(new ChallengeItem(
+                    "📻 Find exp",
+                    "Earn 50 exp from listening (" + todayChallenge.getListeningExpEarned() + "/50)",
+                    15, "listening_exp", todayChallenge.getListeningExpEarned() >= 50));
+                challenges.add(new ChallengeItem(
                     "🎧 Listen to 1 Audio",
-                    "Complete one listening exercise",
-                    15, "listening", todayChallenge.isListeningCompleted()));
+                    "Complete one medium listening exercise (" + todayChallenge.getListeningMediumCount() + "/1)",
+                    20, "listening_medium", todayChallenge.getListeningMediumCount() >= 1));
                 challenges.add(new ChallengeItem(
-                    "🎵 Song Lyrics",
-                    "Listen and fill in missing lyrics",
-                    20, "listening_song", false));
-                challenges.add(new ChallengeItem(
-                    "📻 Podcast Listening",
-                    "Listen to a 5-minute podcast",
-                    15, "listening_podcast", false));
-                challenges.add(new ChallengeItem(
-                    "🎬 Movie Dialogue",
-                    "Listen and understand movie dialogue",
-                    20, "listening_movie", false));
-                challenges.add(new ChallengeItem(
-                    "👂 Dictation",
-                    "Write what you hear (10 sentences)",
-                    20, "listening_dictation", false));
+                    "🎧 Listen to 1 Audio",
+                    "Complete one difficult listening exercise (" + todayChallenge.getListeningHardCount() + "/1)",
+                    20, "listening_hard", todayChallenge.getListeningHardCount() >= 1));
                 challenges.add(new ChallengeItem(
                     "🔊 Pronunciation",
                     "Listen and repeat 20 words correctly",
@@ -348,12 +348,26 @@ public class DailyChallengeActivity extends BaseActivity {
         Intent intent = null;
         String type = item.getType();
         
-        // Route dựa trên skill (kiểm tra prefix của type)
+        // Route dựa trên skill
         if (type.startsWith("reading")) {
             intent = new Intent(this, ReadingComprehensionActivity.class);
         } else if (type.startsWith("writing")) {
             intent = new Intent(this, WritingActivity.class);
-        } else if (type.startsWith("listening")) {
+        } else if (type.equals("listening_easy")) {
+            intent = new Intent(this, ListeningListActivity.class);
+            intent.putExtra("filter_difficulty", "EASY");
+        } else if (type.equals("listening_medium")) {
+            intent = new Intent(this, ListeningListActivity.class);
+            intent.putExtra("filter_difficulty", "MEDIUM");
+        } else if (type.equals("listening_hard")) {
+            intent = new Intent(this, ListeningListActivity.class);
+            intent.putExtra("filter_difficulty", "HARD");
+        } else if (type.equals("listening_fill_blank")) {
+            intent = new Intent(this, FillBlankLessonListActivity.class);
+        } else if (type.equals("listening_exp")) {
+            // Hiển thị danh sách tất cả listening
+            intent = new Intent(this, ListeningListActivity.class);
+        } else if (type.equals("listening")) {
             intent = new Intent(this, ListeningListActivity.class);
         } else if (type.startsWith("speaking")) {
             intent = new Intent(this, SpeakingActivity.class);
@@ -384,9 +398,23 @@ public class DailyChallengeActivity extends BaseActivity {
         if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
             String challengeType = data.getStringExtra("challenge_type");
             int xpEarned = data.getIntExtra("xp_earned", 15);
+            String lessonDifficulty = data.getStringExtra("lesson_difficulty");
             
             if (challengeType != null) {
-                markChallengeCompleted(challengeType, xpEarned);
+                // Nếu là challenge listening với độ khó cụ thể, cập nhật challenge type tương ứng
+                if (challengeType.equals("listening") || challengeType.equals("listening_exp")) {
+                    if ("EASY".equals(lessonDifficulty)) {
+                        markChallengeCompleted("listening_easy", xpEarned);
+                    } else if ("MEDIUM".equals(lessonDifficulty)) {
+                        markChallengeCompleted("listening_medium", xpEarned);
+                    } else if ("HARD".equals(lessonDifficulty)) {
+                        markChallengeCompleted("listening_hard", xpEarned);
+                    }
+                    // Cộng exp cho challenge listening_exp
+                    markChallengeCompleted("listening_exp", xpEarned);
+                } else {
+                    markChallengeCompleted(challengeType, xpEarned);
+                }
             }
         }
     }
@@ -410,6 +438,30 @@ public class DailyChallengeActivity extends BaseActivity {
                     break;
                 case "listening":
                     todayChallenge.setListeningCompleted(true);
+                    updated = true;
+                    break;
+                case "listening_easy":
+                    todayChallenge.setListeningEasyCount(todayChallenge.getListeningEasyCount() + 1);
+                    if (todayChallenge.getListeningEasyCount() >= 2) {
+                        todayChallenge.setListeningCompleted(true);
+                    }
+                    updated = true;
+                    break;
+                case "listening_medium":
+                    todayChallenge.setListeningMediumCount(todayChallenge.getListeningMediumCount() + 1);
+                    updated = true;
+                    break;
+                case "listening_hard":
+                    todayChallenge.setListeningHardCount(todayChallenge.getListeningHardCount() + 1);
+                    updated = true;
+                    break;
+                case "listening_fill_blank":
+                    todayChallenge.setListeningFillBlankCount(todayChallenge.getListeningFillBlankCount() + 1);
+                    updated = true;
+                    break;
+                case "listening_exp":
+                    int currentExp = todayChallenge.getListeningExpEarned();
+                    todayChallenge.setListeningExpEarned(currentExp + xpEarned);
                     updated = true;
                     break;
                 case "speaking":
